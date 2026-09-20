@@ -1,0 +1,434 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7D41414B4AFA478B93449F6B /* QimenDunjiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F23058E68D2546398268CA54 /* QimenDunjiaApp.swift */; };
+		875F1BCAC77A4F7B8C7ED423 /* GanzhiCalendar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2ADA36E1B1D4F978C35FE4F /* GanzhiCalendar.swift */; };
+		051FC04A388240DA9170C0A7 /* InterpretationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 689DC052991D45AE88AECB62 /* InterpretationEngine.swift */; };
+		CA16B7784AAF4E2B9B6F3548 /* JuResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1256A85F60284C708ED64C9B /* JuResolver.swift */; };
+		C69D02318056488DA4B5CFAF /* QimenEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B2A2D9566F480B88570337 /* QimenEngine.swift */; };
+		E58CB631981C4003B6855523 /* SolarTerms.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE56254F172E499C8786244C /* SolarTerms.swift */; };
+		332DF0B89B3E4E47B290D41A /* ChartModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 595BEA514A2C447FB132AB1F /* ChartModels.swift */; };
+		BCC32FCE6C1341B183D4E9A7 /* HistoryRecord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B2DB966AA3E4577B2167844 /* HistoryRecord.swift */; };
+		5DA0FEC2FB344B5796029A8F /* Palace.swift in Sources */ = {isa = PBXBuildFile; fileRef = F069D7496C9F43BF9F81739E /* Palace.swift */; };
+		947B675F5DB845149ECD3FEF /* StemBranch.swift in Sources */ = {isa = PBXBuildFile; fileRef = B061670C78094F3D9FE2E22B /* StemBranch.swift */; };
+		84C5330AE684426E9ECDC6C1 /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4414B51ABAC4F4F86C7F2D3 /* AppTheme.swift */; };
+		8DB84DB68F344DF9BC546FD5 /* ChartDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6E70F2BFB1042B0B5BCEC26 /* ChartDetailView.swift */; };
+		D8D3125B93AB482887FFD676 /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CAA173107C847F5BE5263A5 /* HistoryListView.swift */; };
+		812C944714CE45BDA5A7BAA8 /* HomeCastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402DA77DEDB4763BB3D444C /* HomeCastView.swift */; };
+		D87D0613D5BD480CBA5E43FF /* InterpretationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DD4F1E5FCC541CEB9156B5B /* InterpretationView.swift */; };
+		ED8F42E18EEC4689B78AFB17 /* PalaceGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B1A560D8337443286984C0C /* PalaceGridView.swift */; };
+		FA6EF791F40943FA88090194 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0A0F36441B432091E7BC30 /* RootTabView.swift */; };
+		D2F11DEEB1824CE891788534 /* PlateEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C78A3933BE0D476F9D6822AE /* PlateEngineTests.swift */; };
+		CF2FB88DFC0B486CB6F7199E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B3E19CF68A349A08AB2ABCE /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		F23058E68D2546398268CA54 /* QimenDunjiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QimenDunjiaApp.swift; sourceTree = "<group>"; };
+		F2ADA36E1B1D4F978C35FE4F /* GanzhiCalendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GanzhiCalendar.swift; sourceTree = "<group>"; };
+		689DC052991D45AE88AECB62 /* InterpretationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpretationEngine.swift; sourceTree = "<group>"; };
+		1256A85F60284C708ED64C9B /* JuResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JuResolver.swift; sourceTree = "<group>"; };
+		E6B2A2D9566F480B88570337 /* QimenEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QimenEngine.swift; sourceTree = "<group>"; };
+		AE56254F172E499C8786244C /* SolarTerms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarTerms.swift; sourceTree = "<group>"; };
+		595BEA514A2C447FB132AB1F /* ChartModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartModels.swift; sourceTree = "<group>"; };
+		2B2DB966AA3E4577B2167844 /* HistoryRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryRecord.swift; sourceTree = "<group>"; };
+		F069D7496C9F43BF9F81739E /* Palace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Palace.swift; sourceTree = "<group>"; };
+		B061670C78094F3D9FE2E22B /* StemBranch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StemBranch.swift; sourceTree = "<group>"; };
+		C4414B51ABAC4F4F86C7F2D3 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		E6E70F2BFB1042B0B5BCEC26 /* ChartDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDetailView.swift; sourceTree = "<group>"; };
+		8CAA173107C847F5BE5263A5 /* HistoryListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryListView.swift; sourceTree = "<group>"; };
+		9402DA77DEDB4763BB3D444C /* HomeCastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeCastView.swift; sourceTree = "<group>"; };
+		3DD4F1E5FCC541CEB9156B5B /* InterpretationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpretationView.swift; sourceTree = "<group>"; };
+		5B1A560D8337443286984C0C /* PalaceGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PalaceGridView.swift; sourceTree = "<group>"; };
+		2C0A0F36441B432091E7BC30 /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		C78A3933BE0D476F9D6822AE /* PlateEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlateEngineTests.swift; sourceTree = "<group>"; };
+		2B3E19CF68A349A08AB2ABCE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F4E9504762184D2F996ABB5B /* QimenDunjia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QimenDunjia.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		452A40367C14416F88D91A8E /* QimenDunjiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QimenDunjiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A7D958B9409F4B01AA00FE3B /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3C3B7D97F48740268AB71571 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		42220C293C4942DC8D5A52E0 = {
+			isa = PBXGroup;
+			children = (
+				EAA310323BB74B3A9390DDB0 /* QimenDunjia */,
+				36A25019E2214D758EB97DCF /* QimenDunjiaTests */,
+				1D7710C4D9904DD697AC48F2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		1D7710C4D9904DD697AC48F2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F4E9504762184D2F996ABB5B /* QimenDunjia.app */,
+				452A40367C14416F88D91A8E /* QimenDunjiaTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EAA310323BB74B3A9390DDB0 /* QimenDunjia */ = {
+			isa = PBXGroup;
+			children = (
+				F23058E68D2546398268CA54 /* QimenDunjiaApp.swift */,
+				F1D5D6CAB75C4067B2B37440 /* Engine */,
+				433BCA6D91894B5A94FE24DE /* Models */,
+				2BBDA56B5F2D44D384777B69 /* Theme */,
+				DA75333D240C44C89368E4F1 /* Views */,
+				2B3E19CF68A349A08AB2ABCE /* Assets.xcassets */,
+			);
+			path = QimenDunjia;
+			sourceTree = "<group>";
+		};
+		F1D5D6CAB75C4067B2B37440 /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				F2ADA36E1B1D4F978C35FE4F /* GanzhiCalendar.swift */,
+				689DC052991D45AE88AECB62 /* InterpretationEngine.swift */,
+				1256A85F60284C708ED64C9B /* JuResolver.swift */,
+				E6B2A2D9566F480B88570337 /* QimenEngine.swift */,
+				AE56254F172E499C8786244C /* SolarTerms.swift */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
+		433BCA6D91894B5A94FE24DE /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				595BEA514A2C447FB132AB1F /* ChartModels.swift */,
+				2B2DB966AA3E4577B2167844 /* HistoryRecord.swift */,
+				F069D7496C9F43BF9F81739E /* Palace.swift */,
+				B061670C78094F3D9FE2E22B /* StemBranch.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		2BBDA56B5F2D44D384777B69 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				C4414B51ABAC4F4F86C7F2D3 /* AppTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		DA75333D240C44C89368E4F1 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				E6E70F2BFB1042B0B5BCEC26 /* ChartDetailView.swift */,
+				8CAA173107C847F5BE5263A5 /* HistoryListView.swift */,
+				9402DA77DEDB4763BB3D444C /* HomeCastView.swift */,
+				3DD4F1E5FCC541CEB9156B5B /* InterpretationView.swift */,
+				5B1A560D8337443286984C0C /* PalaceGridView.swift */,
+				2C0A0F36441B432091E7BC30 /* RootTabView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		36A25019E2214D758EB97DCF /* QimenDunjiaTests */ = {
+			isa = PBXGroup;
+			children = (
+				C78A3933BE0D476F9D6822AE /* PlateEngineTests.swift */,
+			);
+			path = QimenDunjiaTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		9BBF4819326C4664952BEF6F /* QimenDunjia */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF6284D7106C4E00A55EE9BB /* Build configuration list for PBXNativeTarget "QimenDunjia" */;
+			buildPhases = (
+				BE348B32E8254D73BBE0D8C6 /* Sources */,
+				A7D958B9409F4B01AA00FE3B /* Frameworks */,
+				BC3C6FA7211944CDAACF2638 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = QimenDunjia;
+			productName = QimenDunjia;
+			productReference = F4E9504762184D2F996ABB5B /* QimenDunjia.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FD524AA7BC214375BF7DCC0B /* QimenDunjiaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F1B4CEBC4DCC4526AC27F696 /* Build configuration list for PBXNativeTarget "QimenDunjiaTests" */;
+			buildPhases = (
+				7A80C8C4EC0E4D4DA0EB347B /* Sources */,
+				3C3B7D97F48740268AB71571 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = QimenDunjiaTests;
+			productName = QimenDunjiaTests;
+			productReference = 452A40367C14416F88D91A8E /* QimenDunjiaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		271DFD38F6F94DF49E593A2E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					9BBF4819326C4664952BEF6F = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					FD524AA7BC214375BF7DCC0B = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = 9BBF4819326C4664952BEF6F;
+					};
+				};
+			};
+			buildConfigurationList = 0EE7513A8E434C228BC1C9EA /* Build configuration list for PBXProject "QimenDunjia" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = 42220C293C4942DC8D5A52E0;
+			productRefGroup = 1D7710C4D9904DD697AC48F2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				9BBF4819326C4664952BEF6F /* QimenDunjia */,
+				FD524AA7BC214375BF7DCC0B /* QimenDunjiaTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BC3C6FA7211944CDAACF2638 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CF2FB88DFC0B486CB6F7199E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BE348B32E8254D73BBE0D8C6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7D41414B4AFA478B93449F6B /* QimenDunjiaApp.swift in Sources */,
+				875F1BCAC77A4F7B8C7ED423 /* GanzhiCalendar.swift in Sources */,
+				051FC04A388240DA9170C0A7 /* InterpretationEngine.swift in Sources */,
+				CA16B7784AAF4E2B9B6F3548 /* JuResolver.swift in Sources */,
+				C69D02318056488DA4B5CFAF /* QimenEngine.swift in Sources */,
+				E58CB631981C4003B6855523 /* SolarTerms.swift in Sources */,
+				332DF0B89B3E4E47B290D41A /* ChartModels.swift in Sources */,
+				BCC32FCE6C1341B183D4E9A7 /* HistoryRecord.swift in Sources */,
+				5DA0FEC2FB344B5796029A8F /* Palace.swift in Sources */,
+				947B675F5DB845149ECD3FEF /* StemBranch.swift in Sources */,
+				84C5330AE684426E9ECDC6C1 /* AppTheme.swift in Sources */,
+				8DB84DB68F344DF9BC546FD5 /* ChartDetailView.swift in Sources */,
+				D8D3125B93AB482887FFD676 /* HistoryListView.swift in Sources */,
+				812C944714CE45BDA5A7BAA8 /* HomeCastView.swift in Sources */,
+				D87D0613D5BD480CBA5E43FF /* InterpretationView.swift in Sources */,
+				ED8F42E18EEC4689B78AFB17 /* PalaceGridView.swift in Sources */,
+				FA6EF791F40943FA88090194 /* RootTabView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7A80C8C4EC0E4D4DA0EB347B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D2F11DEEB1824CE891788534 /* PlateEngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D4569B365613442FAEAC59D6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		90360A829ECA43C69F7332FC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		6FA17EB0B8D6461482B85614 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "奇门遁甲";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gglee.QimenDunjia;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		974A57856DE047D29DA07EFD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "奇门遁甲";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gglee.QimenDunjia;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		C543ECC0ECEA440D907B4BF1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gglee.QimenDunjiaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/QimenDunjia.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/QimenDunjia";
+			};
+			name = Debug;
+		};
+		20ACBA75C98841CCBAD00AED /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gglee.QimenDunjiaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/QimenDunjia.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/QimenDunjia";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0EE7513A8E434C228BC1C9EA /* Build configuration list for PBXProject "QimenDunjia" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D4569B365613442FAEAC59D6 /* Debug */,
+				90360A829ECA43C69F7332FC /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FF6284D7106C4E00A55EE9BB /* Build configuration list for PBXNativeTarget "QimenDunjia" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FA17EB0B8D6461482B85614 /* Debug */,
+				974A57856DE047D29DA07EFD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F1B4CEBC4DCC4526AC27F696 /* Build configuration list for PBXNativeTarget "QimenDunjiaTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C543ECC0ECEA440D907B4BF1 /* Debug */,
+				20ACBA75C98841CCBAD00AED /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 271DFD38F6F94DF49E593A2E /* Project object */;
+}
