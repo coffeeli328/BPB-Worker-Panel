@@ -55,9 +55,15 @@ enum QimenEngine {
         }
 
         let pillars = GanzhiCalendar.stemBranchFourPillars(for: solarAdj.date, timeZone: tz)
-        // 节气边界用民用绝对时刻（全球同一瞬间）
-        let term = SolarTerms.currentTerm(for: civil, timeZone: tz)
-        let juRes = JuResolver.resolve(day: pillars.day, solarTermName: term.name)
+        // 定局：拆补用「已交节气」；置闰用符头超神接气日程
+        let juRes = JuResolver.resolve(
+            day: pillars.day,
+            queryDate: civil,
+            timeZone: tz,
+            method: request.juMethod
+        )
+        let termInstant = juRes.solarTermInstant
+            ?? SolarTerms.currentTerm(for: civil, timeZone: tz).approximateDate
 
         let plate = buildPlate(
             isYangDun: juRes.isYangDun,
@@ -112,7 +118,10 @@ enum QimenEngine {
             juNumber: juRes.juNumber,
             solarTermName: juRes.solarTermName,
             yuanName: juRes.yuanName,
-            solarTermInstant: term.approximateDate,
+            juMethod: juRes.juMethod,
+            juPhase: juRes.phase,
+            isRunQi: juRes.isRunQi,
+            solarTermInstant: termInstant,
             zhiFuStar: plate.zhiFuStar,
             zhiShiGate: plate.zhiShiGate,
             zhiFuPalace: plate.zhiFuPalace,

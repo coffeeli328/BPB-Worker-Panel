@@ -98,10 +98,23 @@ struct HomeCastView: View {
                     .padding(.bottom, 22)
 
                     sectionLabel("起局")
-                    Text(request.method.rawValue)
-                        .font(.system(size: 16, weight: .medium, design: .serif))
-                        .foregroundStyle(AppTheme.ink)
-                        .padding(.bottom, 20)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(request.method.rawValue)
+                            .font(.system(size: 16, weight: .medium, design: .serif))
+                            .foregroundStyle(AppTheme.ink)
+
+                        Picker("定局", selection: $request.juMethod) {
+                            ForEach(JuMethod.allCases) { m in
+                                Text(m.rawValue).tag(m)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+
+                        Text(request.juMethod.detail)
+                            .font(.caption)
+                            .foregroundStyle(AppTheme.muted)
+                    }
+                    .padding(.bottom, 20)
 
                     Button {
                         castChart()

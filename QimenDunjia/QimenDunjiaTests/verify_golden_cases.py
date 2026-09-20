@@ -266,6 +266,144 @@ def test_timezone_meridian():
     assert_eq("utc9", 9 * 15, 135)
 
 
+# --- 置闰 (ZhiYun) schedule mirror ---
+TERM_JU = {
+    "冬至": (True, [1, 7, 4]), "惊蛰": (True, [1, 7, 4]), "小寒": (True, [2, 8, 5]),
+    "大寒": (True, [3, 9, 6]), "春分": (True, [3, 9, 6]), "立春": (True, [8, 5, 2]),
+    "雨水": (True, [9, 6, 3]), "清明": (True, [4, 1, 7]), "立夏": (True, [4, 1, 7]),
+    "谷雨": (True, [5, 2, 8]), "小满": (True, [5, 2, 8]), "芒种": (True, [6, 3, 9]),
+    "夏至": (False, [9, 3, 6]), "白露": (False, [9, 3, 6]), "小暑": (False, [8, 2, 5]),
+    "大暑": (False, [7, 1, 4]), "秋分": (False, [7, 1, 4]), "立秋": (False, [2, 5, 8]),
+    "处暑": (False, [1, 4, 7]), "寒露": (False, [6, 9, 3]), "立冬": (False, [6, 9, 3]),
+    "霜降": (False, [5, 8, 2]), "小雪": (False, [5, 8, 2]), "大雪": (False, [4, 7, 1]),
+}
+
+
+def _jd_to_date(jd):
+    import datetime as _dt
+    Z = int(math.floor(jd + 0.5))
+    F = jd + 0.5 - Z
+    if Z < 2299161:
+        A = Z
+    else:
+        alpha = int((Z - 1867216.25) / 36524.25)
+        A = Z + 1 + alpha - alpha // 4
+    B = A + 1524
+    C = int((B - 122.1) / 365.25)
+    D = int(365.25 * C)
+    E = int((B - D) / 30.6001)
+    day = B - D - int(30.6001 * E) + F
+    month = E - 1 if E < 14 else E - 13
+    year = C - 4716 if month > 2 else C - 4715
+    day_i = int(day)
+    frac = day - day_i
+    hours = frac * 24
+    h = int(hours)
+    minutes = (hours - h) * 60
+    mi = int(minutes)
+    sec = (minutes - mi) * 60
+    return _dt.datetime(year, month, day_i, h, mi, int(sec), tzinfo=_dt.timezone.utc)
+
+
+def _day_sb(y, m, d):
+    jd = jd_ut_ymd(y, m, d, 12)
+    idx = ((10 + int(math.floor(jd - 2415021.0))) % 60 + 60) % 60
+    return STEMS[idx % 10] + BRANCHES[idx % 12]
+
+
+def _build_zhiyun_slots(year):
+    import datetime as _dt
+    terms = []
+    for y in range(year - 1, year + 2):
+        for i, n in enumerate(NAMES):
+            terms.append((n, _jd_to_date(term_ut(y, i))))
+    terms.sort(key=lambda x: x[1])
+    heads = []
+    d = _dt.date(year - 1, 1, 1)
+    end = _dt.date(year + 2, 1, 1)
+    while d < end:
+        sb = _day_sb(d.year, d.month, d.day)
+        if sb[0] in "甲己":
+            heads.append((d, sb))
+        d += _dt.timedelta(days=1)
+    dz = next(i for i, t in enumerate(terms) if t[0] == "冬至")
+    shang = [(d, sb) for d, sb in heads if sb[1] in "子午卯酉"]
+    t0 = terms[dz][1]
+    best = None
+    for i, (d, _) in enumerate(shang):
+        if _dt.datetime(d.year, d.month, d.day, tzinfo=_dt.timezone.utc) <= t0:
+            best = i
+        else:
+            break
+    if best is None:
+        best = 0
+    target = shang[best][0]
+    cursor = next(i for i, (d, _) in enumerate(heads) if d == target)
+    slots = []
+    for tIdx in range(dz, len(terms)):
+        name, instant = terms[tIdx]
+        if cursor + 2 >= len(heads):
+            break
+        shang_start = heads[cursor][0]
+        for y in range(3):
+            start = heads[cursor + y][0]
+            end = heads[cursor + y + 1][0] if cursor + y + 1 < len(heads) else start + _dt.timedelta(days=5)
+            slots.append({"term": name, "yuan": y, "start": start, "end": end, "run": False})
+        cursor += 3
+        if name in ("芒种", "大雪"):
+            chao = (instant.date() - shang_start).days
+            if _dt.datetime(shang_start.year, shang_start.month, shang_start.day, tzinfo=_dt.timezone.utc) <= instant and chao >= 9:
+                for y in range(3):
+                    start = heads[cursor + y][0]
+                    end = heads[cursor + y + 1][0] if cursor + y + 1 < len(heads) else start + _dt.timedelta(days=5)
+                    slots.append({"term": name, "yuan": y, "start": start, "end": end, "run": True})
+                cursor += 3
+    return slots
+
+
+def _lookup(slots, d):
+    for s in slots:
+        if s["start"] <= d < s["end"]:
+            return s
+    return None
+
+
+def test_zhiyun_intercalation_2023_mangzhong():
+    """2023 芒种超神≥9 → 闰奇；6/8 落芒种闰奇上元阳6。"""
+    import datetime as _dt
+    slots = _build_zhiyun_slots(2023)
+    runs = [s for s in slots if s["run"] and s["term"] == "芒种"]
+    assert_eq("闰奇三段", len(runs), 3)
+    d = _dt.date(2023, 6, 8)
+    s = _lookup(slots, d)
+    assert_true("found", s is not None)
+    assert_eq("term", s["term"], "芒种")
+    assert_eq("run", s["run"], True)
+    assert_eq("yuan", s["yuan"], 0)
+    assert_eq("ju", TERM_JU["芒种"][1][s["yuan"]], 6)
+
+
+def test_zhiyun_diverges_from_chaibu_on_chaoshen():
+    """超神日：拆补仍用已交节气，置闰已用下节气局。"""
+    import datetime as _dt
+    slots = _build_zhiyun_slots(2023)
+    d = _dt.date(2023, 5, 1)  # 尚未交立夏，但置闰已入立夏段
+    s = _lookup(slots, d)
+    assert_eq("zhiyun term", s["term"], "立夏")
+    # chaibu would still be 谷雨 (立夏~5/6)
+    assert_true("chaibu would differ", s["term"] != "谷雨")
+
+
+def test_zhiyun_and_chaibu_often_agree_mid_term():
+    """非边界日两法可同局（春分中元附近）。"""
+    import datetime as _dt
+    slots = _build_zhiyun_slots(2024)
+    d = _dt.date(2024, 3, 25)
+    s = _lookup(slots, d)
+    assert_eq("term", s["term"], "春分")
+    assert_eq("ju", TERM_JU["春分"][1][s["yuan"]], 9)
+
+
 if __name__ == "__main__":
     test_plate_core()
     test_solar_terms_known_window()
@@ -274,4 +412,7 @@ if __name__ == "__main__":
     test_longitude_shifts_hour_branch()
     test_beijing_vs_meridian_small_shift()
     test_timezone_meridian()
-    print("ALL GOLDEN + ASTRONOMY CASES PASSED")
+    test_zhiyun_intercalation_2023_mangzhong()
+    test_zhiyun_diverges_from_chaibu_on_chaoshen()
+    test_zhiyun_and_chaibu_often_agree_mid_term()
+    print("ALL GOLDEN + ASTRONOMY + ZHIYUN CASES PASSED")

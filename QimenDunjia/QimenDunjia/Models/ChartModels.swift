@@ -51,6 +51,11 @@ struct QimenChart: Codable, Hashable, Identifiable {
     let juNumber: Int
     let solarTermName: String
     let yuanName: String
+    /// 定局口径
+    let juMethod: JuMethod
+    /// 置闰相位（拆补时为「正授」占位）
+    let juPhase: ZhiYunPhase
+    let isRunQi: Bool
     /// 当前节气交节绝对时刻
     let solarTermInstant: Date
     let zhiFuStar: NineStar
@@ -61,7 +66,10 @@ struct QimenChart: Codable, Hashable, Identifiable {
     let cells: [PalaceCell]
     let interpretations: [InterpretationItem]
 
-    var juTitle: String { "\(isYangDun ? "阳遁" : "阴遁")\(juNumber)局 · \(yuanName)" }
+    var juTitle: String {
+        let run = isRunQi ? "·闰奇" : ""
+        return "\(isYangDun ? "阳遁" : "阴遁")\(juNumber)局 · \(yuanName)\(run) · \(juMethod.rawValue)"
+    }
     var ganzhiLine: String {
         "\(yearSB.name)年 \(monthSB.name)月 \(daySB.name)日 \(hourSB.name)时"
     }
@@ -91,6 +99,8 @@ struct ChartRequest: Hashable {
     var date: Date = Date()
     var calendarMode: CalendarInputMode = .solar
     var method: QimenMethod = .shiJia
+    /// 定局口径：默认拆补
+    var juMethod: JuMethod = .chaiBu
     /// nil = 系统时区
     var timeZoneSecondsFromGMT: Int? = 8 * 3600
     var locationNote: String = "北京"
