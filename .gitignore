@@ -6,3 +6,6 @@
 !CDN优选域名V23.8.18(电脑win64).exe
 !docs/
 !location.json
+!QimenDunjia/
+!QimenDunjia/**
+!/.gitignore
