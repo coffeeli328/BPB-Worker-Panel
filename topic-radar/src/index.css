@@ -341,8 +341,24 @@ a {
   font-family: var(--font-display);
 }
 
-.source-list,
 .keyword-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.keyword-list li {
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(126, 208, 196, 0.22);
+  color: var(--sea);
+  font-size: 0.86rem;
+}
+
+.source-list {
   display: grid;
   gap: 0.65rem;
   margin: 0;
@@ -350,8 +366,7 @@ a {
   list-style: none;
 }
 
-.source-item,
-.keyword-list li {
+.source-item {
   display: flex;
   justify-content: space-between;
   gap: 0.75rem;
