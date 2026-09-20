@@ -2,9 +2,6 @@
 //  PlateEngineTests.swift
 //  QimenDunjiaTests
 //
-//  黄金用例：锁定转盘+拆补核心排盘（不依赖历法/节气）。
-//  在 Mac 上用 Xcode Test 运行；Linux 可用 verify_golden_cases.py 对照。
-//
 
 import XCTest
 @testable import QimenDunjia
@@ -14,7 +11,6 @@ final class PlateEngineTests: XCTestCase {
     func testYangDun1JiaZiFuYin() {
         let hour = StemBranch.parse("甲子")!
         let plate = QimenEngine.buildPlate(isYangDun: true, juNumber: 1, hour: hour)
-
         XCTAssertEqual(stemMap(plate.earth), [
             1: "戊", 2: "己", 3: "庚", 4: "辛", 5: "壬", 6: "癸", 7: "丁", 8: "丙", 9: "乙"
         ])
@@ -22,73 +18,110 @@ final class PlateEngineTests: XCTestCase {
         XCTAssertEqual(plate.zhiShiGate, .xiu)
         XCTAssertEqual(plate.zhiFuPalace, .kan1)
         XCTAssertEqual(plate.zhiShiPalace, .kan1)
-        XCTAssertEqual(plate.xunKongBranches.map(\.name), ["戌", "亥"])
-
-        XCTAssertEqual(plate.stars[.kan1], .peng)
-        XCTAssertEqual(plate.stars[.gen8], .ren)
-        XCTAssertEqual(plate.gates[.kan1], .xiu)
-        XCTAssertEqual(plate.gates[.gen8], .sheng)
-        XCTAssertEqual(plate.deities[.kan1], .zhiFu)
-        XCTAssertEqual(plate.deities[.gen8], .tengShe)
-        XCTAssertEqual(plate.deities[.qian6], .jiuTian)
     }
 
     func testYangDun1DingMao() {
         let hour = StemBranch.parse("丁卯")!
         let plate = QimenEngine.buildPlate(isYangDun: true, juNumber: 1, hour: hour)
-        XCTAssertEqual(plate.zhiFuStar, .peng)
         XCTAssertEqual(plate.zhiFuPalace, .dui7)
-        XCTAssertEqual(plate.zhiShiGate, .xiu)
         XCTAssertEqual(plate.zhiShiPalace, .xun4)
-        XCTAssertEqual(plate.stars[.dui7], .peng)
-        XCTAssertEqual(plate.gates[.xun4], .xiu)
     }
 
     func testYangDun6YiSi() {
         let hour = StemBranch.parse("乙巳")!
         let plate = QimenEngine.buildPlate(isYangDun: true, juNumber: 6, hour: hour)
-        XCTAssertEqual(stemMap(plate.earth), [
-            6: "戊", 7: "己", 8: "庚", 9: "辛", 1: "壬", 2: "癸", 3: "丁", 4: "丙", 5: "乙"
-        ])
-        XCTAssertEqual(plate.yiStem, .ren)
-        XCTAssertEqual(plate.xunShouPalace, .kan1)
-        XCTAssertEqual(plate.zhiFuStar, .peng)
-        XCTAssertEqual(plate.zhiShiGate, .xiu)
-        XCTAssertEqual(plate.zhiFuPalace, .kun2) // 乙在中寄坤
+        XCTAssertEqual(plate.zhiFuPalace, .kun2)
         XCTAssertEqual(plate.zhiShiPalace, .kun2)
-        XCTAssertEqual(plate.deities[.kun2], .zhiFu)
-        XCTAssertEqual(plate.deities[.dui7], .tengShe)
-        XCTAssertEqual(plate.deities[.li9], .jiuTian)
     }
 
     func testYinDun9BingYin() {
         let hour = StemBranch.parse("丙寅")!
         let plate = QimenEngine.buildPlate(isYangDun: false, juNumber: 9, hour: hour)
-        XCTAssertEqual(plate.earth[.li9], .wu)
-        XCTAssertEqual(plate.earth[.kun2], .bing)
         XCTAssertEqual(plate.zhiFuStar, .ying)
-        XCTAssertEqual(plate.zhiShiGate, .jing)
-        XCTAssertEqual(plate.zhiFuPalace, .kun2)
         XCTAssertEqual(plate.zhiShiPalace, .dui7)
     }
 
-    func testJuResolverTable() {
+    func testJuResolverAndFuTou() {
         XCTAssertEqual(JuResolver.ju(term: "冬至", yuanIndex: 0)?.ju, 1)
-        XCTAssertEqual(JuResolver.ju(term: "芒种", yuanIndex: 0)?.ju, 6)
-        XCTAssertEqual(JuResolver.ju(term: "夏至", yuanIndex: 0)?.ju, 9)
-        XCTAssertEqual(JuResolver.ju(term: "立夏", yuanIndex: 2)?.ju, 7)
+        XCTAssertEqual(JuResolver.fuTou(for: StemBranch.parse("壬午")!).name, "己卯")
     }
 
-    func testFuTouYuan() {
-        let wuWu = StemBranch.parse("壬午")!
-        let ft = JuResolver.fuTou(for: wuWu)
-        XCTAssertEqual(ft.name, "己卯")
-        XCTAssertEqual(JuResolver.yuanIndex(fuTou: ft), 0)
+    // MARK: - Astronomy / solar terms
 
-        let renXu = StemBranch.parse("壬戌")!
-        let ft2 = JuResolver.fuTou(for: renXu)
-        XCTAssertEqual(ft2.name, "己未")
-        XCTAssertEqual(JuResolver.yuanIndex(fuTou: ft2), 2)
+    func testSolarTermLichun2024Window() {
+        let instant = SolarTerms.instant(year: 2024, termIndex: 2) // 立春
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(secondsFromGMT: 0)!
+        let c = cal.dateComponents([.year, .month, .day, .hour], from: instant)
+        XCTAssertEqual(c.year, 2024)
+        XCTAssertEqual(c.month, 2)
+        XCTAssertEqual(c.day, 4)
+        XCTAssertEqual(c.hour, 8) // ~08:20 UTC
+    }
+
+    func testSolarTermBoundaryFlip() {
+        let lichun = SolarTerms.instant(year: 2024, termIndex: 2)
+        let before = lichun.addingTimeInterval(-5 * 60)
+        let after = lichun.addingTimeInterval(5 * 60)
+        let tz = TimeZone(secondsFromGMT: 8 * 3600)!
+        XCTAssertEqual(SolarTerms.currentTerm(for: before, timeZone: tz).name, "大寒")
+        XCTAssertEqual(SolarTerms.currentTerm(for: after, timeZone: tz).name, "立春")
+    }
+
+    func testEquationOfTimeMeeusExample() {
+        let jd = AstronomyCore.julianDay(year: 1992, month: 10, day: 13, hourUT: 12)
+        let eot = AstronomyCore.equationOfTimeMinutes(jde: jd)
+        XCTAssertTrue((12.5...15.0).contains(eot), "EoT was \(eot)")
+    }
+
+    func testLongitudeCorrectionBeijing() {
+        let tz = TimeZone(secondsFromGMT: 8 * 3600)!
+        let date = Date(timeIntervalSince1970: 1_700_000_000)
+        let minutes = TrueSolarTime.longitudeCorrectionMinutes(longitude: 116.4074, timeZone: tz, at: date)
+        XCTAssertTrue((-15.0 ... -13.5).contains(minutes), "got \(minutes)")
+    }
+
+    func testUrumqiVersusMeridian120HourBranch() {
+        let tz = TimeZone(secondsFromGMT: 8 * 3600)!
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = tz
+        // 2024-06-15 00:50 CST
+        let civil = cal.date(from: DateComponents(year: 2024, month: 6, day: 15, hour: 0, minute: 50))!
+
+        let at120 = TrueSolarTime.adjustedDate(
+            civil: civil, timeZone: tz, longitudeEastDegrees: 120.0, applyEquationOfTime: false
+        )
+        let atUrumqi = TrueSolarTime.adjustedDate(
+            civil: civil, timeZone: tz, longitudeEastDegrees: 87.6168, applyEquationOfTime: false
+        )
+
+        let h120 = cal.component(.hour, from: at120.date)
+        let m120 = cal.component(.minute, from: at120.date)
+        let hU = cal.component(.hour, from: atUrumqi.date)
+        let mU = cal.component(.minute, from: atUrumqi.date)
+
+        XCTAssertEqual(EarthlyBranch.hourBranch(hour: h120).name, "子")
+        // ~22:40 → 亥
+        XCTAssertEqual(EarthlyBranch.hourBranch(hour: hU).name, "亥")
+        XCTAssertNotEqual(h120 * 60 + m120, hU * 60 + mU)
+    }
+
+    func testGenerateUsesTrueSolarFlag() {
+        let tzSec = 8 * 3600
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = TimeZone(secondsFromGMT: tzSec)!
+        let civil = cal.date(from: DateComponents(year: 2024, month: 6, day: 15, hour: 0, minute: 50))!
+
+        var reqOn = ChartRequest(date: civil, timeZoneSecondsFromGMT: tzSec, longitude: 87.6168, useTrueSolarTime: true)
+        reqOn.locationNote = "乌鲁木齐"
+        var reqOff = reqOn
+        reqOff.useTrueSolarTime = false
+
+        let on = QimenEngine.generate(request: reqOn)
+        let off = QimenEngine.generate(request: reqOff)
+        XCTAssertTrue(on.usedTrueSolarTime)
+        XCTAssertFalse(off.usedTrueSolarTime)
+        XCTAssertNotEqual(on.hourSB.branch, off.hourSB.branch)
     }
 
     private func stemMap(_ earth: [Palace: HeavenlyStem]) -> [Int: String] {

@@ -26,6 +26,8 @@
 		FA6EF791F40943FA88090194 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C0A0F36441B432091E7BC30 /* RootTabView.swift */; };
 		D2F11DEEB1824CE891788534 /* PlateEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C78A3933BE0D476F9D6822AE /* PlateEngineTests.swift */; };
 		CF2FB88DFC0B486CB6F7199E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B3E19CF68A349A08AB2ABCE /* Assets.xcassets */; };
+		6E3DE3EE293B4FB4BE109FAA /* AstronomyCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0326CF2A920B4E3DBA178F13 /* AstronomyCore.swift */; };
+		75C479881A0F479887F46207 /* TrueSolarTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C3FF848F6E44EB8A6660B6 /* TrueSolarTime.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -50,6 +52,8 @@
 		2B3E19CF68A349A08AB2ABCE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F4E9504762184D2F996ABB5B /* QimenDunjia.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QimenDunjia.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		452A40367C14416F88D91A8E /* QimenDunjiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QimenDunjiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		0326CF2A920B4E3DBA178F13 /* AstronomyCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AstronomyCore.swift; sourceTree = "<group>"; };
+		52C3FF848F6E44EB8A6660B6 /* TrueSolarTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueSolarTime.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -109,6 +113,8 @@
 				1256A85F60284C708ED64C9B /* JuResolver.swift */,
 				E6B2A2D9566F480B88570337 /* QimenEngine.swift */,
 				AE56254F172E499C8786244C /* SolarTerms.swift */,
+				0326CF2A920B4E3DBA178F13 /* AstronomyCore.swift */,
+				52C3FF848F6E44EB8A6660B6 /* TrueSolarTime.swift */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -250,6 +256,8 @@
 				CA16B7784AAF4E2B9B6F3548 /* JuResolver.swift in Sources */,
 				C69D02318056488DA4B5CFAF /* QimenEngine.swift in Sources */,
 				E58CB631981C4003B6855523 /* SolarTerms.swift in Sources */,
+				75C479881A0F479887F46207 /* TrueSolarTime.swift in Sources */,
+				6E3DE3EE293B4FB4BE109FAA /* AstronomyCore.swift in Sources */,
 				332DF0B89B3E4E47B290D41A /* ChartModels.swift in Sources */,
 				BCC32FCE6C1341B183D4E9A7 /* HistoryRecord.swift in Sources */,
 				5DA0FEC2FB344B5796029A8F /* Palace.swift in Sources */,

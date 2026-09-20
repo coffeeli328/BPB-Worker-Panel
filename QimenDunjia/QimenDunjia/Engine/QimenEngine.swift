@@ -13,7 +13,8 @@
 //  6. 旬空：时辰所在旬之空亡地支
 //
 //  APPROXIMATE / AMBIGUITY：
-//  - 节气时刻用近似表（非寿星精密），边界日局数可能偏差
+//  - 节气：Meeus 低精度 + ΔT，1900–2100 残差通常数分钟（见 SolarTerms / AstronomyCore）
+//  - 真太阳时：经度+均时差；未计大气折射（见 TrueSolarTime）
 //  - 中五寄宫取坤二（常见现代口径）；部分流派阳遁寄艮
 //  - 年/月柱仅作展示，不影响时家局盘
 //
@@ -38,9 +39,24 @@ enum QimenEngine {
 
     static func generate(request: ChartRequest) -> QimenChart {
         let tz = resolvedTimeZone(request)
-        let queryDate = request.date
-        let pillars = GanzhiCalendar.stemBranchFourPillars(for: queryDate, timeZone: tz)
-        let term = SolarTerms.currentTerm(for: queryDate, timeZone: tz)
+        let civil = request.date
+
+        // 真太阳时：仅用于干支四柱（尤其时辰）；节气仍用绝对民用瞬间
+        let solarAdj: (date: Date, longitudeMinutes: Double, eotMinutes: Double, totalMinutes: Double)
+        if request.useTrueSolarTime {
+            solarAdj = TrueSolarTime.adjustedDate(
+                civil: civil,
+                timeZone: tz,
+                longitudeEastDegrees: request.longitude,
+                applyEquationOfTime: true
+            )
+        } else {
+            solarAdj = (civil, 0, 0, 0)
+        }
+
+        let pillars = GanzhiCalendar.stemBranchFourPillars(for: solarAdj.date, timeZone: tz)
+        // 节气边界用民用绝对时刻（全球同一瞬间）
+        let term = SolarTerms.currentTerm(for: civil, timeZone: tz)
         let juRes = JuResolver.resolve(day: pillars.day, solarTermName: term.name)
 
         let plate = buildPlate(
@@ -78,11 +94,16 @@ enum QimenEngine {
         return QimenChart(
             id: UUID(),
             createdAt: Date(),
-            queryDate: queryDate,
+            queryDate: civil,
+            trueSolarDate: solarAdj.date,
             calendarMode: request.calendarMode,
             timeZoneIdentifier: tz.identifier,
             method: request.method,
             locationNote: request.locationNote,
+            longitude: request.longitude,
+            usedTrueSolarTime: request.useTrueSolarTime,
+            longitudeCorrectionMinutes: solarAdj.longitudeMinutes,
+            equationOfTimeMinutes: solarAdj.eotMinutes,
             yearSB: pillars.year,
             monthSB: pillars.month,
             daySB: pillars.day,
@@ -91,6 +112,7 @@ enum QimenEngine {
             juNumber: juRes.juNumber,
             solarTermName: juRes.solarTermName,
             yuanName: juRes.yuanName,
+            solarTermInstant: term.approximateDate,
             zhiFuStar: plate.zhiFuStar,
             zhiShiGate: plate.zhiShiGate,
             zhiFuPalace: plate.zhiFuPalace,

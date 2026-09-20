@@ -19,6 +19,17 @@ struct ChartDetailView: View {
                         .foregroundStyle(AppTheme.muted)
                     Text(chart.ganzhiLine)
                         .font(.body.monospaced())
+                    if chart.usedTrueSolarTime {
+                        Text(String(
+                            format: "真太阳时 · %@ · 东经%.2f°（经度%+.1f分 均时差%+.1f分）",
+                            chart.locationNote,
+                            chart.longitude,
+                            chart.longitudeCorrectionMinutes,
+                            chart.equationOfTimeMinutes
+                        ))
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.muted)
+                    }
                     Text("值符 \(chart.zhiFuStar.name)（\(chart.zhiFuPalace.name)）· 值使 \(chart.zhiShiGate.displayName)（\(chart.zhiShiPalace.name)）")
                         .font(.subheadline)
                     Text("旬空 \(chart.xunKong.map(\.name).joined())")

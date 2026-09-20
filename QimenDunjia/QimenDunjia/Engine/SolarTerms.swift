@@ -2,9 +2,10 @@
 //  SolarTerms.swift
 //  QimenDunjia
 //
-//  二十四节气查找（定局用「当前已交节气」）。
-//  APPROXIMATE: 使用固定公历月日正午（目标时区），非天文精密时刻。
-//  边界日（节气交接前后数小时）局数可能与专业万年历不一致。
+//  二十四节气：Meeus 视黄经 + 牛顿求根，TT→UT（ΔT）。
+//  SOLID（相对旧「正午月日表」）：年相关交节时刻，可用于边界日定局。
+//  RESIDUAL: 低精度黄经式 + 近似 ΔT；1900–2100 相对精密历通常约数分钟。
+//            交节前后数分钟内与专业历书仍可能差一天定局（极罕见）。
 //
 
 import Foundation
@@ -12,7 +13,10 @@ import Foundation
 struct SolarTermInfo: Hashable {
     let name: String
     let index: Int
+    /// 交节绝对时刻（UT 对应的 Date）
     let approximateDate: Date
+    /// 目标视黄经（度）
+    let longitudeDegrees: Double
 }
 
 enum SolarTerms {
@@ -24,42 +28,49 @@ enum SolarTerms {
         "寒露", "霜降", "立冬", "小雪", "大雪", "冬至"
     ]
 
-    /// 近似月日（东八区常用平均）
-    private static let approxMonthDay: [(Int, Int)] = [
-        (1, 6), (1, 20), (2, 4), (2, 19), (3, 6), (3, 21),
-        (4, 5), (4, 20), (5, 6), (5, 21), (6, 6), (6, 21),
-        (7, 7), (7, 23), (8, 8), (8, 23), (9, 8), (9, 23),
-        (10, 8), (10, 23), (11, 7), (11, 22), (12, 7), (12, 22)
+    /// 各节气太阳视黄经（度）。小寒=285° … 冬至=270°。
+    static let longitudes: [Double] = [
+        285, 300, 315, 330, 345, 0,
+        15, 30, 45, 60, 75, 90,
+        105, 120, 135, 150, 165, 180,
+        195, 210, 225, 240, 255, 270
     ]
 
     static func currentTerm(for date: Date, timeZone: TimeZone) -> SolarTermInfo {
-        let terms = termsForNearbyYears(around: date, timeZone: timeZone)
+        _ = timeZone // 节气为全球同一瞬间；与时区无关，仅用于接口兼容
+        let terms = termsForNearbyYears(around: date)
         let past = terms.filter { $0.approximateDate <= date }
         return past.last ?? terms[0]
     }
 
-    static func termsForNearbyYears(around date: Date, timeZone: TimeZone) -> [SolarTermInfo] {
+    static func termsForNearbyYears(around date: Date) -> [SolarTermInfo] {
         var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = timeZone
+        cal.timeZone = TimeZone(secondsFromGMT: 0)!
         let year = cal.component(.year, from: date)
         var result: [SolarTermInfo] = []
         for y in (year - 1)...(year + 1) {
-            result.append(contentsOf: terms(forSolarYear: y, timeZone: timeZone))
+            result.append(contentsOf: terms(forSolarYear: y))
         }
         return result.sorted { $0.approximateDate < $1.approximateDate }
     }
 
-    static func terms(forSolarYear year: Int, timeZone: TimeZone) -> [SolarTermInfo] {
-        var cal = Calendar(identifier: .gregorian)
-        cal.timeZone = timeZone
-        return zip(names.indices, approxMonthDay).map { idx, md in
-            var comps = DateComponents()
-            comps.year = year
-            comps.month = md.0
-            comps.day = md.1
-            comps.hour = 12
-            let date = cal.date(from: comps) ?? Date()
-            return SolarTermInfo(name: names[idx], index: idx + 1, approximateDate: date)
+    /// 指定公历年的 24 节气（该年 1 月小寒 … 12 月冬至）。
+    static func terms(forSolarYear year: Int) -> [SolarTermInfo] {
+        zip(names.indices, longitudes).map { idx, lon in
+            let date = instant(year: year, termIndex: idx)
+            return SolarTermInfo(name: names[idx], index: idx + 1, approximateDate: date, longitudeDegrees: lon)
         }
+    }
+
+    /// 交节 UT Date。
+    static func instant(year: Int, termIndex: Int) -> Date {
+        let lon = longitudes[termIndex]
+        // 初值：年初 + 约 5+15.2×index 日
+        let guessDay = 5.0 + Double(termIndex) * 15.2184
+        let guessJD = AstronomyCore.julianDay(year: year, month: 1, day: 1, hourUT: 0) + guessDay
+        let jde = AstronomyCore.solveSolarLongitude(targetDegrees: lon, jdeGuess: guessJD)
+        let dt = AstronomyCore.deltaTSeconds(year: Double(year))
+        let jdUT = jde - dt / 86400.0
+        return AstronomyCore.date(fromJulianDayUT: jdUT)
     }
 }
