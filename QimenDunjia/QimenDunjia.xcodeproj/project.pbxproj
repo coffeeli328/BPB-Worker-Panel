@@ -28,6 +28,7 @@
 		CF2FB88DFC0B486CB6F7199E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2B3E19CF68A349A08AB2ABCE /* Assets.xcassets */; };
 		6E3DE3EE293B4FB4BE109FAA /* AstronomyCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0326CF2A920B4E3DBA178F13 /* AstronomyCore.swift */; };
 		75C479881A0F479887F46207 /* TrueSolarTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C3FF848F6E44EB8A6660B6 /* TrueSolarTime.swift */; };
+		4F29EF0A594E42F6A72EFA99 /* ZhiYunResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 898B76107F554E0EB947A037 /* ZhiYunResolver.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -54,6 +55,7 @@
 		452A40367C14416F88D91A8E /* QimenDunjiaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = QimenDunjiaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		0326CF2A920B4E3DBA178F13 /* AstronomyCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AstronomyCore.swift; sourceTree = "<group>"; };
 		52C3FF848F6E44EB8A6660B6 /* TrueSolarTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueSolarTime.swift; sourceTree = "<group>"; };
+		898B76107F554E0EB947A037 /* ZhiYunResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZhiYunResolver.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +117,7 @@
 				AE56254F172E499C8786244C /* SolarTerms.swift */,
 				0326CF2A920B4E3DBA178F13 /* AstronomyCore.swift */,
 				52C3FF848F6E44EB8A6660B6 /* TrueSolarTime.swift */,
+				898B76107F554E0EB947A037 /* ZhiYunResolver.swift */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -254,6 +257,7 @@
 				875F1BCAC77A4F7B8C7ED423 /* GanzhiCalendar.swift in Sources */,
 				051FC04A388240DA9170C0A7 /* InterpretationEngine.swift in Sources */,
 				CA16B7784AAF4E2B9B6F3548 /* JuResolver.swift in Sources */,
+				4F29EF0A594E42F6A72EFA99 /* ZhiYunResolver.swift in Sources */,
 				C69D02318056488DA4B5CFAF /* QimenEngine.swift in Sources */,
 				E58CB631981C4003B6855523 /* SolarTerms.swift in Sources */,
 				75C479881A0F479887F46207 /* TrueSolarTime.swift in Sources */,

@@ -2,14 +2,25 @@
 //  JuResolver.swift
 //  QimenDunjia
 //
-//  拆补法定局：符头定三元 + 节气定局数。
-//  口径来源（交叉对照）：
-//  - 主流时家奇门「转盘排宫 + 拆补定局」（如 DestinySeek 公开算法说明）
-//  - 常见定局歌「冬至惊蛰一七四…」
-//  CAVEAT: 不实现置闰法/超神接气；与置闰派软件局数可能不同。
+//  定局入口：默认拆补；可选置闰（见 ZhiYunResolver）。
+//  拆补口径：符头定三元 + 「当前已交节气」定局数歌。
 //
 
 import Foundation
+
+enum JuMethod: String, Codable, CaseIterable, Identifiable, Hashable {
+    case chaiBu = "拆补"
+    case zhiYun = "置闰"
+
+    var id: String { rawValue }
+
+    var detail: String {
+        switch self {
+        case .chaiBu: return "按交节时刻取本节气三元（默认）"
+        case .zhiYun: return "超神接气；芒种/大雪可闰奇"
+        }
+    }
+}
 
 struct JuResolution: Hashable {
     let isYangDun: Bool
@@ -18,16 +29,16 @@ struct JuResolution: Hashable {
     let yuanIndex: Int // 0上 1中 2下
     let solarTermName: String
     let fuTou: StemBranch
+    var juMethod: JuMethod = .chaiBu
+    var phase: ZhiYunPhase = .zhengShou
+    var isRunQi: Bool = false
+    var solarTermInstant: Date? = nil
 }
 
 enum JuResolver {
 
     /// 节气 → (阳?, 上中下元局数)
-    /// 歌诀（阳遁）：冬至惊蛰一七四；小寒二八五；大寒春分三九六；
-    /// 立春八五二；雨水九六三；清明立夏四一七；谷雨小满五二八；芒种六三九
-    /// 歌诀（阴遁）：夏至白露九三六；小暑八二五；大暑秋分七一四；
-    /// 立秋二五八；处暑一四七；寒露立冬六九三；霜降小雪五八二；大雪四七一
-    private static let termJu: [String: (isYang: Bool, jus: [Int])] = [
+    static let termJu: [String: (isYang: Bool, jus: [Int])] = [
         "冬至": (true, [1, 7, 4]), "惊蛰": (true, [1, 7, 4]),
         "小寒": (true, [2, 8, 5]),
         "大寒": (true, [3, 9, 6]), "春分": (true, [3, 9, 6]),
@@ -46,8 +57,11 @@ enum JuResolver {
         "大雪": (false, [4, 7, 1])
     ]
 
-    /// 由日柱找符头（向前取甲/己日），再定上中下元。
-    /// SOLID: 甲己为符头；子午卯酉上元、寅申巳亥中元、辰戌丑未下元。
+    static func termJuEntry(_ name: String) -> (isYang: Bool, jus: [Int]) {
+        let key = name.replacingOccurrences(of: "（闰）", with: "")
+        return termJu[key] ?? (true, [1, 7, 4])
+    }
+
     static func fuTou(for day: StemBranch) -> StemBranch {
         var idx = day.sexagenaryIndex
         for _ in 0..<10 {
@@ -70,22 +84,51 @@ enum JuResolver {
         ["上元", "中元", "下元"][max(0, min(2, index))]
     }
 
-    static func resolve(day: StemBranch, solarTermName: String) -> JuResolution {
+    /// 统一入口
+    static func resolve(
+        day: StemBranch,
+        queryDate: Date,
+        timeZone: TimeZone,
+        method: JuMethod
+    ) -> JuResolution {
+        switch method {
+        case .chaiBu:
+            let term = SolarTerms.currentTerm(for: queryDate, timeZone: timeZone)
+            var r = resolveChaibu(day: day, solarTermName: term.name)
+            r.juMethod = .chaiBu
+            r.solarTermInstant = term.approximateDate
+            r.phase = .zhengShou
+            r.isRunQi = false
+            return r
+        case .zhiYun:
+            return ZhiYunResolver.resolve(queryDate: queryDate, day: day, timeZone: timeZone)
+        }
+    }
+
+    /// 拆补：当前已交节气 + 符头三元
+    static func resolveChaibu(day: StemBranch, solarTermName: String) -> JuResolution {
         let ft = fuTou(for: day)
         let yi = yuanIndex(fuTou: ft)
-        let entry = termJu[solarTermName] ?? (true, [1, 7, 4])
-        let ju = entry.jus[yi]
+        let entry = termJuEntry(solarTermName)
         return JuResolution(
             isYangDun: entry.isYang,
-            juNumber: ju,
+            juNumber: entry.jus[yi],
             yuanName: yuanName(yi),
             yuanIndex: yi,
             solarTermName: solarTermName,
-            fuTou: ft
+            fuTou: ft,
+            juMethod: .chaiBu,
+            phase: .zhengShou,
+            isRunQi: false,
+            solarTermInstant: nil
         )
     }
 
-    /// 仅局数表查询（供测试）
+    /// 兼容旧测试 API
+    static func resolve(day: StemBranch, solarTermName: String) -> JuResolution {
+        resolveChaibu(day: day, solarTermName: solarTermName)
+    }
+
     static func ju(term: String, yuanIndex: Int) -> (isYang: Bool, ju: Int)? {
         guard let e = termJu[term], (0...2).contains(yuanIndex) else { return nil }
         return (e.isYang, e.jus[yuanIndex])

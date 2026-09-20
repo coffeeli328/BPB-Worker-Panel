@@ -47,7 +47,7 @@ struct ChartDetailView: View {
                 .font(AppTheme.headlineFont)
                 .foregroundStyle(AppTheme.ink)
 
-            Text("\(chart.solarTermName) · \(chart.yuanName) · \(chart.method.rawValue)")
+            Text("\(chart.solarTermName) · \(chart.yuanName) · \(chart.juMethod.rawValue) · \(chart.juPhase.rawValue)")
                 .font(.subheadline)
                 .foregroundStyle(AppTheme.muted)
 

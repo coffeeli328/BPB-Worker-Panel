@@ -124,6 +124,49 @@ final class PlateEngineTests: XCTestCase {
         XCTAssertNotEqual(on.hourSB.branch, off.hourSB.branch)
     }
 
+    // MARK: - 置闰
+
+    func testZhiYunIntercalationMangZhong2023() {
+        let tz = TimeZone(secondsFromGMT: 8 * 3600)!
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = tz
+        let day = cal.date(from: DateComponents(year: 2023, month: 6, day: 8, hour: 12))!
+        let sb = GanzhiCalendar.stemBranchFourPillars(for: day, timeZone: tz).day
+        let ju = ZhiYunResolver.resolve(queryDate: day, day: sb, timeZone: tz)
+        XCTAssertEqual(ju.juMethod, .zhiYun)
+        XCTAssertTrue(ju.isRunQi)
+        XCTAssertTrue(ju.solarTermName.contains("芒种"))
+        XCTAssertEqual(ju.yuanIndex, 0)
+        XCTAssertEqual(ju.juNumber, 6)
+        XCTAssertTrue(ju.isYangDun)
+        XCTAssertEqual(ju.phase, .runQi)
+    }
+
+    func testZhiYunDivergesFromChaibuOnChaoShen() {
+        let tz = TimeZone(secondsFromGMT: 8 * 3600)!
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = tz
+        let day = cal.date(from: DateComponents(year: 2023, month: 5, day: 1, hour: 12))!
+        let sb = GanzhiCalendar.stemBranchFourPillars(for: day, timeZone: tz).day
+        let chai = JuResolver.resolve(day: sb, queryDate: day, timeZone: tz, method: .chaiBu)
+        let zhi = JuResolver.resolve(day: sb, queryDate: day, timeZone: tz, method: .zhiYun)
+        XCTAssertEqual(chai.solarTermName, "谷雨")
+        XCTAssertTrue(zhi.solarTermName.contains("立夏"))
+        XCTAssertNotEqual(chai.juNumber, zhi.juNumber)
+    }
+
+    func testDefaultJuMethodIsChaibu() {
+        XCTAssertEqual(ChartRequest().juMethod, .chaiBu)
+        let tz = TimeZone(secondsFromGMT: 8 * 3600)!
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = tz
+        let day = cal.date(from: DateComponents(year: 2024, month: 3, day: 25, hour: 12))!
+        var req = ChartRequest(date: day, timeZoneSecondsFromGMT: 8 * 3600, useTrueSolarTime: false)
+        let chart = QimenEngine.generate(request: req)
+        XCTAssertEqual(chart.juMethod, .chaiBu)
+        XCTAssertEqual(chart.juNumber, 9) // 春分中元常见
+    }
+
     private func stemMap(_ earth: [Palace: HeavenlyStem]) -> [Int: String] {
         Dictionary(uniqueKeysWithValues: earth.map { ($0.key.rawValue, $0.value.name) })
     }
