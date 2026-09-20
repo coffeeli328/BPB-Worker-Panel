@@ -15,6 +15,11 @@ final class HistoryRecord {
     /// 所问之事（冗余便于列表；完整盘在 chartJSON）
     var question: String = ""
     var chartJSON: Data
+    /// 最近一次 AI 解读正文（可选；无 Key / 失败时为空）
+    var aiReadingText: String = ""
+    /// 与 question+盘面+model 对应的缓存键
+    var aiReadingCacheKey: String = ""
+    var aiReadingUpdatedAt: Date?
 
     init(chart: QimenChart) {
         self.id = chart.id
@@ -31,9 +36,18 @@ final class HistoryRecord {
         }
         let data = (try? JSONEncoder().encode(chart)) ?? Data()
         self.chartJSON = data
+        self.aiReadingText = ""
+        self.aiReadingCacheKey = ""
+        self.aiReadingUpdatedAt = nil
     }
 
     func decodedChart() -> QimenChart? {
         try? JSONDecoder().decode(QimenChart.self, from: chartJSON)
+    }
+
+    func saveAIReading(text: String, cacheKey: String) {
+        aiReadingText = text
+        aiReadingCacheKey = cacheKey
+        aiReadingUpdatedAt = Date()
     }
 }

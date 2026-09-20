@@ -188,6 +188,15 @@ struct HomeCastView: View {
                     Text("结果与所问之事一并写入本地历史。")
                         .font(.caption)
                         .foregroundStyle(AppTheme.muted)
+
+                    NavigationLink {
+                        SettingsView()
+                    } label: {
+                        Text("AI 解读设置（可选）")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(AppTheme.pine)
+                    }
+                    .padding(.top, 10)
                 }
                 .padding(20)
             }
