@@ -11,10 +11,21 @@ struct InterpretationView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("规则模板提示，仅供学习参考。")
-                    .font(.caption)
-                    .foregroundStyle(AppTheme.muted)
-                    .padding(.bottom, 16)
+                if chart.hasQuestion {
+                    Text("所问：\(chart.question)")
+                        .font(.system(size: 17, weight: .semibold, design: .serif))
+                        .foregroundStyle(AppTheme.ink)
+                        .padding(.bottom, 4)
+                    Text("事项：\(chart.questionTopic.rawValue) · 规则模板，仅供参考")
+                        .font(.caption)
+                        .foregroundStyle(AppTheme.muted)
+                        .padding(.bottom, 16)
+                } else {
+                    Text("尚未填写所问之事。请返回起局页填写后再排盘，以获得针对性解读。")
+                        .font(.subheadline)
+                        .foregroundStyle(AppTheme.cinnabar)
+                        .padding(.bottom, 16)
+                }
 
                 ForEach(chart.interpretations) { item in
                     HStack(alignment: .top, spacing: 12) {
@@ -49,7 +60,7 @@ struct InterpretationView: View {
             .padding(20)
         }
         .background(AppTheme.screenBackground)
-        .navigationTitle("简要解读")
+        .navigationTitle(chart.hasQuestion ? "问事解读" : "简要解读")
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -63,9 +74,9 @@ struct InterpretationView: View {
 
     private func toneLabel(_ tone: InterpretationItem.Tone) -> String {
         switch tone {
-        case .auspicious: return "较顺"
-        case .caution: return "宜慎"
-        case .neutral: return "概览"
+        case .auspicious: return "宜"
+        case .caution: return "慎"
+        case .neutral: return "述"
         }
     }
 }

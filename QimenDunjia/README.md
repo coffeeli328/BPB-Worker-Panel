@@ -33,7 +33,7 @@ git pull
    - 选择你的 **Team**（必填；仓库内为空）
    - 将 **Bundle ID** 从占位 `com.gglee.QimenDunjia` 改成**你的唯一 ID**
 3. 模拟器 iOS 17+ → **Product → Run**（⌘R）
-4. 自测：起局（拆补/置闰）→ 盘面 → 解读 → 历史
+4. 自测：起局填「所问之事」→ 盘面 → 问事解读（宫位/宜慎/结论）→ 历史
 
 显示名默认为 **奇门遁甲**。
 
@@ -70,7 +70,7 @@ python3 QimenDunjiaTests/verify_golden_cases.py
 
 | 路径 | 作用 |
 |------|------|
-| `Engine/` | 定局、排盘、天文、真太阳时、置闰 |
+| `Engine/` | 定局、排盘、天文、真太阳时、置闰、问事用神解读 |
 | `Views/` | 起局 / 盘面 / 解读 / 历史 |
 | `Assets.xcassets/AppIcon` | 1024 墨色九宫占位图标（可替换） |
 | `SIGNING.md` | 签名与上架清单 |

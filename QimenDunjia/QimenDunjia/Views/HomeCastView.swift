@@ -12,6 +12,7 @@ struct HomeCastView: View {
     @State private var path = NavigationPath()
     @State private var presetId: String = "beijing"
     @State private var isCasting = false
+    @State private var showQuestionHint = false
 
     private var tz: TimeZone {
         if let s = request.timeZoneSecondsFromGMT {
@@ -20,12 +21,61 @@ struct HomeCastView: View {
         return .current
     }
 
+    private var questionTrimmed: String {
+        request.question.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     brandHeader
                         .padding(.bottom, 24)
+
+                    sectionLabel("所问之事")
+                    VStack(alignment: .leading, spacing: 12) {
+                        TextField("必填：如求财、出行、婚姻、合作…", text: $request.question, axis: .vertical)
+                            .lineLimit(2...4)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.body)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(QuestionTopic.quickTags) { tag in
+                                    Button {
+                                        if request.question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                            request.question = tag.rawValue
+                                        } else if !request.question.contains(tag.rawValue) {
+                                            request.question += request.question.hasSuffix("、") ? tag.rawValue : "、\(tag.rawValue)"
+                                        }
+                                    } label: {
+                                        Text(tag.rawValue)
+                                            .font(.caption.weight(.medium))
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 6)
+                                            .background(AppTheme.wash)
+                                            .foregroundStyle(AppTheme.ink)
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 4)
+                                                    .stroke(AppTheme.line, lineWidth: 1)
+                                            )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+
+                        if showQuestionHint && questionTrimmed.isEmpty {
+                            Text("请先填写所问之事，解读才会针对该问题展开。")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.cinnabar)
+                        } else if !questionTrimmed.isEmpty {
+                            Text("将按「\(QuestionTopic.detect(from: questionTrimmed).rawValue)」用神侧重解读。")
+                                .font(.caption)
+                                .foregroundStyle(AppTheme.muted)
+                        }
+                    }
+                    .padding(.bottom, 22)
 
                     sectionLabel("时刻")
                     VStack(alignment: .leading, spacing: 14) {
@@ -135,7 +185,7 @@ struct HomeCastView: View {
                     .disabled(isCasting)
                     .padding(.bottom, 8)
 
-                    Text("结果将写入本地历史，可随时回看。")
+                    Text("结果与所问之事一并写入本地历史。")
                         .font(.caption)
                         .foregroundStyle(AppTheme.muted)
                 }
@@ -152,6 +202,9 @@ struct HomeCastView: View {
                     request.locationNote = p.name
                 }
             }
+            .onChange(of: request.question) { _, _ in
+                if !questionTrimmed.isEmpty { showQuestionHint = false }
+            }
         }
     }
 
@@ -160,7 +213,7 @@ struct HomeCastView: View {
             Text("奇门遁甲")
                 .font(AppTheme.titleFont)
                 .foregroundStyle(AppTheme.ink)
-            Text("时家 · 转盘 · 拆补定局")
+            Text("时家 · 转盘 · 问事解读")
                 .font(.system(size: 14, weight: .regular, design: .serif))
                 .foregroundStyle(AppTheme.muted)
         }
@@ -177,8 +230,11 @@ struct HomeCastView: View {
     }
 
     private func castChart() {
+        if questionTrimmed.isEmpty {
+            showQuestionHint = true
+            // 仍允许排盘，但解读会提示补问；强烈建议填写
+        }
         isCasting = true
-        // Brief feedback so CTA feels intentional; engine is sync/local.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
             let result = QimenEngine.generate(request: request)
             modelContext.insert(HistoryRecord(chart: result))

@@ -17,7 +17,7 @@ struct ChartDetailView: View {
                     InterpretationView(chart: chart)
                 } label: {
                     HStack {
-                        Text("简要解读")
+                        Text(chart.hasQuestion ? "针对所问解读" : "简要解读")
                             .font(.system(size: 16, weight: .semibold, design: .serif))
                         Spacer()
                         Image(systemName: "chevron.right")
@@ -55,6 +55,19 @@ struct ChartDetailView: View {
                 .font(.system(.body, design: .serif))
                 .foregroundStyle(AppTheme.ink)
                 .padding(.top, 2)
+
+            if chart.hasQuestion {
+                Text("所问：\(chart.question)")
+                    .font(.system(size: 15, weight: .medium, design: .serif))
+                    .foregroundStyle(AppTheme.pine)
+                Text("用神侧重：\(chart.questionTopic.rawValue)")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.muted)
+            } else {
+                Text("未填写所问之事 — 解读将提醒补问")
+                    .font(.caption)
+                    .foregroundStyle(AppTheme.cinnabar)
+            }
 
             HStack(spacing: 16) {
                 labeled("值符", "\(chart.zhiFuStar.name)·\(chart.zhiFuPalace.name)")
