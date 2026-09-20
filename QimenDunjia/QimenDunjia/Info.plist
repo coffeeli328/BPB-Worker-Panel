@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Minimal Info.plist merged with GENERATE_INFOPLIST_FILE keys in the Xcode target.
+	  No location / camera / contacts usage — city presets are manual; do NOT add NSLocation* keys.
+	-->
+	<key>CFBundleDisplayName</key>
+	<string>奇门遁甲</string>
+	<key>CFBundleName</key>
+	<string>QimenDunjia</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+</dict>
+</plist>
