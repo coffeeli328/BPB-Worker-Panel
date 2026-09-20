@@ -10,6 +10,7 @@
 		7D41414B4AFA478B93449F6B /* QimenDunjiaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F23058E68D2546398268CA54 /* QimenDunjiaApp.swift */; };
 		875F1BCAC77A4F7B8C7ED423 /* GanzhiCalendar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2ADA36E1B1D4F978C35FE4F /* GanzhiCalendar.swift */; };
 		051FC04A388240DA9170C0A7 /* InterpretationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 689DC052991D45AE88AECB62 /* InterpretationEngine.swift */; };
+		A1B2C3D4E5F60718293A4B5C /* QuestionTopic.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F60718293A4B5C6D /* QuestionTopic.swift */; };
 		CA16B7784AAF4E2B9B6F3548 /* JuResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1256A85F60284C708ED64C9B /* JuResolver.swift */; };
 		C69D02318056488DA4B5CFAF /* QimenEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6B2A2D9566F480B88570337 /* QimenEngine.swift */; };
 		E58CB631981C4003B6855523 /* SolarTerms.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE56254F172E499C8786244C /* SolarTerms.swift */; };
@@ -35,6 +36,7 @@
 		F23058E68D2546398268CA54 /* QimenDunjiaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QimenDunjiaApp.swift; sourceTree = "<group>"; };
 		F2ADA36E1B1D4F978C35FE4F /* GanzhiCalendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GanzhiCalendar.swift; sourceTree = "<group>"; };
 		689DC052991D45AE88AECB62 /* InterpretationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterpretationEngine.swift; sourceTree = "<group>"; };
+		B2C3D4E5F60718293A4B5C6D /* QuestionTopic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionTopic.swift; sourceTree = "<group>"; };
 		1256A85F60284C708ED64C9B /* JuResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JuResolver.swift; sourceTree = "<group>"; };
 		E6B2A2D9566F480B88570337 /* QimenEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QimenEngine.swift; sourceTree = "<group>"; };
 		AE56254F172E499C8786244C /* SolarTerms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarTerms.swift; sourceTree = "<group>"; };
@@ -112,6 +114,7 @@
 			children = (
 				F2ADA36E1B1D4F978C35FE4F /* GanzhiCalendar.swift */,
 				689DC052991D45AE88AECB62 /* InterpretationEngine.swift */,
+				B2C3D4E5F60718293A4B5C6D /* QuestionTopic.swift */,
 				1256A85F60284C708ED64C9B /* JuResolver.swift */,
 				E6B2A2D9566F480B88570337 /* QimenEngine.swift */,
 				AE56254F172E499C8786244C /* SolarTerms.swift */,
@@ -256,6 +259,7 @@
 				7D41414B4AFA478B93449F6B /* QimenDunjiaApp.swift in Sources */,
 				875F1BCAC77A4F7B8C7ED423 /* GanzhiCalendar.swift in Sources */,
 				051FC04A388240DA9170C0A7 /* InterpretationEngine.swift in Sources */,
+				A1B2C3D4E5F60718293A4B5C /* QuestionTopic.swift in Sources */,
 				CA16B7784AAF4E2B9B6F3548 /* JuResolver.swift in Sources */,
 				4F29EF0A594E42F6A72EFA99 /* ZhiYunResolver.swift in Sources */,
 				C69D02318056488DA4B5CFAF /* QimenEngine.swift in Sources */,

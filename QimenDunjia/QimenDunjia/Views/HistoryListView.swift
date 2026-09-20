@@ -27,9 +27,19 @@ struct HistoryListView: View {
                                     ChartDetailView(chart: chart)
                                 } label: {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(chart.juTitle)
-                                            .font(.system(size: 16, weight: .medium, design: .serif))
-                                            .foregroundStyle(AppTheme.ink)
+                                        if !record.question.isEmpty {
+                                            Text(record.question)
+                                                .font(.system(size: 16, weight: .medium, design: .serif))
+                                                .foregroundStyle(AppTheme.ink)
+                                                .lineLimit(2)
+                                            Text(chart.juTitle)
+                                                .font(.subheadline)
+                                                .foregroundStyle(AppTheme.muted)
+                                        } else {
+                                            Text(chart.juTitle)
+                                                .font(.system(size: 16, weight: .medium, design: .serif))
+                                                .foregroundStyle(AppTheme.ink)
+                                        }
                                         Text("\(chart.hourSB.name)时 · \(chart.zhiFuStar.shortName)/\(chart.zhiShiGate.displayName)")
                                             .font(.subheadline)
                                             .foregroundStyle(AppTheme.muted)

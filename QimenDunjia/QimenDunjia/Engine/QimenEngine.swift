@@ -85,7 +85,10 @@ enum QimenEngine {
             )
         }
 
+        let question = request.question.trimmingCharacters(in: .whitespacesAndNewlines)
+        let topic = QuestionTopic.detect(from: question)
         let interpretations = InterpretationEngine.build(
+            question: question,
             isYang: juRes.isYangDun,
             ju: juRes.juNumber,
             zhiFu: plate.zhiFuStar,
@@ -94,7 +97,8 @@ enum QimenEngine {
             zhiShiPalace: plate.zhiShiPalace,
             cells: cells,
             hour: pillars.hour,
-            xunKong: plate.xunKongBranches
+            xunKong: plate.xunKongBranches,
+            isYangDun: juRes.isYangDun
         )
 
         return QimenChart(
@@ -128,6 +132,8 @@ enum QimenEngine {
             zhiShiPalace: plate.zhiShiPalace,
             xunKong: plate.xunKongBranches,
             cells: cells,
+            question: question,
+            questionTopic: topic,
             interpretations: interpretations
         )
     }

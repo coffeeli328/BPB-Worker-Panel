@@ -167,6 +167,91 @@ final class PlateEngineTests: XCTestCase {
         XCTAssertEqual(chart.juNumber, 9) // 春分中元常见
     }
 
+    // MARK: - 所问之事 / 用神解读
+
+    func testQuestionTopicDetectKeywords() {
+        XCTAssertEqual(QuestionTopic.detect(from: "求财投资"), .wealth)
+        XCTAssertEqual(QuestionTopic.detect(from: "下周出差行程"), .travel)
+        XCTAssertEqual(QuestionTopic.detect(from: "婚姻感情"), .marriage)
+        XCTAssertEqual(QuestionTopic.detect(from: "官司诉讼"), .lawsuit)
+        XCTAssertEqual(QuestionTopic.detect(from: "身体康复"), .health)
+        XCTAssertEqual(QuestionTopic.detect(from: "合伙签约"), .partnership)
+        XCTAssertEqual(QuestionTopic.detect(from: "求职面试"), .career)
+        XCTAssertEqual(QuestionTopic.detect(from: "丢失手机寻找"), .lost)
+        XCTAssertEqual(QuestionTopic.detect(from: ""), .general)
+        XCTAssertEqual(QuestionTopic.detect(from: "随便问问"), .general)
+    }
+
+    func testYongShenWealthPrefersShengJingKai() {
+        let hour = StemBranch.parse("甲子")!
+        let plate = QimenEngine.buildPlate(isYangDun: true, juNumber: 1, hour: hour)
+        let cells = Palace.allCases.map { p in
+            PalaceCell(
+                palace: p,
+                earthStem: plate.earth[p],
+                heavenStem: plate.heaven[p],
+                star: plate.stars[p],
+                gate: plate.gates[p],
+                deity: plate.deities[p],
+                isEmpty: plate.xunKongPalaces.contains(p),
+                isZhiFu: p == plate.zhiFuPalace,
+                isZhiShi: p == plate.zhiShiPalace
+            )
+        }
+        let focus = YongShenMapping.focus(for: .wealth, cells: cells)
+        XCTAssertEqual(focus.preferredGates, [.sheng, .jing, .kai])
+        XCTAssertFalse(focus.palaces.isEmpty)
+    }
+
+    func testInterpretationEmptyQuestionPromptsFill() {
+        let hour = StemBranch.parse("甲子")!
+        let plate = QimenEngine.buildPlate(isYangDun: true, juNumber: 1, hour: hour)
+        let cells = Palace.allCases.map { p in
+            PalaceCell(
+                palace: p,
+                earthStem: plate.earth[p],
+                heavenStem: plate.heaven[p],
+                star: plate.stars[p],
+                gate: plate.gates[p],
+                deity: plate.deities[p],
+                isEmpty: plate.xunKongPalaces.contains(p),
+                isZhiFu: p == plate.zhiFuPalace,
+                isZhiShi: p == plate.zhiShiPalace
+            )
+        }
+        let items = InterpretationEngine.build(
+            question: "",
+            isYang: true,
+            ju: 1,
+            zhiFu: plate.zhiFuStar,
+            zhiShi: plate.zhiShiGate,
+            zhiFuPalace: plate.zhiFuPalace,
+            zhiShiPalace: plate.zhiShiPalace,
+            cells: cells,
+            hour: hour,
+            xunKong: plate.xunKongBranches,
+            isYangDun: true
+        )
+        XCTAssertTrue(items.contains { $0.title.contains("请先填写") })
+        XCTAssertFalse(items.contains { $0.title == "宜" })
+    }
+
+    func testInterpretationWithQuestionHasTargetedSections() {
+        var req = ChartRequest()
+        req.question = "求财买卖"
+        req.useTrueSolarTime = false
+        let chart = QimenEngine.generate(request: req)
+        XCTAssertEqual(chart.questionTopic, .wealth)
+        XCTAssertEqual(chart.question, "求财买卖")
+        let titles = chart.interpretations.map(\.title)
+        XCTAssertTrue(titles.contains("所问之事"))
+        XCTAssertTrue(titles.contains("与所问相关的宫位要点"))
+        XCTAssertTrue(titles.contains("宜"))
+        XCTAssertTrue(titles.contains("慎"))
+        XCTAssertTrue(titles.contains("结合问题的一句话结论"))
+        XCTAssertTrue(chart.interpretations.contains { $0.detail.contains("仅供") || $0.title == "声明" })
+    }
+
     private func stemMap(_ earth: [Palace: HeavenlyStem]) -> [Int: String] {
         Dictionary(uniqueKeysWithValues: earth.map { ($0.key.rawValue, $0.value.name) })
     }

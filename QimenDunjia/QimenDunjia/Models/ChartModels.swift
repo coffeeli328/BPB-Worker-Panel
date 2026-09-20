@@ -64,6 +64,9 @@ struct QimenChart: Codable, Hashable, Identifiable {
     let zhiShiPalace: Palace
     let xunKong: [EarthlyBranch]
     let cells: [PalaceCell]
+    /// 所问之事（解读用神依据）
+    let question: String
+    let questionTopic: QuestionTopic
     let interpretations: [InterpretationItem]
 
     var juTitle: String {
@@ -72,6 +75,10 @@ struct QimenChart: Codable, Hashable, Identifiable {
     }
     var ganzhiLine: String {
         "\(yearSB.name)年 \(monthSB.name)月 \(daySB.name)日 \(hourSB.name)时"
+    }
+
+    var hasQuestion: Bool {
+        !question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     func cell(for palace: Palace) -> PalaceCell? {
@@ -108,4 +115,6 @@ struct ChartRequest: Hashable {
     var longitude: Double = 116.4074
     /// 是否用真太阳时排时柱/日柱换日
     var useTrueSolarTime: Bool = true
+    /// 所问之事（强烈建议填写）
+    var question: String = ""
 }
