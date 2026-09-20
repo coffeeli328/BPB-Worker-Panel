@@ -30,6 +30,11 @@
 		6E3DE3EE293B4FB4BE109FAA /* AstronomyCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0326CF2A920B4E3DBA178F13 /* AstronomyCore.swift */; };
 		75C479881A0F479887F46207 /* TrueSolarTime.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C3FF848F6E44EB8A6660B6 /* TrueSolarTime.swift */; };
 		4F29EF0A594E42F6A72EFA99 /* ZhiYunResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 898B76107F554E0EB947A037 /* ZhiYunResolver.swift */; };
+		A11B22C33D44E55F66778801 /* AISettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B22C33D44E55F66778811 /* AISettingsStore.swift */; };
+		A11B22C33D44E55F66778802 /* AIInterpretationPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B22C33D44E55F66778812 /* AIInterpretationPrompt.swift */; };
+		A11B22C33D44E55F66778803 /* AIInterpretationClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B22C33D44E55F66778813 /* AIInterpretationClient.swift */; };
+		A11B22C33D44E55F66778804 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B22C33D44E55F66778814 /* KeychainStore.swift */; };
+		A11B22C33D44E55F66778805 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11B22C33D44E55F66778815 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,6 +63,11 @@
 		0326CF2A920B4E3DBA178F13 /* AstronomyCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AstronomyCore.swift; sourceTree = "<group>"; };
 		52C3FF848F6E44EB8A6660B6 /* TrueSolarTime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrueSolarTime.swift; sourceTree = "<group>"; };
 		898B76107F554E0EB947A037 /* ZhiYunResolver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZhiYunResolver.swift; sourceTree = "<group>"; };
+		A11B22C33D44E55F66778811 /* AISettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISettingsStore.swift; sourceTree = "<group>"; };
+		A11B22C33D44E55F66778812 /* AIInterpretationPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIInterpretationPrompt.swift; sourceTree = "<group>"; };
+		A11B22C33D44E55F66778813 /* AIInterpretationClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIInterpretationClient.swift; sourceTree = "<group>"; };
+		A11B22C33D44E55F66778814 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		A11B22C33D44E55F66778815 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -102,6 +112,7 @@
 				F23058E68D2546398268CA54 /* QimenDunjiaApp.swift */,
 				F1D5D6CAB75C4067B2B37440 /* Engine */,
 				433BCA6D91894B5A94FE24DE /* Models */,
+				A11B22C33D44E55F66778820 /* Services */,
 				2BBDA56B5F2D44D384777B69 /* Theme */,
 				DA75333D240C44C89368E4F1 /* Views */,
 				2B3E19CF68A349A08AB2ABCE /* Assets.xcassets */,
@@ -151,10 +162,22 @@
 				8CAA173107C847F5BE5263A5 /* HistoryListView.swift */,
 				9402DA77DEDB4763BB3D444C /* HomeCastView.swift */,
 				3DD4F1E5FCC541CEB9156B5B /* InterpretationView.swift */,
+				A11B22C33D44E55F66778815 /* SettingsView.swift */,
 				5B1A560D8337443286984C0C /* PalaceGridView.swift */,
 				2C0A0F36441B432091E7BC30 /* RootTabView.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		A11B22C33D44E55F66778820 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				A11B22C33D44E55F66778811 /* AISettingsStore.swift */,
+				A11B22C33D44E55F66778812 /* AIInterpretationPrompt.swift */,
+				A11B22C33D44E55F66778813 /* AIInterpretationClient.swift */,
+				A11B22C33D44E55F66778814 /* KeychainStore.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 		36A25019E2214D758EB97DCF /* QimenDunjiaTests */ = {
@@ -277,6 +300,11 @@
 				D87D0613D5BD480CBA5E43FF /* InterpretationView.swift in Sources */,
 				ED8F42E18EEC4689B78AFB17 /* PalaceGridView.swift in Sources */,
 				FA6EF791F40943FA88090194 /* RootTabView.swift in Sources */,
+				A11B22C33D44E55F66778801 /* AISettingsStore.swift in Sources */,
+				A11B22C33D44E55F66778802 /* AIInterpretationPrompt.swift in Sources */,
+				A11B22C33D44E55F66778803 /* AIInterpretationClient.swift in Sources */,
+				A11B22C33D44E55F66778804 /* KeychainStore.swift in Sources */,
+				A11B22C33D44E55F66778805 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

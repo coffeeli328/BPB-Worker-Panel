@@ -252,6 +252,32 @@ final class PlateEngineTests: XCTestCase {
         XCTAssertTrue(chart.interpretations.contains { $0.detail.contains("仅供") || $0.title == "声明" })
     }
 
+    // MARK: - AI prompt / URL
+
+    func testAIChatURLNormalization() {
+        let a = AIInterpretationClient.normalizedChatURL(baseURL: "https://api.deepseek.com")
+        XCTAssertEqual(a?.absoluteString, "https://api.deepseek.com/v1/chat/completions")
+        let b = AIInterpretationClient.normalizedChatURL(baseURL: "https://api.openai.com/v1/")
+        XCTAssertEqual(b?.absoluteString, "https://api.openai.com/v1/chat/completions")
+        XCTAssertNil(AIInterpretationClient.normalizedChatURL(baseURL: "  "))
+    }
+
+    func testAIPromptContainsQuestionAndYongShen() {
+        var req = ChartRequest()
+        req.question = "求财买卖"
+        req.useTrueSolarTime = false
+        let chart = QimenEngine.generate(request: req)
+        let user = AIInterpretationPrompt.userPayload(chart: chart)
+        XCTAssertTrue(user.contains("求财买卖"))
+        XCTAssertFalse(user.contains("【总断】")) // 四段结构在 system prompt
+        XCTAssertTrue(user.contains("值符"))
+        XCTAssertTrue(user.contains("九宫"))
+        let key1 = AIInterpretationPrompt.cacheKey(chart: chart, model: "deepseek-chat")
+        let key2 = AIInterpretationPrompt.cacheKey(chart: chart, model: "gpt-4o-mini")
+        XCTAssertNotEqual(key1, key2)
+        XCTAssertTrue(key1.contains(chart.id.uuidString))
+    }
+
     private func stemMap(_ earth: [Palace: HeavenlyStem]) -> [Int: String] {
         Dictionary(uniqueKeysWithValues: earth.map { ($0.key.rawValue, $0.value.name) })
     }

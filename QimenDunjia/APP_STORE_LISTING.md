@@ -28,14 +28,17 @@
 • 定局：拆补法（默认）或置闰法（可选）
 • 盘面：九宫格展示天盘/地盘干、九星、八门、八神、值符值使、旬空
 • 问事解读：填写「所问之事」后，按用神宫位生成针对性规则模板（宜/慎/结论），仅供参考
+• 可选 AI 解读：在设置中自行填写 OpenAI 兼容 Base URL / 模型 / API Key；启用时盘面与所问会发往该第三方接口；未配置则仅用本机规则
 • 历史：排盘与所问之事保存在本机（SwiftData）
 
 【技术口径】
 • 排盘：时家奇门 · 转盘排宫
 • 节气与真太阳时：内置天文近似算法（存在数分钟量级残差，重要用事请与专业历书核对）
+• AI：可选、自备密钥；本应用不托管解读服务器
 
 【请注意】
 本应用提供排盘与学习辅助，不构成任何吉凶、运势或决策保证，亦非宗教或医疗建议。请理性使用。
+启用 AI 时，相关内容将离开本机发往你配置的服务商。
 
 无需账号、无广告追踪；不请求定位权限（地点用预设城市或手动经度）。
 ```
@@ -87,11 +90,11 @@ App Store 关键词用英文逗号分隔，总长 ≤100 字符（含逗号）�
 |----------|----------|------|
 | 联系信息 / 位置 / 健康 / 财务 / 敏感信息 | **不收集** | 无登录；不使用系统定位 API |
 | 使用数据 / 诊断 / 广告数据 | **不收集** | 无第三方追踪/广告（请确认你未额外接入） |
-| 用户内容（排盘历史） | **不收集到开发者服务器** | 仅存本机；不用于追踪 |
+| 用户内容（排盘历史） | **不收集到开发者服务器** | 默认仅存本机；**可选 AI 解读**时，用户主动触发会将所问与盘面发往其自配的第三方 API（非本开发者服务器） |
 
 **追踪（Tracking）：否** — 不跨 App/网站追踪用户。
 
-若日后加入 iCloud 同步或统计 SDK，须重新更新本表与隐私政策。
+若日后加入 iCloud 同步或统计 SDK，须重新更新本表与隐私政策。启用可选 AI 时，隐私政策应写明「用户自备 API、数据发往其配置的服务商」。
 
 ---
 
@@ -107,7 +110,8 @@ City list and manual longitude are used instead of GPS.
 Demo: open the app → set date/time → tap 起局排盘 → view the nine-palace chart.
 Optional: switch 定局 between 拆补 and 置闰 on the home screen.
 
-No login required. All history stays on device.
+No login required. Chart history stays on device by default.
+Optional AI reading: user pastes their own OpenAI-compatible API key in Settings; when used, question + chart leave the device to that third-party endpoint. The app hosts no AI backend.
 ```
 
 中文补充（可选）：
@@ -131,8 +135,9 @@ No login required. All history stays on device.
 
 1. 起局页 —「时刻 · 地点 · 拆补/置闰」  
 2. 九宫盘面 —「天盘地盘 · 星门神一层看清」  
-3. 问事解读 —「所问 + 用神宫位；规则模板，仅供学习」  
+3. 问事解读 —「规则 + 可选 AI；仅供学习」  
 4. 历史 —「问题与盘面留在本机」
+5. 设置 —「自备 API Key（可选）」
 
 ---
 
