@@ -138,5 +138,6 @@ No login required. All history stays on device.
 
 ## 相关文档
 
-- 工程签名与 Archive：`QimenDunjia/SIGNING.md`（仓库内）  
-- 产品计划：同目录 [`qimen-ios-plan.md`](./qimen-ios-plan.md)
+- 工程签名与 Archive：仓库内 [`SIGNING.md`](./SIGNING.md)  
+- 产品计划（Cursor Project Agent Store）：`docs/qimen-ios-plan.md`  
+- 本文 canonical 路径（Agent Store）：`docs/app-store-listing.md`
