@@ -10,45 +10,85 @@ struct ChartDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(chart.juTitle)
-                        .font(AppTheme.headlineFont)
-                    Text("\(chart.solarTermName) · \(chart.method.rawValue)")
-                        .font(.subheadline)
-                        .foregroundStyle(AppTheme.muted)
-                    Text(chart.ganzhiLine)
-                        .font(.body.monospaced())
-                    if chart.usedTrueSolarTime {
-                        Text(String(
-                            format: "真太阳时 · %@ · 东经%.2f°（经度%+.1f分 均时差%+.1f分）",
-                            chart.locationNote,
-                            chart.longitude,
-                            chart.longitudeCorrectionMinutes,
-                            chart.equationOfTimeMinutes
-                        ))
-                        .font(.caption)
-                        .foregroundStyle(AppTheme.muted)
-                    }
-                    Text("值符 \(chart.zhiFuStar.name)（\(chart.zhiFuPalace.name)）· 值使 \(chart.zhiShiGate.displayName)（\(chart.zhiShiPalace.name)）")
-                        .font(.subheadline)
-                    Text("旬空 \(chart.xunKong.map(\.name).joined())")
-                        .font(.caption)
-                        .foregroundStyle(AppTheme.muted)
-                }
-
+            VStack(alignment: .leading, spacing: 20) {
+                headerBlock
                 PalaceGridView(chart: chart)
-
-                NavigationLink("简要解读") {
+                NavigationLink {
                     InterpretationView(chart: chart)
+                } label: {
+                    HStack {
+                        Text("简要解读")
+                            .font(.system(size: 16, weight: .semibold, design: .serif))
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.semibold))
+                    }
+                    .foregroundStyle(AppTheme.cinnabar)
+                    .padding(.vertical, 12)
+                    .padding(.horizontal, 4)
+                    .overlay(alignment: .bottom) {
+                        Rectangle()
+                            .fill(AppTheme.line)
+                            .frame(height: 1)
+                    }
                 }
-                .font(.headline)
-                .foregroundStyle(AppTheme.cinnabar)
             }
-            .padding(16)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
         }
-        .background(AppTheme.paper.ignoresSafeArea())
+        .background(AppTheme.screenBackground)
         .navigationTitle("盘面")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var headerBlock: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(chart.juTitle)
+                .font(AppTheme.headlineFont)
+                .foregroundStyle(AppTheme.ink)
+
+            Text("\(chart.solarTermName) · \(chart.yuanName) · \(chart.method.rawValue)")
+                .font(.subheadline)
+                .foregroundStyle(AppTheme.muted)
+
+            Text(chart.ganzhiLine)
+                .font(.system(.body, design: .serif))
+                .foregroundStyle(AppTheme.ink)
+                .padding(.top, 2)
+
+            HStack(spacing: 16) {
+                labeled("值符", "\(chart.zhiFuStar.name)·\(chart.zhiFuPalace.name)")
+                labeled("值使", "\(chart.zhiShiGate.displayName)·\(chart.zhiShiPalace.name)")
+                labeled("旬空", chart.xunKong.map(\.name).joined())
+            }
+            .padding(.top, 4)
+
+            if chart.usedTrueSolarTime {
+                Text(String(
+                    format: "%@ · 东经%.2f° · 真太阳时（经度%+.1f分 均时差%+.1f分）",
+                    chart.locationNote,
+                    chart.longitude,
+                    chart.longitudeCorrectionMinutes,
+                    chart.equationOfTimeMinutes
+                ))
+                .font(.caption)
+                .foregroundStyle(AppTheme.muted)
+                .padding(.top, 2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func labeled(_ title: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(AppTheme.sectionFont)
+                .foregroundStyle(AppTheme.muted)
+            Text(value)
+                .font(.system(size: 14, weight: .medium, design: .serif))
+                .foregroundStyle(AppTheme.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
     }
 }

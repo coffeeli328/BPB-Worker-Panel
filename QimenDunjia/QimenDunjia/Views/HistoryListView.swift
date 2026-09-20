@@ -14,7 +14,11 @@ struct HistoryListView: View {
         NavigationStack {
             Group {
                 if records.isEmpty {
-                    ContentUnavailableView("暂无记录", systemImage: "clock", description: Text("起局后将自动保存在本地"))
+                    ContentUnavailableView {
+                        Label("暂无记录", systemImage: "clock")
+                    } description: {
+                        Text("在「起局」完成排盘后，记录会保存在本机。")
+                    }
                 } else {
                     List {
                         ForEach(records) { record in
@@ -23,21 +27,29 @@ struct HistoryListView: View {
                                     ChartDetailView(chart: chart)
                                 } label: {
                                     VStack(alignment: .leading, spacing: 4) {
-                                        Text(record.summary)
+                                        Text(chart.juTitle)
+                                            .font(.system(size: 16, weight: .medium, design: .serif))
+                                            .foregroundStyle(AppTheme.ink)
+                                        Text("\(chart.hourSB.name)时 · \(chart.zhiFuStar.shortName)/\(chart.zhiShiGate.displayName)")
+                                            .font(.subheadline)
+                                            .foregroundStyle(AppTheme.muted)
                                         Text(record.queryDate.formatted(date: .abbreviated, time: .shortened))
                                             .font(.caption)
-                                            .foregroundStyle(AppTheme.muted)
+                                            .foregroundStyle(AppTheme.muted.opacity(0.85))
                                     }
+                                    .padding(.vertical, 2)
                                 }
+                                .listRowBackground(AppTheme.paper.opacity(0.6))
                             }
                         }
                         .onDelete { indexSet in
                             for i in indexSet { modelContext.delete(records[i]) }
                         }
                     }
+                    .scrollContentBackground(.hidden)
                 }
             }
-            .background(AppTheme.paper)
+            .background(AppTheme.screenBackground)
             .navigationTitle("历史")
         }
     }
