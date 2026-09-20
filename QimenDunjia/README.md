@@ -4,6 +4,7 @@ SwiftUI 本地排盘 App：**时家奇门 · 转盘排宫 · 拆补定局（默�
 
 - **不含**飞盘法；**不请求定位**（城市预设 / 手动经度）
 - App Store / Archive 准备见下方与 [`SIGNING.md`](SIGNING.md)
+- App Store Connect 中文文案草稿：[`APP_STORE_LISTING.md`](APP_STORE_LISTING.md)
 
 ## 要求
 
@@ -72,9 +73,9 @@ python3 QimenDunjiaTests/verify_golden_cases.py
 | `Engine/` | 定局、排盘、天文、真太阳时、置闰 |
 | `Views/` | 起局 / 盘面 / 解读 / 历史 |
 | `Assets.xcassets/AppIcon` | 1024 墨色九宫占位图标（可替换） |
-| `Info.plist` | 显示名、出口合规声明；**无**定位隐私键 |
 | `SIGNING.md` | 签名与上架清单 |
-
+| `APP_STORE_LISTING.md` | App Store Connect 中文文案草稿 |
+| `Info.plist` | 显示名、出口合规声明；**无**定位隐私键 |
 ## 口径与残差
 
 见 Agent Store 计划 `docs/qimen-ios-plan.md`（拆补 / 置闰 SOLID vs APPROXIMATE）。
