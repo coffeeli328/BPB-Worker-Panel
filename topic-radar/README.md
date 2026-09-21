@@ -2,6 +2,10 @@
 
 把指定网站/RSS 上关于某个话题的内容，聚合成一条可浏览的情报流。
 
+> **iOS 版（主产品）** 见同仓库 [`TopicRadar/`](../TopicRadar/)：SwiftUI + SwiftData，本机采集，用 Xcode 打开即可运行。
+
+本目录是 **Web 参考实现**（Node + React），逻辑与 iOS 版对齐，方便在浏览器里快速验证源与关键词。
+
 预置示例话题：**温哥华房价**，默认源包括：
 
 - Google News（英文 / 中文检索）
