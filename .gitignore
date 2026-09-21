@@ -8,4 +8,8 @@
 !location.json
 !QimenDunjia/
 !QimenDunjia/**
+!topic-radar/
+!topic-radar/**
+!TopicRadar/
+!TopicRadar/**
 !/.gitignore
