@@ -1,0 +1,444 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C3507DDEEA5744ADA9D4BE65 /* BaZiYuCeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 734C5698F1984489A32BEA15 /* BaZiYuCeApp.swift */; };
+		92A4C0F0A49D4981ABB17770 /* BaZiSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F3A900492C454BBE41BB6E /* BaZiSession.swift */; };
+		00F4644C9BE246768B12928E /* StemBranch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504195A8CB2745A69AF6FE8C /* StemBranch.swift */; };
+		3C9BF44C312D42CFB293C529 /* BaZiModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C79DED418FEC41148CF6D4A8 /* BaZiModels.swift */; };
+		5B27408941B14BEAA1815E38 /* GanzhiCalendar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F829912F274E379994147B /* GanzhiCalendar.swift */; };
+		8BD6FF9AC1EA4AC089EA4C03 /* TenGods.swift in Sources */ = {isa = PBXBuildFile; fileRef = 605B7A025C04402E84D727EA /* TenGods.swift */; };
+		4D6F6358340645C98E8158F4 /* FiveElements.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B51F5069A6747B0AB2D2561 /* FiveElements.swift */; };
+		5A602FA424F1418286A1829F /* BranchRelations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DF70F735D0745DB9A73C689 /* BranchRelations.swift */; };
+		8032A8A82B234F4CAC994E1B /* BaZiEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 549C5413D7F74EE39D0148A1 /* BaZiEngine.swift */; };
+		5D2DF36A520345A9B02314B6 /* PredictionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6A6539F77664418A528DBC6 /* PredictionEngine.swift */; };
+		38624E59DEE24AC489E7859B /* AstronomyCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDF7A47B5BA149EE805F0A12 /* AstronomyCore.swift */; };
+		2D054FDD6B7543D4B68184A3 /* SolarTerms.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE3F6FE61B464D64939F0F49 /* SolarTerms.swift */; };
+		1F45A9EFCE244CB6BC44E81E /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7522BC67FA446C886997203 /* AppTheme.swift */; };
+		373BF8B4FAE64C97A12C5B46 /* RootTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BF3ECAA2FEF4933BA178E7C /* RootTabView.swift */; };
+		4277EF4D8C1F4546B576822D /* BirthInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99858C39DF4F425790B1AAAA /* BirthInputView.swift */; };
+		AA0F46E152504CA7B6DE2F10 /* ChartResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CED93E22A46C431D85867BD1 /* ChartResultView.swift */; };
+		E9981C07356641368FC718F3 /* PredictionHubView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 182EDF03FB0C41049CF7FA0D /* PredictionHubView.swift */; };
+		04939262A7B5464198D4DE01 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06F2B19C923D449B9205AD0B /* AboutView.swift */; };
+		295700B1B70C47719BFA3BDA /* BaZiEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7AC37E3E37433C83382034 /* BaZiEngineTests.swift */; };
+		822222564FC14C98B25791E5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5DDA167719264C4183029699 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		734C5698F1984489A32BEA15 /* BaZiYuCeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaZiYuCeApp.swift; sourceTree = "<group>"; };
+		61F3A900492C454BBE41BB6E /* BaZiSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaZiSession.swift; sourceTree = "<group>"; };
+		504195A8CB2745A69AF6FE8C /* StemBranch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StemBranch.swift; sourceTree = "<group>"; };
+		C79DED418FEC41148CF6D4A8 /* BaZiModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaZiModels.swift; sourceTree = "<group>"; };
+		83F829912F274E379994147B /* GanzhiCalendar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GanzhiCalendar.swift; sourceTree = "<group>"; };
+		605B7A025C04402E84D727EA /* TenGods.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TenGods.swift; sourceTree = "<group>"; };
+		7B51F5069A6747B0AB2D2561 /* FiveElements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FiveElements.swift; sourceTree = "<group>"; };
+		6DF70F735D0745DB9A73C689 /* BranchRelations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BranchRelations.swift; sourceTree = "<group>"; };
+		549C5413D7F74EE39D0148A1 /* BaZiEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaZiEngine.swift; sourceTree = "<group>"; };
+		B6A6539F77664418A528DBC6 /* PredictionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionEngine.swift; sourceTree = "<group>"; };
+		DDF7A47B5BA149EE805F0A12 /* AstronomyCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AstronomyCore.swift; sourceTree = "<group>"; };
+		EE3F6FE61B464D64939F0F49 /* SolarTerms.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SolarTerms.swift; sourceTree = "<group>"; };
+		D7522BC67FA446C886997203 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
+		0BF3ECAA2FEF4933BA178E7C /* RootTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootTabView.swift; sourceTree = "<group>"; };
+		99858C39DF4F425790B1AAAA /* BirthInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BirthInputView.swift; sourceTree = "<group>"; };
+		CED93E22A46C431D85867BD1 /* ChartResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartResultView.swift; sourceTree = "<group>"; };
+		182EDF03FB0C41049CF7FA0D /* PredictionHubView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PredictionHubView.swift; sourceTree = "<group>"; };
+		06F2B19C923D449B9205AD0B /* AboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutView.swift; sourceTree = "<group>"; };
+		3F7AC37E3E37433C83382034 /* BaZiEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BaZiEngineTests.swift; sourceTree = "<group>"; };
+		5DDA167719264C4183029699 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		0F766549A1254E0EA81B6326 /* BaZiYuCe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BaZiYuCe.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		99058B6EDC3243FEA91DB878 /* BaZiYuCeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BaZiYuCeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		9DC8EC38BAF3450EB0DF881A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8F6CEF753E7F489BB9A87E53 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		BB7A2282EE4D4A3983323194 = {
+			isa = PBXGroup;
+			children = (
+				1D7010CE24D64C22BAB2D071 /* BaZiYuCe */,
+				3391344C39754792B56406EA /* BaZiYuCeTests */,
+				EB74BD17F45B49909A5DB28D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EB74BD17F45B49909A5DB28D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0F766549A1254E0EA81B6326 /* BaZiYuCe.app */,
+				99058B6EDC3243FEA91DB878 /* BaZiYuCeTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		1D7010CE24D64C22BAB2D071 /* BaZiYuCe */ = {
+			isa = PBXGroup;
+			children = (
+				734C5698F1984489A32BEA15 /* BaZiYuCeApp.swift */,
+				61F3A900492C454BBE41BB6E /* BaZiSession.swift */,
+				E92E57B8ECE64A45AB883C97 /* Engine */,
+				8155634D035E411BB796791A /* Models */,
+				46567641986E40A3AB98D929 /* Theme */,
+				CDC88656B46040B18F6E45F8 /* Views */,
+				5DDA167719264C4183029699 /* Assets.xcassets */,
+			);
+			path = BaZiYuCe;
+			sourceTree = "<group>";
+		};
+		E92E57B8ECE64A45AB883C97 /* Engine */ = {
+			isa = PBXGroup;
+			children = (
+				83F829912F274E379994147B /* GanzhiCalendar.swift */,
+				605B7A025C04402E84D727EA /* TenGods.swift */,
+				7B51F5069A6747B0AB2D2561 /* FiveElements.swift */,
+				6DF70F735D0745DB9A73C689 /* BranchRelations.swift */,
+				549C5413D7F74EE39D0148A1 /* BaZiEngine.swift */,
+				B6A6539F77664418A528DBC6 /* PredictionEngine.swift */,
+				DDF7A47B5BA149EE805F0A12 /* AstronomyCore.swift */,
+				EE3F6FE61B464D64939F0F49 /* SolarTerms.swift */,
+			);
+			path = Engine;
+			sourceTree = "<group>";
+		};
+		8155634D035E411BB796791A /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				504195A8CB2745A69AF6FE8C /* StemBranch.swift */,
+				C79DED418FEC41148CF6D4A8 /* BaZiModels.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		46567641986E40A3AB98D929 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				D7522BC67FA446C886997203 /* AppTheme.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		CDC88656B46040B18F6E45F8 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				0BF3ECAA2FEF4933BA178E7C /* RootTabView.swift */,
+				99858C39DF4F425790B1AAAA /* BirthInputView.swift */,
+				CED93E22A46C431D85867BD1 /* ChartResultView.swift */,
+				182EDF03FB0C41049CF7FA0D /* PredictionHubView.swift */,
+				06F2B19C923D449B9205AD0B /* AboutView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		3391344C39754792B56406EA /* BaZiYuCeTests */ = {
+			isa = PBXGroup;
+			children = (
+				3F7AC37E3E37433C83382034 /* BaZiEngineTests.swift */,
+			);
+			path = BaZiYuCeTests;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		47871712DBE54941ADE9F701 /* BaZiYuCe */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 72746D013C32460383ECD0E3 /* Build configuration list for PBXNativeTarget "BaZiYuCe" */;
+			buildPhases = (
+				1A3330C2B9E7449A94D91A64 /* Sources */,
+				9DC8EC38BAF3450EB0DF881A /* Frameworks */,
+				2A0F226A4E7B4442B3AE2F18 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BaZiYuCe;
+			productName = BaZiYuCe;
+			productReference = 0F766549A1254E0EA81B6326 /* BaZiYuCe.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3BC3F821BE3B4D3F8195578C /* BaZiYuCeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7ECF65F300CE4D48B2F6B817 /* Build configuration list for PBXNativeTarget "BaZiYuCeTests" */;
+			buildPhases = (
+				E97D8172F6804DD9A1E3E337 /* Sources */,
+				8F6CEF753E7F489BB9A87E53 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = BaZiYuCeTests;
+			productName = BaZiYuCeTests;
+			productReference = 99058B6EDC3243FEA91DB878 /* BaZiYuCeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AD33DE258F514A0D88664C0A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					47871712DBE54941ADE9F701 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					3BC3F821BE3B4D3F8195578C = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = 47871712DBE54941ADE9F701;
+					};
+				};
+			};
+			buildConfigurationList = 0B88FDDB6BB846B985F186D9 /* Build configuration list for PBXProject "BaZiYuCe" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = "zh-Hans";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+				"zh-Hans",
+			);
+			mainGroup = BB7A2282EE4D4A3983323194;
+			productRefGroup = EB74BD17F45B49909A5DB28D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				47871712DBE54941ADE9F701 /* BaZiYuCe */,
+				3BC3F821BE3B4D3F8195578C /* BaZiYuCeTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2A0F226A4E7B4442B3AE2F18 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				822222564FC14C98B25791E5 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		1A3330C2B9E7449A94D91A64 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C3507DDEEA5744ADA9D4BE65 /* BaZiYuCeApp.swift in Sources */,
+				92A4C0F0A49D4981ABB17770 /* BaZiSession.swift in Sources */,
+				00F4644C9BE246768B12928E /* StemBranch.swift in Sources */,
+				3C9BF44C312D42CFB293C529 /* BaZiModels.swift in Sources */,
+				5B27408941B14BEAA1815E38 /* GanzhiCalendar.swift in Sources */,
+				8BD6FF9AC1EA4AC089EA4C03 /* TenGods.swift in Sources */,
+				4D6F6358340645C98E8158F4 /* FiveElements.swift in Sources */,
+				5A602FA424F1418286A1829F /* BranchRelations.swift in Sources */,
+				8032A8A82B234F4CAC994E1B /* BaZiEngine.swift in Sources */,
+				5D2DF36A520345A9B02314B6 /* PredictionEngine.swift in Sources */,
+				38624E59DEE24AC489E7859B /* AstronomyCore.swift in Sources */,
+				2D054FDD6B7543D4B68184A3 /* SolarTerms.swift in Sources */,
+				1F45A9EFCE244CB6BC44E81E /* AppTheme.swift in Sources */,
+				373BF8B4FAE64C97A12C5B46 /* RootTabView.swift in Sources */,
+				4277EF4D8C1F4546B576822D /* BirthInputView.swift in Sources */,
+				AA0F46E152504CA7B6DE2F10 /* ChartResultView.swift in Sources */,
+				E9981C07356641368FC718F3 /* PredictionHubView.swift in Sources */,
+				04939262A7B5464198D4DE01 /* AboutView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E97D8172F6804DD9A1E3E337 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				295700B1B70C47719BFA3BDA /* BaZiEngineTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		114BC957F40141788032F0FD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		17048103253148B3BCE0C068 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		F7D7C5728990452A8CF23950 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BaZiYuCe/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "八字运势";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gglee.BaZiYuCe;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		FA54EB4B87EC4E0C98A8A14A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BaZiYuCe/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "八字运势";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gglee.BaZiYuCe;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		F86C16A40DF049E6BBD3CC46 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gglee.BaZiYuCeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BaZiYuCe.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BaZiYuCe";
+			};
+			name = Debug;
+		};
+		15FCAECB0BEE4B19B87F20A9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.gglee.BaZiYuCeTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BaZiYuCe.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/BaZiYuCe";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0B88FDDB6BB846B985F186D9 /* Build configuration list for PBXProject "BaZiYuCe" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				114BC957F40141788032F0FD /* Debug */,
+				17048103253148B3BCE0C068 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		72746D013C32460383ECD0E3 /* Build configuration list for PBXNativeTarget "BaZiYuCe" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F7D7C5728990452A8CF23950 /* Debug */,
+				FA54EB4B87EC4E0C98A8A14A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7ECF65F300CE4D48B2F6B817 /* Build configuration list for PBXNativeTarget "BaZiYuCeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F86C16A40DF049E6BBD3CC46 /* Debug */,
+				15FCAECB0BEE4B19B87F20A9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AD33DE258F514A0D88664C0A /* Project object */;
+}
