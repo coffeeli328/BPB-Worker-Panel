@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -40,6 +42,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -88,6 +93,7 @@ fun CastScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .verticalScroll(scroll)
             .padding(horizontal = 20.dp, vertical = 16.dp),
     ) {
@@ -112,9 +118,22 @@ fun CastScreen(
             placeholder = { Text("必填：如求财、出行、婚姻、合作…") },
             minLines = 2,
             maxLines = 4,
+            singleLine = false,
+            enabled = true,
+            readOnly = false,
+            keyboardOptions = KeyboardOptions(
+                capitalization = KeyboardCapitalization.None,
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Done,
+            ),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Pine,
+                unfocusedBorderColor = Muted.copy(alpha = 0.45f),
+                focusedTextColor = Ink,
+                unfocusedTextColor = Ink,
                 cursorColor = Pine,
+                focusedContainerColor = Wash.copy(alpha = 0.35f),
+                unfocusedContainerColor = Wash.copy(alpha = 0.2f),
             ),
         )
         Spacer(Modifier.height(8.dp))

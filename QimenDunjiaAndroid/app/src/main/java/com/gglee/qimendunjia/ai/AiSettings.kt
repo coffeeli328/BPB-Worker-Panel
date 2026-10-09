@@ -48,9 +48,18 @@ class AiSettings(context: Context) {
         }
 
     var apiKey: String
-        get() = securePrefs.getString(KEY_API_KEY, "") ?: ""
+        get() = try {
+            securePrefs.getString(KEY_API_KEY, "") ?: ""
+        } catch (_: Exception) {
+            prefs.getString(KEY_API_KEY, "") ?: ""
+        }
         set(value) {
-            securePrefs.edit().putString(KEY_API_KEY, value).apply()
+            try {
+                securePrefs.edit().putString(KEY_API_KEY, value).apply()
+            } catch (_: Exception) {
+                // Fallback if EncryptedSharedPreferences fails on some devices
+                prefs.edit().putString(KEY_API_KEY, value).apply()
+            }
         }
 
     val isConfigured: Boolean

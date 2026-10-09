@@ -29,18 +29,27 @@ class CastViewModel(
     val state: StateFlow<CastUiState> = _state.asStateFlow()
 
     fun updateRequest(block: ChartRequest.() -> Unit) {
-        _state.update { it.copy(request = it.request.apply(block)) }
+        // Must copy ChartRequest: in-place apply() mutates the same instance so
+        // CastUiState equals() sees no change and StateFlow skips emission —
+        // controlled TextFields then appear to reject all input.
+        _state.update { state ->
+            val next = state.request.copy().apply(block)
+            state.copy(
+                request = next,
+                showQuestionHint = if (next.question.trim().isNotEmpty()) false else state.showQuestionHint,
+            )
+        }
     }
 
     fun setPresetId(id: String) {
         val preset = LocationPreset.all.firstOrNull { it.id == id } ?: return
-        _state.update {
-            it.copy(
+        _state.update { state ->
+            state.copy(
                 presetId = id,
-                request = it.request.apply {
-                    locationNote = preset.name
-                    longitude = preset.longitude
-                },
+                request = state.request.copy(
+                    locationNote = preset.name,
+                    longitude = preset.longitude,
+                ),
             )
         }
     }
@@ -68,6 +77,8 @@ class CastViewModel(
     }
 
     fun setJuMethod(method: JuMethod) {
-        _state.update { it.copy(request = it.request.apply { juMethod = method }) }
+        _state.update { state ->
+            state.copy(request = state.request.copy(juMethod = method))
+        }
     }
 }
