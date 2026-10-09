@@ -27,7 +27,9 @@ object SolarTerms {
         195.0, 210.0, 225.0, 240.0, 255.0, 270.0,
     )
 
+    @Suppress("UNUSED_PARAMETER")
     fun currentTerm(forDate: Date, timeZone: TimeZone): SolarTermInfo {
+        // timeZone kept for iOS API parity; solar terms are absolute instants
         val terms = termsForNearbyYears(around = forDate)
         val past = terms.filter { it.approximateDate <= forDate }
         return past.lastOrNull() ?: terms[0]

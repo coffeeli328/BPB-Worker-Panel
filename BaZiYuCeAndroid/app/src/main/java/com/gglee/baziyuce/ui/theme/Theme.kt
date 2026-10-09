@@ -95,10 +95,12 @@ val BaZiTypography = Typography(
 )
 
 @Composable
+@Suppress("UNUSED_PARAMETER")
 fun BaZiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit,
 ) {
+    // Light mist/celadon only — matches iOS AppTheme (no dark mode in v1)
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
