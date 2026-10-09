@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,24 +23,29 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gglee.qimendunjia.ai.AiSettings
 import com.gglee.qimendunjia.ui.theme.Ink
 import com.gglee.qimendunjia.ui.theme.Muted
 import com.gglee.qimendunjia.ui.theme.Pine
+import com.gglee.qimendunjia.ui.theme.Wash
 
 @Composable
 fun SettingsScreen(aiSettings: AiSettings) {
     var baseUrl by rememberSaveable { mutableStateOf(aiSettings.baseUrl) }
     var model by rememberSaveable { mutableStateOf(aiSettings.model) }
     var apiKey by rememberSaveable { mutableStateOf(aiSettings.apiKey) }
+    var revealKey by rememberSaveable { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .imePadding()
             .verticalScroll(rememberScrollState())
             .padding(20.dp),
     ) {
@@ -55,8 +61,15 @@ fun SettingsScreen(aiSettings: AiSettings) {
                 aiSettings.baseUrl = it
             },
             modifier = Modifier.fillMaxWidth(),
+            enabled = true,
+            readOnly = false,
+            singleLine = true,
             label = { Text("Base URL") },
             placeholder = { Text(AiSettings.PLACEHOLDER_BASE_URL_DEEPSEEK) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Uri,
+                imeAction = ImeAction.Next,
+            ),
             colors = fieldColors(),
         )
         Spacer(Modifier.height(12.dp))
@@ -67,8 +80,15 @@ fun SettingsScreen(aiSettings: AiSettings) {
                 aiSettings.model = it
             },
             modifier = Modifier.fillMaxWidth(),
+            enabled = true,
+            readOnly = false,
+            singleLine = true,
             label = { Text("模型") },
             placeholder = { Text(AiSettings.PLACEHOLDER_MODEL_DEEPSEEK) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Ascii,
+                imeAction = ImeAction.Next,
+            ),
             colors = fieldColors(),
         )
         Spacer(Modifier.height(12.dp))
@@ -79,20 +99,39 @@ fun SettingsScreen(aiSettings: AiSettings) {
                 aiSettings.apiKey = it
             },
             modifier = Modifier.fillMaxWidth(),
+            enabled = true,
+            readOnly = false,
+            singleLine = true,
             label = { Text("API Key") },
-            visualTransformation = PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            // KeyboardType.Password blocks many Chinese IMEs; keep masking via visualTransformation.
+            visualTransformation = if (revealKey) {
+                VisualTransformation.None
+            } else {
+                PasswordVisualTransformation()
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Ascii,
+                imeAction = ImeAction.Done,
+            ),
+            trailingIcon = {
+                TextButton(onClick = { revealKey = !revealKey }) {
+                    Text(if (revealKey) "隐藏" else "显示", color = Pine, fontSize = 12.sp)
+                }
+            },
             colors = fieldColors(),
         )
         Text(
-            if (aiSettings.isConfigured) "已配置密钥（仅存于本机加密存储）" else "未配置 API Key",
+            if (apiKey.isNotBlank()) "已配置密钥（仅存于本机加密存储）" else "未配置 API Key",
             fontSize = 12.sp,
             color = Muted,
             modifier = Modifier.padding(top = 6.dp),
         )
 
         Spacer(Modifier.height(16.dp))
-        RowPresets(aiSettings) { baseUrl = aiSettings.baseUrl; model = aiSettings.model }
+        RowPresets(aiSettings) {
+            baseUrl = aiSettings.baseUrl
+            model = aiSettings.model
+        }
 
         Spacer(Modifier.height(24.dp))
         Text("隐私说明", fontSize = 13.sp, fontWeight = FontWeight.Medium, color = Muted)
@@ -142,5 +181,10 @@ private fun RowPresets(aiSettings: AiSettings, onApplied: () -> Unit) {
 @Composable
 private fun fieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = Pine,
+    unfocusedBorderColor = Muted.copy(alpha = 0.45f),
+    focusedTextColor = Ink,
+    unfocusedTextColor = Ink,
     cursorColor = Pine,
+    focusedContainerColor = Wash.copy(alpha = 0.35f),
+    unfocusedContainerColor = Wash.copy(alpha = 0.2f),
 )

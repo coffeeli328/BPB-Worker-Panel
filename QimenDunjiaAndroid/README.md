@@ -11,10 +11,12 @@ Kotlin + Jetpack Compose 本地排盘 App，与 iOS `QimenDunjia/` 功能对齐�
 
 ## 直接安装 APK（侧载）
 
-预构建 APK（debug 签名，可安装）：
+预构建 APK（debug 签名，可安装；当前 **v1.0.1** 已修复文字输入）：
 
 - Agent Store：`/cursor/stores/bc-1bfe3aab-fbad-44f1-8b19-b0a2acba2c2d/media/QimenDunjia.apk`
 - 本目录：`dist/QimenDunjia.apk`（构建后生成）
+
+若旧版「输入不了文字」：卸载后安装新 APK（起局「所问之事」与设置字段均可中英文输入）。
 
 ### 安装步骤
 

@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.QimenDunjia" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- DeviceDefault avoids OEM IME / EditText quirks seen with bare Theme.Material on some phones -->
+    <style name="Theme.QimenDunjia" parent="android:Theme.DeviceDefault.Light.NoActionBar">
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
 </resources>
