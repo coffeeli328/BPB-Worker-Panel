@@ -450,14 +450,30 @@ class MainActivity : ComponentActivity() {
         edit.setText(draft.text)
         edit.isEnabled = editable
         view.findViewById<TextView>(R.id.txtCount).text = "${draft.text.length}/280"
+        val btnRewrite = view.findViewById<Button>(R.id.btnRewrite)
         val btnSave = view.findViewById<Button>(R.id.btnSave)
         val btnReject = view.findViewById<Button>(R.id.btnReject)
         val btnApprove = view.findViewById<Button>(R.id.btnApprove)
         if (!editable) {
+            btnRewrite.visibility = View.GONE
             btnSave.visibility = View.GONE
             btnReject.visibility = View.GONE
             btnApprove.visibility = View.GONE
             return view
+        }
+        btnRewrite.setOnClickListener {
+            lifecycleScope.launch {
+                val text = withContext(Dispatchers.IO) {
+                    container.repository.regenerateDraft(draft.id)
+                }
+                if (text == null) {
+                    toast("无法重写")
+                } else {
+                    edit.setText(text)
+                    view.findViewById<TextView>(R.id.txtCount).text = "${text.length}/280"
+                    toast("已换一版")
+                }
+            }
         }
         btnSave.setOnClickListener {
             val text = edit.text.toString()

@@ -261,7 +261,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="写作风格决定模板角度；人设会注入语气。开启 AI 后用你的 Key 写稿，失败自动回退本地模板。"
+            android:text="本地模板已改成更像真人短帖。想要明显更好：打开 AI 写稿并填 Key（DeepSeek/OpenAI 等），写完可在审核台点「换一版」。"
             android:textColor="#9BB3AA"
             android:textSize="13sp" />
 

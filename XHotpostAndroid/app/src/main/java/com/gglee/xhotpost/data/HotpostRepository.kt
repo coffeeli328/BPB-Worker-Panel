@@ -125,6 +125,44 @@ class HotpostRepository(
         return DraftGenerator.templateDraft(topic, settings)
     }
 
+    /**
+     * Rewrite one pending draft. Pass [forceVariant] to nudge local template angle
+     * when AI is off (uses timestamp so the next bank index differs).
+     */
+    suspend fun regenerateDraft(id: String): String? {
+        val entity = dao.draftById(id) ?: return null
+        if (entity.status != DraftStatus.PENDING_REVIEW.name) return null
+        val settings = settingsStore.settings.first()
+        val now = System.currentTimeMillis()
+        val live = dao.topicById(entity.topicId)?.toDomain()
+        val topic = (live ?: HotTopic(
+            id = entity.topicId,
+            title = entity.topicTitle,
+            summary = "",
+            source = "regen",
+            url = null,
+            score = 50,
+            language = if (settings.language == com.gglee.xhotpost.domain.ContentLanguage.EN) {
+                "en"
+            } else {
+                "zh"
+            },
+            fetchedAt = now,
+        )).let { base ->
+            // Nudge variant selection for local templates.
+            base.copy(id = "${base.id}-$now")
+        }
+        val text = draftTextFor(topic, settings)
+        dao.updateDraft(
+            entity.copy(
+                text = text,
+                monetizationHook = DraftGenerator.buildHook(settings),
+                updatedAt = now,
+            ),
+        )
+        return text
+    }
+
     /** Rewrite all pending drafts with current style / AI settings. */
     suspend fun regeneratePendingDrafts(): Int {
         val settings = settingsStore.settings.first()

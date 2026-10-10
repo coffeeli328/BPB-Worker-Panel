@@ -10,12 +10,12 @@ import {
 import type { Draft, HotTopic, Settings } from './types.js'
 
 const nicheLabel: Record<Settings['niche'], string> = {
-  tech: '科技 / AI',
-  finance: '财经投资',
-  lifestyle: '生活方式',
-  creator: '自媒体变现',
-  local: '综合热点',
-  custom: '自定义赛道',
+  tech: '科技',
+  finance: '财经',
+  lifestyle: '生活',
+  creator: '创作',
+  local: '热点',
+  custom: '赛道',
 }
 
 function stripExcess(text: string): string {
@@ -30,25 +30,88 @@ function buildHook(settings: Settings): string {
   if (settings.affiliateUrl.trim()) {
     return settings.ctaTemplate.replaceAll('{link}', settings.affiliateUrl.trim())
   }
-  return '关注我，下一条继续拆这个热点怎么变现。'
+  return ''
+}
+
+function usableSignal(summary?: string): string | null {
+  const s = (summary ?? '').trim()
+  if (!s) return null
+  if (s.includes('X 热搜') || (s.includes('第 ') && s.includes('名'))) return null
+  if (s.includes('打开可看') || s.includes('适合结合')) return null
+  return s.slice(0, 120)
+}
+
+function hashIndex(seed: string, mod: number): number {
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0
+  return Math.abs(h) % mod
 }
 
 function templateDraft(topic: HotTopic, settings: Settings): string {
-  const niche =
-    settings.niche === 'custom' && settings.customNicheLabel
-      ? settings.customNicheLabel
-      : nicheLabel[settings.niche]
-  const hook = buildHook(settings)
+  const title = topic.title.trim()
+  const signal = usableSignal(topic.summary)
+  const niche = settings.niche
+  const idx = hashIndex(`${topic.id}:${niche}:${settings.persona.slice(0, 16)}`, 8)
+  const extra = signal ? `（${signal.slice(0, 42)}）` : ''
 
-  if (topic.language === 'en' && settings.language !== 'zh') {
-    return stripExcess(
-      `${topic.title}\n\nWhy it matters for ${niche}: ${topic.summary}\n\nTakeaway: spot the signal early, then ship a clear POV.\n\n${hook}`,
-    )
+  const zhBanks: Record<string, string[]> = {
+    tech: [
+      `大家都在聊 ${title}。\n我更关心：谁已经把它接到真实产品/工作流里了？概念帖太多，落地帖太少。`,
+      `${title} 很火。\n做科技内容别只会喊「颠覆」——写清：换了什么输入，得到什么输出。`,
+      `关于 ${title}：技术叙事很会讲故事。\n你要问的是成本、可靠性、谁买单。`,
+      `${title}\n一句话标准：能不能复现？不能复现，就先当营销。`,
+    ],
+    finance: [
+      `${title} 上热搜了。\n这种时候最容易被情绪带着走——仓位比观点诚实。`,
+      `看到 ${title}，先分清：这是信息，还是叙事？\n叙事能涨粉，信息才能决策。`,
+      `${title}\n提醒自己：热搜≠催化剂。没有传导路径，就别急着下结论。`,
+      `关于 ${title}：把「可能」和「已经」写清楚，少一半焦虑。`,
+    ],
+    creator: [
+      `${title} 可以追，但别当复读机。\n你的增量是什么：角度、案例，还是方法？`,
+      `热搜 ${title} 来了。\n创作者真正该问：我的读者为什么要听我讲这个？`,
+      `${title}\n同一热点：一条观点、一条拆解、一条复盘。矩阵比单发强。`,
+      `别只会蹭 ${title}。\n把热闹翻译成你自己的选题系统，才算变现能力。`,
+    ],
+    lifestyle: [
+      `${title} 刷屏时，我更想问：它会不会真的改变你明天的选择？\n会，就认真看；不会，就滑走。`,
+      `关于 ${title}：生活类热点最怕鸡汤。\n给一个小到能做的动作，比口号有用。`,
+      `${title}\n少一点「你应该」，多一点「我试过」。`,
+      `看见 ${title}，先对自己诚实：是好奇，还是焦虑？`,
+    ],
+    local: [
+      `${title} 又上热搜了。\n说真的，先别站队，先看一手信息。`,
+      `短评 ${title}：热闹不重要，判断要具体。`,
+      `${title}${extra}\n我就一句话——别当复读机。`,
+      `刷到 ${title}……\n要不要跟？取决于你有没有自己的看法。`,
+    ],
+    custom: [
+      `${title} 在涨。\n我只记可核对的点，其他当背景噪声。`,
+      `热搜：${title}\n发言前先过两关：来源？增量？`,
+      `${title}——热闹过后，留下判断的人更少。我想做后者。`,
+      `看到 ${title}。\n先观察，再开口。`,
+    ],
   }
 
-  return stripExcess(
-    `【热点】${topic.title}\n\n一句话：${topic.summary}\n\n对「${niche}」创作者意味着：别只转发标题，给出你的判断与下一步动作。\n\n${hook}`,
-  )
+  const enBanks: string[] = [
+    `${title} is trending.\nHot takes are cheap. A clear, falsifiable claim isn’t.`,
+    `Everyone’s on ${title}.\nIf I can’t explain why it matters in one line, I don’t post.`,
+    `${title}\nDon’t amplify the headline. Add a judgment.`,
+    `Quick on ${title}: don’t be a RT machine.`,
+  ]
+
+  const useEn = topic.language === 'en' && settings.language !== 'zh'
+  let body: string
+  if (useEn) {
+    body = enBanks[idx % enBanks.length]
+  } else {
+    const bank = zhBanks[niche] ?? zhBanks.local
+    body = bank[idx % bank.length]
+  }
+
+  const hook = buildHook(settings)
+  if (hook && body.length <= 200) body = `${body}\n\n${hook}`
+  return stripExcess(body)
 }
 
 async function aiDraft(
@@ -59,8 +122,20 @@ async function aiDraft(
   if (!cfg?.enabled || !cfg.apiKey) return null
 
   const hook = buildHook(settings)
-  const system = `${settings.persona}\n输出一条适合发在 X 的短帖，不超过 260 字，不要使用 Markdown，不要加引号包裹全文。结尾可自然带上变现钩子。`
-  const user = `热点标题：${topic.title}\n摘要：${topic.summary}\n赛道：${nicheLabel[settings.niche]}\n变现钩子参考：${hook}`
+  const niche =
+    settings.niche === 'custom' && settings.customNicheLabel
+      ? settings.customNicheLabel
+      : nicheLabel[settings.niche]
+  const signal = usableSignal(topic.summary)
+  const system = `你在写 X 短帖，不是作文。
+人设（勿写入正文）：${settings.persona}
+赛道：${niche}
+规则：只输出正文；80～180 字为佳，最多 280；要有具体判断；禁止【热点】/值得关注/复读标题；少 emoji。
+${hook ? `文末可自然带：${hook}` : '不要硬广。'}
+好例子：「大家都在聊 #AI。我更关心谁已经把它接到付费流程里了。」`
+
+  const user = `热搜/话题：${topic.title}
+${signal ? `背景：${signal}\n` : ''}写一条可直接发的短帖。`
 
   const base = cfg.baseUrl.replace(/\/$/, '')
   const response = await fetch(`${base}/chat/completions`, {
@@ -71,7 +146,8 @@ async function aiDraft(
     },
     body: JSON.stringify({
       model: cfg.model,
-      temperature: 0.7,
+      temperature: 0.9,
+      max_tokens: 280,
       messages: [
         { role: 'system', content: system },
         { role: 'user', content: user },

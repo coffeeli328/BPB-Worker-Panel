@@ -46,7 +46,7 @@ class TrendCollector(
         HotTopic(
             id = topicId("#OpenSourceAI", "x-demo"),
             title = "#OpenSourceAI",
-            summary = "X 热搜演示：开源模型话题正在讨论区发酵，适合发一条带判断的短帖。",
+            summary = "开源模型成本下降，讨论正从概念转向谁先接到产品。",
             source = "X 热搜 · demo",
             url = xSearchUrl("#OpenSourceAI"),
             score = 96,
@@ -56,7 +56,7 @@ class TrendCollector(
         HotTopic(
             id = topicId("创作者经济", "x-demo"),
             title = "创作者经济",
-            summary = "X 热搜演示：创作者在讨论如何把长内容拆成可复用短帖矩阵。",
+            summary = "长内容被拆成可复用短帖矩阵，审核后再发。",
             source = "X 热搜 · demo",
             url = xSearchUrl("创作者经济"),
             score = 88,
@@ -66,7 +66,7 @@ class TrendCollector(
         HotTopic(
             id = topicId("#BuildInPublic", "x-demo"),
             title = "#BuildInPublic",
-            summary = "X 热搜演示：公开构建与审核发帖成为常见打法。",
+            summary = "公开构建 + 人工审核发帖，正在成为常见打法。",
             source = "X 热搜 · demo",
             url = xSearchUrl("#BuildInPublic"),
             score = 81,
@@ -162,8 +162,8 @@ class TrendCollector(
             HotTopic(
                 id = topicId(name, "x-$regionSlug"),
                 title = name,
-                summary = "X 热搜 · $regionLabel · 第 ${index + 1} 名。打开可看实时讨论，适合结合你的赛道写观点帖。",
-                source = "X 热搜 · $regionLabel",
+                summary = "",
+                source = "X 热搜 · $regionLabel · #${index + 1}",
                 url = xSearchUrl(name),
                 score = (100 - index).coerceAtLeast(40),
                 language = lang,

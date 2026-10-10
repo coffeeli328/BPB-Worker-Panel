@@ -122,8 +122,8 @@ function parseGetDayTrends(html: string, regionSlug: string, now: string): HotTo
     return {
       id: topicIdFrom(name, `x-${regionSlug}`),
       title: name,
-      summary: `X 热搜 · ${label} · 第 ${index + 1} 名。打开可看实时讨论。`,
-      source: `X 热搜 · ${label}`,
+      summary: '',
+      source: `X 热搜 · ${label} · #${index + 1}`,
       url: xSearchUrl(name),
       score: Math.max(40, 100 - index),
       language: hasCjk ? 'zh' : 'en',

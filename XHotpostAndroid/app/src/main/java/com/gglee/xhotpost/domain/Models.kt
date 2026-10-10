@@ -80,9 +80,9 @@ data class AppSettings(
     val language: ContentLanguage = ContentLanguage.ZH,
     /** 跟踪哪个地区的 X 热搜 */
     val xTrendRegion: XTrendRegion = XTrendRegion.AUTO,
-    val writingStyle: WritingStyle = WritingStyle.OPINION,
+    val writingStyle: WritingStyle = WritingStyle.CASUAL,
     val persona: String =
-        "你是一位务实的中文创作者，擅长把热点讲清楚，语气真诚、不夸张，偶尔带一点洞察。",
+        "像真人在 X 上说话：短句、有观点、不鸡汤、不复读热搜。犀利但克制，偶尔一句俏皮。",
     val affiliateUrl: String = "",
     val affiliateLabel: String = "了解更多",
     val ctaTemplate: String = "对这个话题感兴趣的话，可以看看：{link}",

@@ -15,7 +15,8 @@ Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力�
 1. **写作风格**：观点 / 干货 / 故事 / 口语 / 专业（同一热点会换不同角度）
 2. **人设**：用一两句话描述语气（例如「犀利但真诚，爱用短句」）
 3. **可选 AI 写稿**：打开开关，填 OpenAI 兼容 Base URL + Model + API Key（DeepSeek / 通义兼容网关等均可）；失败会自动回退本地模板
-4. 改完点 **「按当前风格重写待审草稿」**，或先拒绝旧草稿再「跑一轮」
+4. 改完点 **「按当前风格重写待审草稿」**，或在审核台点 **「换一版」**
+5. **最有效**：打开 AI 写稿并填 Key——本地模板只能保底，AI 才能针对具体热搜写活
 
 仍不满意时：在审核台直接改文案再通过——人工微调是变现质量的最后一道闸。
 
@@ -23,9 +24,9 @@ Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力�
 
 GitHub **Releases** 比分支里的 raw 文件更稳（约 17MB）：
 
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.7/XHotpost.apk
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.8/XHotpost.apk
 
-发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.7
+发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.8
 
 ### X 热搜说明
 

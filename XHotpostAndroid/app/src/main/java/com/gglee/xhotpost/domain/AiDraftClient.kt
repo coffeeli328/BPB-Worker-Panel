@@ -44,8 +44,8 @@ class AiDraftClient(
                             .put("content", DraftGenerator.aiUserPrompt(topic)),
                     ),
             )
-            .put("temperature", 0.85)
-            .put("max_tokens", 400)
+            .put("temperature", 0.9)
+            .put("max_tokens", 280)
 
         val request = Request.Builder()
             .url(url)
