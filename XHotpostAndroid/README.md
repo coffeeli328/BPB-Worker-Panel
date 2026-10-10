@@ -2,7 +2,7 @@
 
 Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力对齐：
 
-- 本机抓热点（Google News RSS + 演示样本）
+- 本机抓 **X 平台热搜**（公开趋势镜像，不用 X API；演示样本）
 - 自动生成待审草稿（多风格模板；可选 OpenAI 兼容 AI 写稿）
 - **人工审核**后发布
 - **不用 X API**：关闭演示模式后，跳转到 X/Twitter 应用发帖（文案已填好，你在 X 里点发送）
@@ -23,9 +23,14 @@ Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力�
 
 GitHub **Releases** 比分支里的 raw 文件更稳（约 17MB）：
 
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.6/XHotpost.apk
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.7/XHotpost.apk
 
-发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.6
+发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.7
+
+### X 热搜说明
+
+设置 →「跟踪 X 热搜」可选地区（美国 / 英国 / 日本 / 新加坡 / 印度，或自动）。
+赛道用于**优先排序**匹配词；选「综合 X 热搜」则不过滤。点话题标题会打开 X 实时搜索。
 
 若浏览器一直卡在 0%：换 Chrome/Safari、换网络，或用电脑下载后传到手机。
 
@@ -78,6 +83,6 @@ cd XHotpostAndroid
 
 ## 隐私
 
-- 默认仅请求 **INTERNET**（拉 RSS）
+- 默认仅请求 **INTERNET**（拉 X 热搜镜像）
 - 草稿与设置存本机 Room / DataStore
 - 不向第三方上传账号密码

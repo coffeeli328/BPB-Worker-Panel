@@ -10,6 +10,7 @@ import com.gglee.xhotpost.domain.AppSettings
 import com.gglee.xhotpost.domain.ContentLanguage
 import com.gglee.xhotpost.domain.NicheId
 import com.gglee.xhotpost.domain.WritingStyle
+import com.gglee.xhotpost.domain.XTrendRegion
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -27,6 +28,7 @@ class SettingsStore(private val context: Context) {
             prefs[stringKey("niche")] = next.niche.name
             prefs[stringKey("customNicheLabel")] = next.customNicheLabel
             prefs[stringKey("language")] = next.language.name
+            prefs[stringKey("xTrendRegion")] = next.xTrendRegion.name
             prefs[stringKey("writingStyle")] = next.writingStyle.name
             prefs[stringKey("persona")] = next.persona
             prefs[stringKey("affiliateUrl")] = next.affiliateUrl
@@ -61,6 +63,11 @@ class SettingsStore(private val context: Context) {
                     prefs[stringKey("language")] ?: ContentLanguage.ZH.name,
                 )
             }.getOrDefault(ContentLanguage.ZH),
+            xTrendRegion = runCatching {
+                XTrendRegion.valueOf(
+                    prefs[stringKey("xTrendRegion")] ?: XTrendRegion.AUTO.name,
+                )
+            }.getOrDefault(XTrendRegion.AUTO),
             writingStyle = runCatching {
                 WritingStyle.valueOf(
                     prefs[stringKey("writingStyle")] ?: WritingStyle.OPINION.name,

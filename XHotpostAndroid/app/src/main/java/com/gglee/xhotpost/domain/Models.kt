@@ -28,6 +28,16 @@ enum class WritingStyle {
     PRO,
 }
 
+/** X 热搜地区（公开趋势镜像，不用 X API） */
+enum class XTrendRegion {
+    AUTO,
+    UNITED_STATES,
+    UNITED_KINGDOM,
+    JAPAN,
+    SINGAPORE,
+    INDIA,
+}
+
 enum class DraftStatus {
     PENDING_REVIEW,
     APPROVED,
@@ -68,6 +78,8 @@ data class AppSettings(
     val niche: NicheId = NicheId.TECH,
     val customNicheLabel: String = "",
     val language: ContentLanguage = ContentLanguage.ZH,
+    /** 跟踪哪个地区的 X 热搜 */
+    val xTrendRegion: XTrendRegion = XTrendRegion.AUTO,
     val writingStyle: WritingStyle = WritingStyle.OPINION,
     val persona: String =
         "你是一位务实的中文创作者，擅长把热点讲清楚，语气真诚、不夸张，偶尔带一点洞察。",

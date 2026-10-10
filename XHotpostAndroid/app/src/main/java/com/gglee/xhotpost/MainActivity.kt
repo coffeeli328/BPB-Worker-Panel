@@ -25,7 +25,10 @@ import com.gglee.xhotpost.domain.HotTopic
 import com.gglee.xhotpost.domain.NicheId
 import com.gglee.xhotpost.domain.WritingStyle
 import com.gglee.xhotpost.domain.XPublisher
+import com.gglee.xhotpost.domain.XTrendRegion
 import com.gglee.xhotpost.work.SyncWorker
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -165,10 +168,18 @@ class MainActivity : ComponentActivity() {
         } else {
             "X 未登录（请到设置登录）"
         }
+        val region = when (s.xTrendRegion) {
+            XTrendRegion.AUTO -> "自动地区"
+            XTrendRegion.UNITED_STATES -> "美国热搜"
+            XTrendRegion.UNITED_KINGDOM -> "英国热搜"
+            XTrendRegion.JAPAN -> "日本热搜"
+            XTrendRegion.SINGAPORE -> "新加坡热搜"
+            XTrendRegion.INDIA -> "印度热搜"
+        }
         return if (s.demoMode) {
-            "演示模式 · 话题：$niche · $login"
+            "演示 · X热搜 · $region · $niche · $login"
         } else {
-            "正式发帖 · 话题：$niche · $login"
+            "正式 · X热搜 · $region · $niche · $login"
         }
     }
 
@@ -213,16 +224,39 @@ class MainActivity : ComponentActivity() {
 
     private fun renderTopics() {
         if (topics.isEmpty()) {
-            content.addView(simpleText("暂无热点，先跑一轮。"))
+            content.addView(simpleText("暂无 X 热搜，先跑一轮。"))
             return
         }
+        content.addView(simpleText("来自 X 平台热搜（点标题打开 X 实时搜索）", bold = true))
         val inflater = LayoutInflater.from(this)
-        topics.take(20).forEach { topic ->
+        topics.take(30).forEach { topic ->
             val view = inflater.inflate(R.layout.item_topic, content, false)
             view.findViewById<TextView>(R.id.txtTitle).text = topic.title
             view.findViewById<TextView>(R.id.txtMeta).text =
                 "${topic.source} · 热度 ${topic.score}"
+            view.setOnClickListener {
+                val link = topic.url
+                    ?: com.gglee.xhotpost.domain.TrendCollector.xSearchUrl(topic.title)
+                openUrl(link)
+            }
             content.addView(view)
+        }
+    }
+
+    private fun openUrl(url: String) {
+        try {
+            CustomTabsIntent.Builder().build().launchUrl(this, Uri.parse(url))
+        } catch (_: Exception) {
+            try {
+                startActivity(
+                    android.content.Intent(
+                        android.content.Intent.ACTION_VIEW,
+                        Uri.parse(url),
+                    ),
+                )
+            } catch (_: Exception) {
+                toast("无法打开链接")
+            }
         }
     }
 
@@ -231,6 +265,7 @@ class MainActivity : ComponentActivity() {
         val txtXStatus = view.findViewById<TextView>(R.id.txtXStatus)
         val editXUsername = view.findViewById<EditText>(R.id.editXUsername)
         val switchXLoggedIn = view.findViewById<Switch>(R.id.switchXLoggedIn)
+        val groupXRegion = view.findViewById<RadioGroup>(R.id.groupXRegion)
         val groupNiche = view.findViewById<RadioGroup>(R.id.groupNiche)
         val editCustomNiche = view.findViewById<EditText>(R.id.editCustomNiche)
         val groupLanguage = view.findViewById<RadioGroup>(R.id.groupLanguage)
@@ -254,6 +289,15 @@ class MainActivity : ComponentActivity() {
         }
         editXUsername.setText(settings.xUsername)
         switchXLoggedIn.isChecked = settings.xLoggedIn
+
+        when (settings.xTrendRegion) {
+            XTrendRegion.AUTO -> view.findViewById<RadioButton>(R.id.regionAuto).isChecked = true
+            XTrendRegion.UNITED_STATES -> view.findViewById<RadioButton>(R.id.regionUs).isChecked = true
+            XTrendRegion.UNITED_KINGDOM -> view.findViewById<RadioButton>(R.id.regionUk).isChecked = true
+            XTrendRegion.JAPAN -> view.findViewById<RadioButton>(R.id.regionJp).isChecked = true
+            XTrendRegion.SINGAPORE -> view.findViewById<RadioButton>(R.id.regionSg).isChecked = true
+            XTrendRegion.INDIA -> view.findViewById<RadioButton>(R.id.regionIn).isChecked = true
+        }
 
         when (settings.niche) {
             NicheId.TECH -> view.findViewById<RadioButton>(R.id.nicheTech).isChecked = true
@@ -315,6 +359,14 @@ class MainActivity : ComponentActivity() {
                 R.id.nicheCustom -> NicheId.CUSTOM
                 else -> NicheId.TECH
             }
+            val xTrendRegion = when (groupXRegion.checkedRadioButtonId) {
+                R.id.regionUs -> XTrendRegion.UNITED_STATES
+                R.id.regionUk -> XTrendRegion.UNITED_KINGDOM
+                R.id.regionJp -> XTrendRegion.JAPAN
+                R.id.regionSg -> XTrendRegion.SINGAPORE
+                R.id.regionIn -> XTrendRegion.INDIA
+                else -> XTrendRegion.AUTO
+            }
             val language = when (groupLanguage.checkedRadioButtonId) {
                 R.id.langEn -> ContentLanguage.EN
                 R.id.langMixed -> ContentLanguage.MIXED
@@ -332,6 +384,7 @@ class MainActivity : ComponentActivity() {
                 niche = niche,
                 customNicheLabel = editCustomNiche.text.toString().trim(),
                 language = language,
+                xTrendRegion = xTrendRegion,
                 writingStyle = writingStyle,
                 persona = editPersona.text.toString().ifBlank { AppSettings().persona },
                 aiEnabled = switchAi.isChecked,
@@ -457,7 +510,7 @@ class MainActivity : ComponentActivity() {
 
     private suspend fun runTick(silent: Boolean) {
         btnTick.isEnabled = false
-        txtStatus.text = "正在抓热点 / 写草稿…"
+        txtStatus.text = "正在抓 X 热搜 / 写草稿…"
         try {
             val result = withContext(Dispatchers.IO) { container.repository.runTick() }
             val msg = "完成：热点 ${result.topics} · 新草稿 ${result.drafts} · 发布 ${result.published}"
