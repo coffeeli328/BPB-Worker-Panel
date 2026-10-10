@@ -65,6 +65,7 @@ private sealed class Tab(val route: String, val label: String) {
     data object Settings : Tab("settings", "设置")
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HotpostApp(container: AppContainer) {
     HotpostTheme {

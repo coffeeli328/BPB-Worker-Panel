@@ -4,6 +4,8 @@
 
 **不使用 X API。** 真发帖时用本机 Chromium 已登录会话，在网页端代你点「发帖」。
 
+**Android 版**见 [`XHotpostAndroid/`](../XHotpostAndroid/)：手机本机抓热点与审核，跳转 X 应用发帖（无 API）。
+
 ## 能做什么
 
 1. **跟踪热点**：按赛道拉取公开 Google News RSS（演示模式还有内置样本）
