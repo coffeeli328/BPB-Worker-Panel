@@ -7,17 +7,23 @@ import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import com.gglee.xhotpost.domain.AppSettings
+import com.gglee.xhotpost.domain.ContentLanguage
 import com.gglee.xhotpost.domain.Draft
 import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
+import com.gglee.xhotpost.domain.NicheId
+import com.gglee.xhotpost.domain.XPublisher
 import com.gglee.xhotpost.work.SyncWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -40,6 +46,15 @@ class MainActivity : ComponentActivity() {
     private var topics: List<HotTopic> = emptyList()
     private var tab = Tab.REVIEW
     private var collectJob: Job? = null
+
+    private val loginLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult(),
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            toast("X 登录状态已更新")
+            if (tab == Tab.SETTINGS) render()
+        }
+    }
 
     private enum class Tab { REVIEW, TOPICS, SETTINGS }
 
@@ -128,14 +143,33 @@ class MainActivity : ComponentActivity() {
                 topics = q.topics
                 txtStats.text =
                     "待审核 ${q.stats.pendingReview} · 已发布 ${q.stats.published} · 草稿 ${q.stats.draftsCreated}"
-                txtBanner.text = if (settings.demoMode) {
-                    "演示模式：不会打开 X。关闭后审核通过会跳转 X 发帖（无 API）。"
-                } else {
-                    "非演示：审核通过后打开 X，文案已填好，你点发送即可。"
-                }
+                txtBanner.text = buildBanner(settings)
                 render()
             }
         }
+    }
+
+    private fun buildBanner(s: AppSettings): String {
+        val niche = nicheLabel(s)
+        val login = if (s.xLoggedIn) {
+            "X 已登录${s.xUsername.takeIf { it.isNotBlank() }?.let { "($it)" } ?: ""}"
+        } else {
+            "X 未登录（请到设置登录）"
+        }
+        return if (s.demoMode) {
+            "演示模式 · 话题：$niche · $login"
+        } else {
+            "正式发帖 · 话题：$niche · $login"
+        }
+    }
+
+    private fun nicheLabel(s: AppSettings): String = when (s.niche) {
+        NicheId.TECH -> "科技/AI"
+        NicheId.FINANCE -> "财经"
+        NicheId.LIFESTYLE -> "生活"
+        NicheId.CREATOR -> "自媒体"
+        NicheId.LOCAL -> "综合"
+        NicheId.CUSTOM -> s.customNicheLabel.ifBlank { "自定义" }
     }
 
     private data class Quad(
@@ -185,12 +219,48 @@ class MainActivity : ComponentActivity() {
 
     private fun renderSettings() {
         val view = LayoutInflater.from(this).inflate(R.layout.panel_settings, content, false)
+        val txtXStatus = view.findViewById<TextView>(R.id.txtXStatus)
+        val editXUsername = view.findViewById<EditText>(R.id.editXUsername)
+        val switchXLoggedIn = view.findViewById<Switch>(R.id.switchXLoggedIn)
+        val groupNiche = view.findViewById<RadioGroup>(R.id.groupNiche)
+        val editCustomNiche = view.findViewById<EditText>(R.id.editCustomNiche)
+        val groupLanguage = view.findViewById<RadioGroup>(R.id.groupLanguage)
         val editName = view.findViewById<EditText>(R.id.editDisplayName)
         val editAffiliate = view.findViewById<EditText>(R.id.editAffiliate)
         val editCta = view.findViewById<EditText>(R.id.editCta)
         val switchDemo = view.findViewById<Switch>(R.id.switchDemo)
         val switchAutoDraft = view.findViewById<Switch>(R.id.switchAutoDraft)
         val switchAutoPublish = view.findViewById<Switch>(R.id.switchAutoPublish)
+
+        txtXStatus.text = if (settings.xLoggedIn) {
+            "状态：已登录${settings.xUsername.takeIf { it.isNotBlank() }?.let { " · $it" } ?: ""}"
+        } else {
+            "状态：未登录（发帖前请先登录 X）"
+        }
+        editXUsername.setText(settings.xUsername)
+        switchXLoggedIn.isChecked = settings.xLoggedIn
+
+        when (settings.niche) {
+            NicheId.TECH -> view.findViewById<RadioButton>(R.id.nicheTech).isChecked = true
+            NicheId.FINANCE -> view.findViewById<RadioButton>(R.id.nicheFinance).isChecked = true
+            NicheId.LIFESTYLE -> view.findViewById<RadioButton>(R.id.nicheLifestyle).isChecked = true
+            NicheId.CREATOR -> view.findViewById<RadioButton>(R.id.nicheCreator).isChecked = true
+            NicheId.LOCAL -> view.findViewById<RadioButton>(R.id.nicheLocal).isChecked = true
+            NicheId.CUSTOM -> view.findViewById<RadioButton>(R.id.nicheCustom).isChecked = true
+        }
+        editCustomNiche.setText(settings.customNicheLabel)
+        editCustomNiche.visibility =
+            if (settings.niche == NicheId.CUSTOM) View.VISIBLE else View.GONE
+        groupNiche.setOnCheckedChangeListener { _, checkedId ->
+            editCustomNiche.visibility =
+                if (checkedId == R.id.nicheCustom) View.VISIBLE else View.GONE
+        }
+
+        when (settings.language) {
+            ContentLanguage.ZH -> view.findViewById<RadioButton>(R.id.langZh).isChecked = true
+            ContentLanguage.EN -> view.findViewById<RadioButton>(R.id.langEn).isChecked = true
+            ContentLanguage.MIXED -> view.findViewById<RadioButton>(R.id.langMixed).isChecked = true
+        }
 
         editName.setText(settings.displayName)
         editAffiliate.setText(settings.affiliateUrl)
@@ -199,20 +269,49 @@ class MainActivity : ComponentActivity() {
         switchAutoDraft.isChecked = settings.autoDraft
         switchAutoPublish.isChecked = settings.autoPublishApproved
 
+        view.findViewById<Button>(R.id.btnLoginX).setOnClickListener {
+            loginLauncher.launch(android.content.Intent(this, XLoginActivity::class.java))
+        }
+        view.findViewById<Button>(R.id.btnOpenXApp).setOnClickListener {
+            if (!XPublisher.openXApp(this)) {
+                toast("未找到 X App，请先安装或用网页登录")
+            }
+        }
+
         view.findViewById<Button>(R.id.btnSaveSettings).setOnClickListener {
+            val niche = when (groupNiche.checkedRadioButtonId) {
+                R.id.nicheFinance -> NicheId.FINANCE
+                R.id.nicheLifestyle -> NicheId.LIFESTYLE
+                R.id.nicheCreator -> NicheId.CREATOR
+                R.id.nicheLocal -> NicheId.LOCAL
+                R.id.nicheCustom -> NicheId.CUSTOM
+                else -> NicheId.TECH
+            }
+            val language = when (groupLanguage.checkedRadioButtonId) {
+                R.id.langEn -> ContentLanguage.EN
+                R.id.langMixed -> ContentLanguage.MIXED
+                else -> ContentLanguage.ZH
+            }
             val next = settings.copy(
                 displayName = editName.text.toString().ifBlank { "热帖" },
+                niche = niche,
+                customNicheLabel = editCustomNiche.text.toString().trim(),
+                language = language,
                 affiliateUrl = editAffiliate.text.toString().trim(),
                 ctaTemplate = editCta.text.toString().ifBlank { settings.ctaTemplate },
                 demoMode = switchDemo.isChecked,
                 autoDraft = switchAutoDraft.isChecked,
                 autoPublishApproved = switchAutoPublish.isChecked,
+                xLoggedIn = switchXLoggedIn.isChecked,
+                xUsername = editXUsername.text.toString().trim(),
             )
             lifecycleScope.launch {
                 withContext(Dispatchers.IO) {
                     container.repository.updateSettings { next }
                 }
-                toast("设置已保存")
+                toast("设置已保存。可点「跑一轮」按新话题抓热点")
+                tab = Tab.REVIEW
+                render()
             }
         }
         content.addView(view)
@@ -254,6 +353,12 @@ class MainActivity : ComponentActivity() {
         }
         btnApprove.setOnClickListener {
             val text = edit.text.toString()
+            if (!settings.demoMode && !settings.xLoggedIn) {
+                toast("请先到「设置」登录 X 账号")
+                tab = Tab.SETTINGS
+                render()
+                return@setOnClickListener
+            }
             lifecycleScope.launch {
                 try {
                     val result = withContext(Dispatchers.IO) {

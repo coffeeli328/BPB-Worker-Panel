@@ -12,8 +12,183 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="赛道与变现（无 X API）"
+            android:text="1. X 账号登录（无 API）"
+            android:textColor="#D6FF4B"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtXStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="未登录"
+            android:textColor="#9BB3AA"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/editXUsername"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="你的 X 用户名（可选，如 @name）"
             android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <Button
+            android:id="@+id/btnLoginX"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="打开网页登录 X" />
+
+        <Button
+            android:id="@+id/btnOpenXApp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="打开 X App（请在 App 内登录）" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="我已登录 X（发帖前请勾选）"
+                android:textColor="#F3F7F2" />
+
+            <Switch
+                android:id="@+id/switchXLoggedIn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="2. 跟踪话题 / 赛道"
+            android:textColor="#D6FF4B"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="选择要自动跟踪的热点方向"
+            android:textColor="#9BB3AA"
+            android:textSize="13sp" />
+
+        <RadioGroup
+            android:id="@+id/groupNiche"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <RadioButton
+                android:id="@+id/nicheTech"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="科技 / AI"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheFinance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="财经投资"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheLifestyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="生活方式"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheCreator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="自媒体变现"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheLocal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="综合热点"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheCustom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="自定义关键词"
+                android:textColor="#F3F7F2" />
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/editCustomNiche"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:hint="自定义话题关键词，例如：温哥华房价"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="内容语言"
+            android:textColor="#F3F7F2"
+            android:textSize="14sp" />
+
+        <RadioGroup
+            android:id="@+id/groupLanguage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/langZh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="中文"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/langEn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="英文"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/langMixed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="混合"
+                android:textColor="#F3F7F2" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="3. 变现与发布"
+            android:textColor="#D6FF4B"
             android:textSize="16sp"
             android:textStyle="bold" />
 
@@ -56,7 +231,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="演示模式"
+                android:text="演示模式（不真发帖）"
                 android:textColor="#F3F7F2" />
 
             <Switch
@@ -96,7 +271,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="通过后打开 X"
+                android:text="通过后打开 X 发帖"
                 android:textColor="#F3F7F2" />
 
             <Switch

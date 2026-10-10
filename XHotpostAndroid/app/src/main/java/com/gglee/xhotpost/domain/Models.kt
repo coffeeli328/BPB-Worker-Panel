@@ -65,6 +65,9 @@ data class AppSettings(
     val pollIntervalMinutes: Int = 30,
     val maxDraftsPerTick: Int = 3,
     val demoMode: Boolean = true,
+    /** User confirmed / WebView detected X login (no X API). */
+    val xLoggedIn: Boolean = false,
+    val xUsername: String = "",
 )
 
 data class DashboardStats(

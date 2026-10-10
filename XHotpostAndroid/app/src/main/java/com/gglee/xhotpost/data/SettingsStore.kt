@@ -16,45 +16,12 @@ private val Context.settingsDataStore by preferencesDataStore(name = "hotpost_se
 
 class SettingsStore(private val context: Context) {
     val settings: Flow<AppSettings> = context.settingsDataStore.data.map { prefs ->
-        AppSettings(
-            displayName = prefs[stringKey("displayName")] ?: "热帖",
-            niche = NicheId.valueOf(prefs[stringKey("niche")] ?: NicheId.TECH.name),
-            customNicheLabel = prefs[stringKey("customNicheLabel")] ?: "",
-            language = ContentLanguage.valueOf(
-                prefs[stringKey("language")] ?: ContentLanguage.ZH.name,
-            ),
-            persona = prefs[stringKey("persona")] ?: AppSettings().persona,
-            affiliateUrl = prefs[stringKey("affiliateUrl")] ?: "",
-            affiliateLabel = prefs[stringKey("affiliateLabel")] ?: "了解更多",
-            ctaTemplate = prefs[stringKey("ctaTemplate")] ?: AppSettings().ctaTemplate,
-            autoDraft = prefs[booleanKey("autoDraft")] ?: true,
-            autoPublishApproved = prefs[booleanKey("autoPublishApproved")] ?: true,
-            pollIntervalMinutes = prefs[intKey("pollIntervalMinutes")] ?: 30,
-            maxDraftsPerTick = prefs[intKey("maxDraftsPerTick")] ?: 3,
-            demoMode = prefs[booleanKey("demoMode")] ?: true,
-        )
+        read(prefs)
     }
 
     suspend fun update(transform: (AppSettings) -> AppSettings) {
         context.settingsDataStore.edit { prefs ->
-            val current = AppSettings(
-                displayName = prefs[stringKey("displayName")] ?: "热帖",
-                niche = NicheId.valueOf(prefs[stringKey("niche")] ?: NicheId.TECH.name),
-                customNicheLabel = prefs[stringKey("customNicheLabel")] ?: "",
-                language = ContentLanguage.valueOf(
-                    prefs[stringKey("language")] ?: ContentLanguage.ZH.name,
-                ),
-                persona = prefs[stringKey("persona")] ?: AppSettings().persona,
-                affiliateUrl = prefs[stringKey("affiliateUrl")] ?: "",
-                affiliateLabel = prefs[stringKey("affiliateLabel")] ?: "了解更多",
-                ctaTemplate = prefs[stringKey("ctaTemplate")] ?: AppSettings().ctaTemplate,
-                autoDraft = prefs[booleanKey("autoDraft")] ?: true,
-                autoPublishApproved = prefs[booleanKey("autoPublishApproved")] ?: true,
-                pollIntervalMinutes = prefs[intKey("pollIntervalMinutes")] ?: 30,
-                maxDraftsPerTick = prefs[intKey("maxDraftsPerTick")] ?: 3,
-                demoMode = prefs[booleanKey("demoMode")] ?: true,
-            )
-            val next = transform(current)
+            val next = transform(read(prefs))
             prefs[stringKey("displayName")] = next.displayName
             prefs[stringKey("niche")] = next.niche.name
             prefs[stringKey("customNicheLabel")] = next.customNicheLabel
@@ -68,7 +35,37 @@ class SettingsStore(private val context: Context) {
             prefs[intKey("pollIntervalMinutes")] = next.pollIntervalMinutes
             prefs[intKey("maxDraftsPerTick")] = next.maxDraftsPerTick
             prefs[booleanKey("demoMode")] = next.demoMode
+            prefs[booleanKey("xLoggedIn")] = next.xLoggedIn
+            prefs[stringKey("xUsername")] = next.xUsername
         }
+    }
+
+    private fun read(
+        prefs: androidx.datastore.preferences.core.Preferences,
+    ): AppSettings {
+        return AppSettings(
+            displayName = prefs[stringKey("displayName")] ?: "热帖",
+            niche = runCatching {
+                NicheId.valueOf(prefs[stringKey("niche")] ?: NicheId.TECH.name)
+            }.getOrDefault(NicheId.TECH),
+            customNicheLabel = prefs[stringKey("customNicheLabel")] ?: "",
+            language = runCatching {
+                ContentLanguage.valueOf(
+                    prefs[stringKey("language")] ?: ContentLanguage.ZH.name,
+                )
+            }.getOrDefault(ContentLanguage.ZH),
+            persona = prefs[stringKey("persona")] ?: AppSettings().persona,
+            affiliateUrl = prefs[stringKey("affiliateUrl")] ?: "",
+            affiliateLabel = prefs[stringKey("affiliateLabel")] ?: "了解更多",
+            ctaTemplate = prefs[stringKey("ctaTemplate")] ?: AppSettings().ctaTemplate,
+            autoDraft = prefs[booleanKey("autoDraft")] ?: true,
+            autoPublishApproved = prefs[booleanKey("autoPublishApproved")] ?: true,
+            pollIntervalMinutes = prefs[intKey("pollIntervalMinutes")] ?: 30,
+            maxDraftsPerTick = prefs[intKey("maxDraftsPerTick")] ?: 3,
+            demoMode = prefs[booleanKey("demoMode")] ?: true,
+            xLoggedIn = prefs[booleanKey("xLoggedIn")] ?: false,
+            xUsername = prefs[stringKey("xUsername")] ?: "",
+        )
     }
 
     private fun stringKey(name: String) = stringPreferencesKey(name)

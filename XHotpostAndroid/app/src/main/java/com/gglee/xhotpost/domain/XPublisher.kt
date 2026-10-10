@@ -11,26 +11,20 @@ import java.net.URLEncoder
 object XPublisher {
     private const val TWITTER_PACKAGE = "com.twitter.android"
 
+    fun openXApp(context: Context): Boolean {
+        val appContext = context.applicationContext
+        val launch = appContext.packageManager.getLaunchIntentForPackage(TWITTER_PACKAGE)
+        if (launch != null) {
+            launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            return startOnMain(appContext, launch)
+        }
+        val web = Intent(Intent.ACTION_VIEW, Uri.parse("https://x.com/login"))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        return startOnMain(appContext, web)
+    }
+
     fun openCompose(context: Context, text: String): Boolean {
         val appContext = context.applicationContext
-        fun startOnMain(intent: Intent): Boolean {
-            return try {
-                if (Looper.myLooper() == Looper.getMainLooper()) {
-                    appContext.startActivity(intent)
-                } else {
-                    Handler(Looper.getMainLooper()).post {
-                        try {
-                            appContext.startActivity(intent)
-                        } catch (_: Exception) {
-                        }
-                    }
-                }
-                true
-            } catch (_: Exception) {
-                false
-            }
-        }
-
         val share = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, text)
@@ -38,7 +32,7 @@ object XPublisher {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         if (share.resolveActivity(appContext.packageManager) != null) {
-            return startOnMain(share)
+            return startOnMain(appContext, share)
         }
 
         val encoded = URLEncoder.encode(text, Charsets.UTF_8.name())
@@ -47,8 +41,26 @@ object XPublisher {
             Uri.parse("https://twitter.com/intent/tweet?text=$encoded"),
         ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (web.resolveActivity(appContext.packageManager) != null) {
-            return startOnMain(web)
+            return startOnMain(appContext, web)
         }
         return false
+    }
+
+    private fun startOnMain(context: Context, intent: Intent): Boolean {
+        return try {
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                context.startActivity(intent)
+            } else {
+                Handler(Looper.getMainLooper()).post {
+                    try {
+                        context.startActivity(intent)
+                    } catch (_: Exception) {
+                    }
+                }
+            }
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 }
