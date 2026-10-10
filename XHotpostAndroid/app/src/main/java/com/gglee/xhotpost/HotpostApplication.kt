@@ -2,41 +2,26 @@ package com.gglee.xhotpost
 
 import android.app.Application
 import android.util.Log
-import com.gglee.xhotpost.work.SyncWorker
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 
 class HotpostApplication : Application() {
-    lateinit var container: AppContainer
-        private set
+    @Volatile
+    private var containerOrNull: AppContainer? = null
 
-    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val container: AppContainer
+        get() = containerOrNull ?: synchronized(this) {
+            containerOrNull ?: AppContainer(this).also { containerOrNull = it }
+        }
 
     override fun onCreate() {
         super.onCreate()
+        CrashLogger.install(this)
         try {
-            container = AppContainer(this)
+            containerOrNull = AppContainer(this)
         } catch (t: Throwable) {
-            Log.e(TAG, "Failed to init AppContainer", t)
-            throw t
+            Log.e(TAG, "AppContainer init failed", t)
+            CrashLogger.save(this, t)
         }
-        appScope.launch {
-            try {
-                val settings = container.repository.settings.first()
-                SyncWorker.schedule(this@HotpostApplication, settings.pollIntervalMinutes.toLong())
-            } catch (t: Throwable) {
-                Log.e(TAG, "Failed to schedule sync", t)
-            }
-            // 启动时抓热点失败不应杀死 App
-            try {
-                container.repository.runTick()
-            } catch (t: Throwable) {
-                Log.e(TAG, "Boot tick failed", t)
-            }
-        }
+        // 不在 Application 里跑网络 / WorkManager，避免启动期崩溃
     }
 
     companion object {

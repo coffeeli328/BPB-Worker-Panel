@@ -12,9 +12,9 @@ Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力�
 
 GitHub **Releases** 比分支里的 raw 文件更稳（约 17MB）：
 
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.1/XHotpost.apk
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.2/XHotpost.apk
 
-发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.1
+发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.2
 
 若浏览器一直卡在 0%：换 Chrome/Safari、换网络，或用电脑下载后传到手机。
 
