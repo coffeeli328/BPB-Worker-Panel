@@ -5,6 +5,6 @@ local.properties
 *.iml
 app/build/
 dist/*
-!dist/.gitkeep
+!dist/XHotpost.apk
 captures/
 .DS_Store
