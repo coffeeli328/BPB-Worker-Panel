@@ -5,6 +5,8 @@
 
     <queries>
         <package android:name="com.twitter.android" />
+        <package android:name="com.twitter.android.lite" />
+        <package android:name="com.android.chrome" />
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" android:host="x.com" />
@@ -12,6 +14,13 @@
         <intent>
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="https" android:host="twitter.com" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="twitter" />
+        </intent>
+        <intent>
+            <action android:name="android.support.customtabs.action.CustomTabsService" />
         </intent>
         <intent>
             <action android:name="android.intent.action.SEND" />

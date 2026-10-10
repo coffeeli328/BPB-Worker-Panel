@@ -51,8 +51,16 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.StartActivityForResult(),
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            toast("X 登录状态已更新")
-            if (tab == Tab.SETTINGS) render()
+            val name = result.data?.getStringExtra(XLoginActivity.EXTRA_USERNAME).orEmpty()
+            toast(if (name.isBlank()) "X 登录状态已更新" else "已登录：$name")
+            // force refresh from store
+            lifecycleScope.launch {
+                settings = withContext(Dispatchers.IO) {
+                    container.repository.settings.first()
+                }
+                txtBanner.text = buildBanner(settings)
+                if (tab == Tab.SETTINGS) render()
+            }
         }
     }
 

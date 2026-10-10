@@ -40,14 +40,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="打开网页登录 X" />
+            android:text="去登录 X（浏览器 / 官方 App）" />
 
         <Button
             android:id="@+id/btnOpenXApp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
-            android:text="打开 X App（请在 App 内登录）" />
+            android:text="仅打开 X App" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -60,7 +60,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="我已登录 X（发帖前请勾选）"
+                android:text="已登录 X（登录成功后会自动勾选）"
                 android:textColor="#F3F7F2" />
 
             <Switch
