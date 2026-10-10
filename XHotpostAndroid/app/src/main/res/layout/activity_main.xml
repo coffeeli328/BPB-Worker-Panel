@@ -94,6 +94,13 @@
                 android:text="热点" />
 
             <Button
+                android:id="@+id/tabShare"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="视频链接" />
+
+            <Button
                 android:id="@+id/tabSettings"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

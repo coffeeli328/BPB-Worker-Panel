@@ -24,6 +24,22 @@ class AiDraftClient(
         .build(),
 ) {
     fun generate(topic: HotTopic, settings: AppSettings): AiDraftResult {
+        return chat(
+            settings = settings,
+            system = DraftGenerator.aiSystemPrompt(settings),
+            user = DraftGenerator.aiUserPrompt(topic),
+        )
+    }
+
+    fun generateLinkShare(parsed: ParsedXLink, settings: AppSettings): AiDraftResult {
+        return chat(
+            settings = settings,
+            system = DraftGenerator.aiLinkShareSystemPrompt(settings),
+            user = DraftGenerator.aiLinkShareUserPrompt(parsed),
+        )
+    }
+
+    private fun chat(settings: AppSettings, system: String, user: String): AiDraftResult {
         val key = settings.aiApiKey.trim()
         if (!settings.aiEnabled || key.isEmpty()) return AiDraftResult.Skipped
 
@@ -36,16 +52,8 @@ class AiDraftClient(
             .put(
                 "messages",
                 JSONArray()
-                    .put(
-                        JSONObject()
-                            .put("role", "system")
-                            .put("content", DraftGenerator.aiSystemPrompt(settings)),
-                    )
-                    .put(
-                        JSONObject()
-                            .put("role", "user")
-                            .put("content", DraftGenerator.aiUserPrompt(topic)),
-                    ),
+                    .put(JSONObject().put("role", "system").put("content", system))
+                    .put(JSONObject().put("role", "user").put("content", user)),
             )
             .put("temperature", 0.9)
             .put("max_tokens", 400)
@@ -141,7 +149,7 @@ class AiDraftClient(
                 (model.isBlank() || model.startsWith("gpt-"))
         }
 
-        private fun shortError(raw: String): String {
+        fun shortError(raw: String): String {
             return try {
                 val root = JSONObject(raw)
                 val err = root.optJSONObject("error")
@@ -154,7 +162,7 @@ class AiDraftClient(
             }
         }
 
-        private fun extractContent(raw: String): String? {
+        fun extractContent(raw: String): String? {
             return try {
                 val root = JSONObject(raw)
                 val choices = root.optJSONArray("choices") ?: return null

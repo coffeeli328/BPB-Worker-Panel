@@ -315,4 +315,139 @@ object DraftGenerator {
             append("请写一条可直接发的短帖（像真人，不像模板）。")
         }
     }
+
+    /** Caption for resharing an X video / status link (link appended separately). */
+    fun linkShareCaption(parsed: ParsedXLink, settings: AppSettings): String {
+        val who = parsed.username?.let { "@$it" } ?: "这条"
+        val niche = nicheName(settings)
+        val english = settings.language == ContentLanguage.EN
+        val idx = (
+            (parsed.statusId ?: parsed.canonicalUrl) + settings.writingStyle.name
+            ).hashCode().absoluteValue % 5
+
+        val body = if (english) {
+            when (settings.writingStyle) {
+                WritingStyle.CASUAL -> listOf(
+                    "Caught this from $who — worth a watch if you care about $niche.",
+                    "Saving this clip from $who. Short, clear, actually useful.",
+                    "Not doomscrolling — this one from $who earned the pause.",
+                    "Quick share: $who nailed a point creators in $niche keep missing.",
+                    "If you’re in $niche, watch this before the timeline moves on.",
+                )
+                WritingStyle.OPINION -> listOf(
+                    "Most clips are noise. This one from $who isn’t — it makes a real claim.",
+                    "My take after $who’s video: stop copying formats, ship a clearer POV.",
+                    "Credit to $who — the cut is simple, the idea isn’t.",
+                    "Watch $who’s clip, then ask: what’s the one sentence you’d add?",
+                    "For $niche: this is the kind of signal that beats another hot take.",
+                )
+                WritingStyle.HOWTO -> listOf(
+                    "Steal this structure from $who: hook → one proof → one action.",
+                    "Creator note: pause $who’s video and list 3 beats you can reuse.",
+                    "Workflow: watch once, write your angle, then post with the link.",
+                    "Use $who’s clip as a prompt: what’s YOUR version of this point?",
+                    "For $niche drafts: attach the link, lead with your judgment first.",
+                )
+                WritingStyle.STORY -> listOf(
+                    "Stopped mid-scroll on $who’s video. That’s rare.",
+                    "Friend sent me $who’s clip — stayed for the ending.",
+                    "Timeline was loud; $who’s video was the quiet useful one.",
+                    "Bookmarking $who for later. Future-me will thank present-me.",
+                    "Saw $who’s clip and thought of our last $niche debate.",
+                )
+                WritingStyle.PRO -> listOf(
+                    "Signal | clip via $who — relevant to $niche.",
+                    "Reference: $who. Review before amplifying.",
+                    "Media note: $who — compact delivery, check claims.",
+                    "Share for $niche desk: primary source embedded below.",
+                    "Brief: $who video — extract the falsifiable claim first.",
+                )
+            }[idx]
+        } else {
+            when (settings.writingStyle) {
+                WritingStyle.CASUAL -> listOf(
+                    "刚刷到 $who 这个视频，停下来看完了。做「$niche」的可以看看。",
+                    "分享一条：$who 讲得比一堆文字清楚。",
+                    "不是广告，是真觉得 $who 这条值得存一下。",
+                    "时间线太吵，这条 $who 的视频算有用信号。",
+                    "$who 这条短视频，比十条复读热搜有用。",
+                )
+                WritingStyle.OPINION -> listOf(
+                    "$who 这条视频有个真实判断，不是情绪复读。做「$niche」的值得对照一下自己的立场。",
+                    "看完 $who：热闹不重要，重要的是你能不能补一句别人没说过的。",
+                    "多数二创在抄形式，$who 这条至少把观点说清楚了。",
+                    "转发 $who 之前先问：我的增量是什么？没有增量就别发。",
+                    "关于「$niche」：$who 这条比空喊口号更接近可执行。",
+                )
+                WritingStyle.HOWTO -> listOf(
+                    "可复用结构（来自 $who）：开头钩子 → 一个证据 → 一个动作。你也可以照着写。",
+                    "创作者作业：看完 $who，记下 3 个可拆镜头/论点，改成自己的帖。",
+                    "用法：先写你的判断，再贴链接。别只扔链接。",
+                    "把 $who 当素材库：同一视频可拆观点帖 + 拆解帖。",
+                    "「$niche」练习：用一句话概括 $who 的核心，再决定转不转。",
+                )
+                WritingStyle.STORY -> listOf(
+                    "刷到 $who 的视频，本来想滑走，结果看到一半不舍得关。",
+                    "朋友丢来 $who 这条，我说：这比今日热搜列表有用。",
+                    "晚上时间线全是热闹，唯独 $who 这条让我记了笔记。",
+                    "想起自己上次也想讲清楚同一件事——$who 讲得更干脆。",
+                    "收藏了 $who。过两天选题荒，大概会回来翻。",
+                )
+                WritingStyle.PRO -> listOf(
+                    "参考｜$who 视频，与「$niche」相关。转发前请自核信息。",
+                    "材料：$who。建议先提取可验证主张，再公开表态。",
+                    "简报：来源 $who。适合作为讨论底本，而非结论。",
+                    "分享供「$niche」对照：原文链接见下。",
+                    "笔记｜$who — 信息密度尚可，注意区分事实与观点。",
+                )
+            }[idx]
+        }
+        return stripExcess(body)
+    }
+
+    fun linkSharePost(parsed: ParsedXLink, caption: String, settings: AppSettings): String {
+        val captionClean = caption.trim().ifBlank { linkShareCaption(parsed, settings) }
+        val hook = buildHook(settings)
+        val withLink = if (captionClean.contains(parsed.canonicalUrl)) {
+            captionClean
+        } else {
+            "$captionClean\n\n${parsed.canonicalUrl}"
+        }
+        val merged = if (hook.isNotBlank() && withLink.length + hook.length + 2 <= 280) {
+            "$withLink\n$hook"
+        } else {
+            withLink
+        }
+        return stripExcess(merged)
+    }
+
+    fun aiLinkShareSystemPrompt(settings: AppSettings): String {
+        val niche = nicheName(settings)
+        val lang = when (settings.language) {
+            ContentLanguage.ZH -> "中文"
+            ContentLanguage.EN -> "English"
+            ContentLanguage.MIXED -> "中文（可夹少量英文）"
+        }
+        return """
+你在帮创作者写一条「转发 X 视频/帖子」的推荐短帖。
+人设（勿写入正文）：${settings.persona}
+赛道：$niche
+语言：$lang
+规则：
+1. 只输出正文，不要标题/引号/解释
+2. 80～160 字为佳；不要复读链接
+3. 不要写「值得一看」「冲」等空话；要有一句具体理由
+4. 不要在正文里放 URL（链接会另附）
+5. 少 emoji
+        """.trimIndent()
+    }
+
+    fun aiLinkShareUserPrompt(parsed: ParsedXLink): String {
+        return buildString {
+            appendLine("原帖链接：${parsed.canonicalUrl}")
+            if (!parsed.username.isNullOrBlank()) appendLine("作者：@${parsed.username}")
+            if (!parsed.statusId.isNullOrBlank()) appendLine("帖子 ID：${parsed.statusId}")
+            append("请写一条推荐转发短帖（不含 URL）。")
+        }
+    }
 }

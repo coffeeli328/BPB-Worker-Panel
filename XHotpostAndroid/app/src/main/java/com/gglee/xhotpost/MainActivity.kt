@@ -1,5 +1,9 @@
 package com.gglee.xhotpost
 
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -15,21 +19,24 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.view.WindowCompat
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.gglee.xhotpost.domain.AiDraftClient
 import com.gglee.xhotpost.domain.AppSettings
 import com.gglee.xhotpost.domain.ContentLanguage
 import com.gglee.xhotpost.domain.Draft
+import com.gglee.xhotpost.domain.DraftGenerator
 import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
 import com.gglee.xhotpost.domain.NicheId
+import com.gglee.xhotpost.domain.ParsedXLink
 import com.gglee.xhotpost.domain.WritingStyle
+import com.gglee.xhotpost.domain.XLinkParser
 import com.gglee.xhotpost.domain.XPublisher
 import com.gglee.xhotpost.domain.XTrendRegion
 import com.gglee.xhotpost.work.SyncWorker
-import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -53,6 +60,8 @@ class MainActivity : ComponentActivity() {
     private var aiStatusLine: String = "AI：未使用"
     private var tab = Tab.REVIEW
     private var collectJob: Job? = null
+    private var pendingShareInput: String? = null
+    private var shareParsed: ParsedXLink? = null
 
     private val loginLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
@@ -71,7 +80,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private enum class Tab { REVIEW, TOPICS, SETTINGS }
+    private enum class Tab { REVIEW, TOPICS, SHARE, SETTINGS }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,6 +98,7 @@ class MainActivity : ComponentActivity() {
             setContentView(R.layout.activity_main)
             bindViews()
             startCollectors()
+            consumeShareIntent(intent)
             lifecycleScope.launch {
                 try {
                     val current = withContext(Dispatchers.IO) {
@@ -104,6 +114,35 @@ class MainActivity : ComponentActivity() {
             Log.e(TAG, "onCreate failed", t)
             CrashLogger.save(this, t)
             setContentView(buildCrashView(t.stackTraceToString()))
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        consumeShareIntent(intent)
+        if (pendingShareInput != null) {
+            tab = Tab.SHARE
+            render()
+        }
+    }
+
+    private fun consumeShareIntent(intent: Intent?) {
+        if (intent == null) return
+        val shared = when (intent.action) {
+            Intent.ACTION_SEND -> {
+                if (intent.type?.startsWith("text/") == true) {
+                    intent.getStringExtra(Intent.EXTRA_TEXT)
+                } else {
+                    null
+                }
+            }
+            Intent.ACTION_VIEW -> intent.data?.toString()
+            else -> null
+        }?.trim().orEmpty()
+        if (shared.isNotBlank() && XLinkParser.extract(shared) != null) {
+            pendingShareInput = shared
+            tab = Tab.SHARE
         }
     }
 
@@ -138,6 +177,10 @@ class MainActivity : ComponentActivity() {
             tab = Tab.TOPICS
             render()
         }
+        findViewById<Button>(R.id.tabShare).setOnClickListener {
+            tab = Tab.SHARE
+            render()
+        }
         findViewById<Button>(R.id.tabSettings).setOnClickListener {
             tab = Tab.SETTINGS
             render()
@@ -163,11 +206,9 @@ class MainActivity : ComponentActivity() {
                 txtStats.text =
                     "待审核 ${q.stats.pendingReview} · 已发布 ${q.stats.published} · 草稿 ${q.stats.draftsCreated}"
                 txtBanner.text = buildBanner(settings)
-                if (tab != Tab.SETTINGS) {
-                    // Avoid wiping in-progress settings edits on every AI status tick.
+                if (tab != Tab.SETTINGS && tab != Tab.SHARE) {
+                    // Avoid wiping in-progress edits on every store tick.
                     render()
-                } else {
-                    // Still refresh banner/stats; settings panel keeps local edits.
                 }
             }
         }
@@ -219,8 +260,175 @@ class MainActivity : ComponentActivity() {
         when (tab) {
             Tab.REVIEW -> renderReview()
             Tab.TOPICS -> renderTopics()
+            Tab.SHARE -> renderShareLink()
             Tab.SETTINGS -> renderSettings()
         }
+    }
+
+    private fun renderShareLink() {
+        val view = LayoutInflater.from(this).inflate(R.layout.panel_share_link, content, false)
+        val editUrl = view.findViewById<EditText>(R.id.editShareUrl)
+        val editCaption = view.findViewById<EditText>(R.id.editShareCaption)
+        val txtMeta = view.findViewById<TextView>(R.id.txtShareMeta)
+        val txtPreview = view.findViewById<TextView>(R.id.txtSharePreview)
+        val txtCount = view.findViewById<TextView>(R.id.txtShareCount)
+
+        fun refreshPreview() {
+            val parsed = shareParsed ?: XLinkParser.extract(editUrl.text.toString())
+            if (parsed?.statusId == null) {
+                txtPreview.text = "完整发帖预览会显示在这里"
+                txtCount.text = "0/280"
+                txtMeta.text = ""
+                return
+            }
+            shareParsed = parsed
+            txtMeta.text = "已识别：${parsed.shortLabel}"
+            val full = DraftGenerator.linkSharePost(
+                parsed,
+                editCaption.text.toString(),
+                settings,
+            )
+            txtPreview.text = full
+            txtCount.text = "${full.length}/280"
+        }
+
+        pendingShareInput?.let {
+            editUrl.setText(it)
+            shareParsed = XLinkParser.extract(it)
+            pendingShareInput = null
+            refreshPreview()
+        }
+        shareParsed?.let {
+            if (editUrl.text.isNullOrBlank()) editUrl.setText(it.canonicalUrl)
+        }
+
+        editUrl.doAfterTextChanged {
+            shareParsed = XLinkParser.extract(it?.toString().orEmpty())
+            refreshPreview()
+        }
+        editCaption.doAfterTextChanged { refreshPreview() }
+
+        view.findViewById<Button>(R.id.btnPasteClipboard).setOnClickListener {
+            val clip = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val text = clip.primaryClip?.getItemAt(0)?.coerceToText(this)?.toString().orEmpty()
+            if (text.isBlank()) {
+                toast("剪贴板为空")
+                return@setOnClickListener
+            }
+            val parsed = XLinkParser.extract(text)
+            if (parsed == null) {
+                editUrl.setText(text)
+                toast("未识别到 X 帖子链接，请检查")
+            } else {
+                editUrl.setText(parsed.canonicalUrl)
+                shareParsed = parsed
+                toast("已粘贴：${parsed.shortLabel}")
+            }
+            refreshPreview()
+        }
+
+        view.findViewById<Button>(R.id.btnOpenOriginal).setOnClickListener {
+            val parsed = shareParsed ?: XLinkParser.extract(editUrl.text.toString())
+            if (parsed == null) {
+                toast("请先粘贴有效链接")
+                return@setOnClickListener
+            }
+            openUrl(parsed.canonicalUrl)
+        }
+
+        view.findViewById<Button>(R.id.btnGenShareCaption).setOnClickListener {
+            lifecycleScope.launch {
+                txtStatus.text = "正在生成推荐文案…"
+                try {
+                    val prep = withContext(Dispatchers.IO) {
+                        container.repository.prepareLinkShare(editUrl.text.toString())
+                    }
+                    shareParsed = prep.parsed
+                    editUrl.setText(prep.parsed.canonicalUrl)
+                    editCaption.setText(prep.caption)
+                    refreshPreview()
+                    val msg = when {
+                        prep.usedAi -> "已用 AI 生成文案"
+                        prep.aiError != null -> "AI 失败（${prep.aiError}），已用模板"
+                        else -> "已生成模板文案"
+                    }
+                    txtStatus.text = msg
+                    toast(msg)
+                } catch (t: Throwable) {
+                    txtStatus.text = t.message
+                    toast(t.message ?: "生成失败")
+                }
+            }
+        }
+
+        view.findViewById<Button>(R.id.btnShareToReview).setOnClickListener {
+            lifecycleScope.launch {
+                try {
+                    val prep = withContext(Dispatchers.IO) {
+                        container.repository.prepareLinkShare(
+                            editUrl.text.toString(),
+                            captionOverride = editCaption.text.toString(),
+                        )
+                    }
+                    shareParsed = prep.parsed
+                    withContext(Dispatchers.IO) {
+                        container.repository.saveLinkShareDraft(prep.fullText, prep.parsed)
+                    }
+                    toast("已加入待审")
+                    tab = Tab.REVIEW
+                    render()
+                } catch (t: Throwable) {
+                    toast(t.message ?: "保存失败")
+                }
+            }
+        }
+
+        view.findViewById<Button>(R.id.btnSharePublish).setOnClickListener {
+            if (!settings.demoMode && !settings.xLoggedIn) {
+                toast("请先到「设置」登录 X")
+                tab = Tab.SETTINGS
+                render()
+                return@setOnClickListener
+            }
+            lifecycleScope.launch {
+                try {
+                    val prep = withContext(Dispatchers.IO) {
+                        container.repository.prepareLinkShare(
+                            editUrl.text.toString(),
+                            captionOverride = editCaption.text.toString(),
+                        )
+                    }
+                    shareParsed = prep.parsed
+                    editCaption.setText(prep.caption)
+                    refreshPreview()
+                    if (settings.demoMode) {
+                        withContext(Dispatchers.IO) {
+                            container.repository.publishLinkShareNow(prep.fullText, prep.parsed)
+                        }
+                        toast("演示模式：已记为发布")
+                        tab = Tab.REVIEW
+                        render()
+                    } else {
+                        withContext(Dispatchers.IO) {
+                            container.repository.saveLinkShareDraft(prep.fullText, prep.parsed)
+                        }
+                        val opened = XPublisher.openCompose(this@MainActivity, prep.fullText)
+                        if (opened) {
+                            toast("已打开 X，请确认发送")
+                            tab = Tab.REVIEW
+                            render()
+                        } else {
+                            toast("无法打开 X，请安装 X App 或浏览器")
+                        }
+                    }
+                } catch (t: Throwable) {
+                    toast(t.message ?: "发布失败")
+                }
+            }
+        }
+
+        refreshPreview()
+        content.addView(view)
     }
 
     private fun renderReview() {

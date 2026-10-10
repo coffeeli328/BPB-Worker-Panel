@@ -12,7 +12,9 @@ import com.gglee.xhotpost.domain.DraftGenOutcome
 import com.gglee.xhotpost.domain.DraftGenerator
 import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
+import com.gglee.xhotpost.domain.ParsedXLink
 import com.gglee.xhotpost.domain.TrendCollector
+import com.gglee.xhotpost.domain.XLinkParser
 import com.gglee.xhotpost.domain.XPublisher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -178,6 +180,97 @@ class HotpostRepository(
                 )
             }
         }
+    }
+
+    data class LinkSharePrep(
+        val parsed: ParsedXLink,
+        val caption: String,
+        val fullText: String,
+        val usedAi: Boolean,
+        val aiError: String?,
+    )
+
+    /** Build caption + post text for a pasted X video/status link. */
+    suspend fun prepareLinkShare(
+        rawInput: String,
+        captionOverride: String? = null,
+    ): LinkSharePrep {
+        val parsed = XLinkParser.extract(rawInput)
+            ?: error("请粘贴有效的 X/Twitter 帖子链接（含 /status/）")
+        if (parsed.statusId.isNullOrBlank()) {
+            error("请使用带视频/帖子的链接，例如 https://x.com/用户名/status/数字")
+        }
+        val settings = settingsStore.settings.first()
+        val caption: String
+        var usedAi = false
+        var aiError: String? = null
+        val override = captionOverride?.trim().orEmpty()
+        if (override.isNotBlank()) {
+            caption = override
+        } else if (settings.aiEnabled && settings.aiApiKey.isNotBlank()) {
+            when (val ai = withContext(Dispatchers.IO) { aiDraftClient.generateLinkShare(parsed, settings) }) {
+                is AiDraftResult.Ok -> {
+                    caption = ai.text
+                    usedAi = true
+                    setAiStatus("AI：链接转发文案成功")
+                }
+                is AiDraftResult.Err -> {
+                    caption = DraftGenerator.linkShareCaption(parsed, settings)
+                    aiError = ai.message
+                    setAiStatus("AI：链接文案失败 → ${ai.message}")
+                }
+                AiDraftResult.Skipped -> {
+                    caption = DraftGenerator.linkShareCaption(parsed, settings)
+                }
+            }
+        } else {
+            caption = DraftGenerator.linkShareCaption(parsed, settings)
+        }
+        val fullText = DraftGenerator.linkSharePost(parsed, caption, settings)
+        return LinkSharePrep(parsed, caption, fullText, usedAi, aiError)
+    }
+
+    suspend fun saveLinkShareDraft(fullText: String, parsed: ParsedXLink): Draft {
+        val settings = settingsStore.settings.first()
+        val now = System.currentTimeMillis()
+        val topicId = "xlink-${parsed.statusId}"
+        val draft = Draft(
+            id = UUID.randomUUID().toString(),
+            topicId = topicId,
+            topicTitle = "视频链接 · ${parsed.shortLabel}",
+            text = fullText.take(280),
+            status = DraftStatus.PENDING_REVIEW,
+            monetizationHook = DraftGenerator.buildHook(settings),
+            createdAt = now,
+            updatedAt = now,
+            demo = settings.demoMode,
+        )
+        dao.upsertDraft(draft.toEntity())
+        // Keep a lightweight topic row so regenerate can resolve title.
+        dao.upsertTopics(
+            listOf(
+                HotTopic(
+                    id = topicId,
+                    title = "视频 · ${parsed.shortLabel}",
+                    summary = parsed.canonicalUrl,
+                    source = "X 链接",
+                    url = parsed.canonicalUrl,
+                    score = 95,
+                    language = if (settings.language == com.gglee.xhotpost.domain.ContentLanguage.EN) {
+                        "en"
+                    } else {
+                        "zh"
+                    },
+                    fetchedAt = now,
+                ).toEntity(),
+            ),
+        )
+        return draft
+    }
+
+    suspend fun publishLinkShareNow(fullText: String, parsed: ParsedXLink): Draft {
+        val draft = saveLinkShareDraft(fullText, parsed)
+        return approveDraft(draft.id, fullText)
     }
 
     suspend fun testAi(): String {
