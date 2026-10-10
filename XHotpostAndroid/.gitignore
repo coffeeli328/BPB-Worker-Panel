@@ -4,6 +4,7 @@ local.properties
 .idea/
 *.iml
 app/build/
-dist/
+dist/*
+!dist/.gitkeep
 captures/
 .DS_Store

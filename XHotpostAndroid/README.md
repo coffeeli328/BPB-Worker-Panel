@@ -8,6 +8,18 @@ Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力�
 - **不用 X API**：关闭演示模式后，跳转到 X/Twitter 应用发帖（文案已填好，你在 X 里点发送）
 - WorkManager 后台定时「跑一轮」（抓热点 + 写草稿；演示模式可自动记为已发布）
 
+## 安装到已连接的手机（本机 USB）
+
+云 Agent **无法**访问你电脑上的 USB，需要在你自己的电脑上执行（手机已连上并开启 USB 调试）：
+
+```bash
+cd XHotpostAndroid
+chmod +x scripts/install-to-phone.sh
+./scripts/install-to-phone.sh
+```
+
+脚本会自动 `assembleDebug`（若还没有 APK）并用 `adb install -r` 安装。
+
 ## 构建 APK
 
 要求：JDK 17+、Android SDK 34。

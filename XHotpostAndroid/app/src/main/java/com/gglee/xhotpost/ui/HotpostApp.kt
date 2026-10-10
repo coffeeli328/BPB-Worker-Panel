@@ -39,7 +39,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
@@ -300,7 +302,7 @@ private fun TopicsScreen(topics: List<HotTopic>) {
 
 @Composable
 private fun SettingsScreen(settings: AppSettings, onSave: (AppSettings) -> Unit) {
-    var form by remember(settings) { androidx.compose.runtime.mutableStateOf(settings) }
+    var form by remember(settings) { mutableStateOf(settings) }
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
