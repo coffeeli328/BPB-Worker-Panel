@@ -40,13 +40,12 @@ export type Draft = {
   demo: boolean
 }
 
-export type XCredentials = {
-  /** OAuth 1.0a app key */
-  apiKey: string
-  apiSecret: string
-  /** User access token pair */
-  accessToken: string
-  accessTokenSecret: string
+/** Publish via local Chromium session — no X API */
+export type BrowserPublishSettings = {
+  /** Absolute or project-relative profile directory */
+  profileDir: string
+  headless: boolean
+  slowMoMs: number
 }
 
 export type Settings = {
@@ -62,8 +61,9 @@ export type Settings = {
   autoPublishApproved: boolean
   pollIntervalMinutes: number
   maxDraftsPerTick: number
+  /** When true, never open a browser — only mark published locally */
   demoMode: boolean
-  x: XCredentials
+  browser: BrowserPublishSettings
   openaiCompatible?: {
     enabled: boolean
     baseUrl: string

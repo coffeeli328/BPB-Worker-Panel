@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { v4 as uuidv4 } from 'uuid'
+import { browserSessionLooksReady } from './browser-profile.js'
 import type { Draft, HotTopic, Settings, StoreShape, WorkerLog } from './types.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -23,11 +24,10 @@ export const defaultSettings = (): Settings => ({
   pollIntervalMinutes: 30,
   maxDraftsPerTick: 3,
   demoMode: true,
-  x: {
-    apiKey: '',
-    apiSecret: '',
-    accessToken: '',
-    accessTokenSecret: '',
+  browser: {
+    profileDir: 'data/browser-profile',
+    headless: true,
+    slowMoMs: 50,
   },
   openaiCompatible: {
     enabled: false,
@@ -52,6 +52,23 @@ function defaultStore(): StoreShape {
   }
 }
 
+function normalizeSettings(raw: Partial<Settings> & { x?: unknown }): Settings {
+  const base = defaultSettings()
+  const { x: _legacyX, ...rest } = raw
+  return {
+    ...base,
+    ...rest,
+    browser: {
+      ...base.browser,
+      ...(raw.browser ?? {}),
+    },
+    openaiCompatible: {
+      ...base.openaiCompatible!,
+      ...(raw.openaiCompatible ?? {}),
+    },
+  }
+}
+
 function ensureStore(): StoreShape {
   if (!existsSync(dataDir)) {
     mkdirSync(dataDir, { recursive: true })
@@ -66,7 +83,7 @@ function ensureStore(): StoreShape {
   return {
     ...defaultStore(),
     ...parsed,
-    settings: { ...defaultSettings(), ...parsed.settings },
+    settings: normalizeSettings(parsed.settings ?? {}),
     stats: { ...defaultStore().stats, ...parsed.stats },
   }
 }
@@ -89,6 +106,10 @@ export function writeStore(next: StoreShape): void {
   if (!existsSync(dataDir)) {
     mkdirSync(dataDir, { recursive: true })
   }
+  writeStoreFile(next)
+}
+
+function writeStoreFile(next: StoreShape): void {
   writeFileSync(storePath, JSON.stringify(next, null, 2), 'utf8')
 }
 
@@ -105,15 +126,18 @@ export function getSettings(): Settings {
 
 export function saveSettings(partial: Partial<Settings>): Settings {
   const store = updateStore((s) => {
-    s.settings = {
+    s.settings = normalizeSettings({
       ...s.settings,
       ...partial,
-      x: { ...s.settings.x, ...(partial.x ?? {}) },
+      browser: {
+        ...s.settings.browser,
+        ...(partial.browser ?? {}),
+      },
       openaiCompatible: {
         ...s.settings.openaiCompatible!,
         ...(partial.openaiCompatible ?? {}),
       },
-    }
+    })
   })
   return store.settings
 }
@@ -169,30 +193,15 @@ export function appendLog(
 export function publicSettings(settings: Settings = getSettings()) {
   return {
     ...settings,
-    x: {
-      apiKey: settings.x.apiKey ? mask(settings.x.apiKey) : '',
-      apiSecret: settings.x.apiSecret ? '••••••••' : '',
-      accessToken: settings.x.accessToken ? mask(settings.x.accessToken) : '',
-      accessTokenSecret: settings.x.accessTokenSecret ? '••••••••' : '',
-      configured: Boolean(
-        settings.x.apiKey &&
-          settings.x.apiSecret &&
-          settings.x.accessToken &&
-          settings.x.accessTokenSecret,
-      ),
+    browser: {
+      ...settings.browser,
+      sessionReady: browserSessionLooksReady(settings.browser.profileDir),
     },
     openaiCompatible: settings.openaiCompatible
       ? {
           ...settings.openaiCompatible,
-          apiKey: settings.openaiCompatible.apiKey
-            ? '••••••••'
-            : '',
+          apiKey: settings.openaiCompatible.apiKey ? '••••••••' : '',
         }
       : undefined,
   }
-}
-
-function mask(value: string): string {
-  if (value.length <= 8) return '••••••••'
-  return `${value.slice(0, 4)}…${value.slice(-4)}`
 }

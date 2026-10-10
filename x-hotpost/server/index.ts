@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { z } from 'zod'
+import { browserPublicStatus } from './browser.js'
 import { generateDraftsFromTopics } from './draft.js'
 import { publishDraft } from './publisher.js'
 import {
@@ -46,12 +47,11 @@ const settingsSchema = z.object({
   pollIntervalMinutes: z.number().int().min(5).max(240).optional(),
   maxDraftsPerTick: z.number().int().min(1).max(10).optional(),
   demoMode: z.boolean().optional(),
-  x: z
+  browser: z
     .object({
-      apiKey: z.string().optional(),
-      apiSecret: z.string().optional(),
-      accessToken: z.string().optional(),
-      accessTokenSecret: z.string().optional(),
+      profileDir: z.string().trim().min(1).max(300).optional(),
+      headless: z.boolean().optional(),
+      slowMoMs: z.number().int().min(0).max(2000).optional(),
     })
     .optional(),
   openaiCompatible: z
@@ -72,12 +72,17 @@ app.get('/api/overview', (_req, res) => {
   const store = readStore()
   res.json({
     settings: publicSettings(store.settings),
+    browser: browserPublicStatus(),
     worker: workerStatus(),
     stats: store.stats,
     topics: listTopics().slice(0, 12),
     drafts: listDrafts().slice(0, 40),
     logs: store.logs.slice(0, 30),
   })
+})
+
+app.get('/api/browser/status', (_req, res) => {
+  res.json(browserPublicStatus())
 })
 
 app.get('/api/settings', (_req, res) => {
@@ -109,22 +114,11 @@ app.patch('/api/settings', (req, res) => {
     demoMode: body.demoMode,
   }
 
-  if (body.x) {
-    next.x = {
-      apiKey: body.x.apiKey?.includes('…')
-        ? current.x.apiKey
-        : (body.x.apiKey ?? current.x.apiKey),
-      apiSecret:
-        body.x.apiSecret === '••••••••' || !body.x.apiSecret
-          ? current.x.apiSecret
-          : body.x.apiSecret,
-      accessToken: body.x.accessToken?.includes('…')
-        ? current.x.accessToken
-        : (body.x.accessToken ?? current.x.accessToken),
-      accessTokenSecret:
-        body.x.accessTokenSecret === '••••••••' || !body.x.accessTokenSecret
-          ? current.x.accessTokenSecret
-          : body.x.accessTokenSecret,
+  if (body.browser) {
+    next.browser = {
+      profileDir: body.browser.profileDir ?? current.browser.profileDir,
+      headless: body.browser.headless ?? current.browser.headless,
+      slowMoMs: body.browser.slowMoMs ?? current.browser.slowMoMs,
     }
   }
 

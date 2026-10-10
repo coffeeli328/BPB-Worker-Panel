@@ -66,12 +66,12 @@ const demoTopics: Array<Omit<HotTopic, 'id' | 'fetchedAt'>> = [
     url: 'https://example.com/demo/paid-community',
   },
   {
-    title: 'Pay-per-use X API changes how indie tools ship',
-    summary: 'Indie builders lean on review queues and sparse posting to control cost.',
+    title: 'Creators automate drafts, keep a human review gate',
+    summary: 'Browser-session posting plus approval queues beats unattended spam.',
     source: 'demo',
     score: 74,
     language: 'en',
-    url: 'https://example.com/demo/x-api',
+    url: 'https://example.com/demo/review-gate',
   },
 ]
 

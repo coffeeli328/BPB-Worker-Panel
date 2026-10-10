@@ -1,4 +1,5 @@
-import { buildOAuth1Header } from './oauth1.js'
+import { browserSessionLooksReady } from './browser-profile.js'
+import { postViaBrowser } from './browser.js'
 import {
   appendLog,
   getDraft,
@@ -16,43 +17,6 @@ export type PublishResult = {
   error?: string
 }
 
-function credentialsReady(): boolean {
-  const x = getSettings().x
-  return Boolean(x.apiKey && x.apiSecret && x.accessToken && x.accessTokenSecret)
-}
-
-async function postToX(text: string): Promise<{ id: string }> {
-  const settings = getSettings()
-  const url = 'https://api.x.com/2/tweets'
-  const authorization = buildOAuth1Header({
-    method: 'POST',
-    url,
-    consumerKey: settings.x.apiKey,
-    consumerSecret: settings.x.apiSecret,
-    token: settings.x.accessToken,
-    tokenSecret: settings.x.accessTokenSecret,
-  })
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      Authorization: authorization,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ text }),
-  })
-
-  const bodyText = await response.text()
-  if (!response.ok) {
-    throw new Error(`X API ${response.status}: ${bodyText.slice(0, 240)}`)
-  }
-
-  const json = JSON.parse(bodyText) as { data?: { id?: string } }
-  const id = json.data?.id
-  if (!id) throw new Error('X API returned no post id')
-  return { id }
-}
-
 export async function publishDraft(draftId: string): Promise<PublishResult> {
   const draft = getDraft(draftId)
   if (!draft) {
@@ -65,7 +29,7 @@ export async function publishDraft(draftId: string): Promise<PublishResult> {
   const settings = getSettings()
   const now = new Date().toISOString()
 
-  if (settings.demoMode || !credentialsReady()) {
+  if (settings.demoMode) {
     const next: Draft = {
       ...draft,
       status: 'published',
@@ -79,17 +43,26 @@ export async function publishDraft(draftId: string): Promise<PublishResult> {
     updateStore((s) => {
       s.stats.published += 1
     })
-    appendLog(
-      'info',
-      settings.demoMode
-        ? `演示模式已“发布”草稿：${draft.topicTitle}`
-        : `未配置 X 凭证，已用演示模式发布：${draft.topicTitle}`,
-    )
+    appendLog('info', `演示模式已“发布”草稿：${draft.topicTitle}`)
     return { ok: true, draft: next, demo: true, postId: next.externalPostId }
   }
 
+  if (!browserSessionLooksReady(settings.browser.profileDir)) {
+    const message =
+      '尚未保存 X 浏览器登录会话。请先运行 npm run x:login，或临时打开演示模式。'
+    const next: Draft = {
+      ...draft,
+      status: 'failed',
+      updatedAt: now,
+      publishError: message,
+    }
+    upsertDraft(next)
+    appendLog('error', message)
+    return { ok: false, draft: next, demo: false, error: message }
+  }
+
   try {
-    const { id } = await postToX(draft.text)
+    const { id } = await postViaBrowser(draft.text)
     const next: Draft = {
       ...draft,
       status: 'published',
@@ -103,7 +76,7 @@ export async function publishDraft(draftId: string): Promise<PublishResult> {
     updateStore((s) => {
       s.stats.published += 1
     })
-    appendLog('info', `已发布到 X：${draft.topicTitle} (#${id})`)
+    appendLog('info', `已通过浏览器发布到 X：${draft.topicTitle} (${id})`)
     return { ok: true, draft: next, demo: false, postId: id }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -114,7 +87,7 @@ export async function publishDraft(draftId: string): Promise<PublishResult> {
       publishError: message,
     }
     upsertDraft(next)
-    appendLog('error', `发布失败：${message}`)
+    appendLog('error', `浏览器发布失败：${message}`)
     return { ok: false, draft: next, demo: false, error: message }
   }
 }

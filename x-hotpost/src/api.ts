@@ -54,12 +54,11 @@ export type PublicSettings = {
   pollIntervalMinutes: number
   maxDraftsPerTick: number
   demoMode: boolean
-  x: {
-    apiKey: string
-    apiSecret: string
-    accessToken: string
-    accessTokenSecret: string
-    configured: boolean
+  browser: {
+    profileDir: string
+    headless: boolean
+    slowMoMs: number
+    sessionReady: boolean
   }
   openaiCompatible?: {
     enabled: boolean
@@ -71,6 +70,12 @@ export type PublicSettings = {
 
 export type Overview = {
   settings: PublicSettings
+  browser: {
+    profileDir: string
+    headless: boolean
+    slowMoMs: number
+    sessionReady: boolean
+  }
   worker: {
     running: boolean
     lastTickAt: string | null

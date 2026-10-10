@@ -101,8 +101,10 @@ export default function App() {
         result.draft.status === 'published'
           ? result.demo
             ? '已通过并在演示模式发布'
-            : '已通过并发布到 X'
-          : '已通过，等待自动发布',
+            : '已通过，并用浏览器会话发布到 X'
+          : result.draft.status === 'failed'
+            ? `发布失败：${result.draft.publishError ?? '未知错误'}`
+            : '已通过，等待自动发布',
       )
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -157,11 +159,10 @@ export default function App() {
         pollIntervalMinutes: settingsForm.pollIntervalMinutes,
         maxDraftsPerTick: settingsForm.maxDraftsPerTick,
         demoMode: settingsForm.demoMode,
-        x: {
-          apiKey: settingsForm.x.apiKey,
-          apiSecret: settingsForm.x.apiSecret,
-          accessToken: settingsForm.x.accessToken,
-          accessTokenSecret: settingsForm.x.accessTokenSecret,
+        browser: {
+          profileDir: settingsForm.browser.profileDir,
+          headless: settingsForm.browser.headless,
+          slowMoMs: settingsForm.browser.slowMoMs,
         },
         openaiCompatible: settingsForm.openaiCompatible,
       })
@@ -216,10 +217,10 @@ export default function App() {
 
       <div className="banner">
         {data.settings.demoMode
-          ? '当前是演示模式：热点与发布都可本地跑通，不会真实发到 X。配好 API 后关闭演示即可上线。'
-          : data.settings.x.configured
-            ? '已连接 X 凭证。通过审核的内容会按设置自动发布。'
-            : '演示已关闭，但尚未配置完整 X API 凭证；发布会回退为本地演示。'}
+          ? '当前是演示模式：不会打开浏览器发帖。关掉演示后，将用本机已登录的 X 浏览器会话发布（不用 X API）。'
+          : data.browser.sessionReady
+            ? '演示已关闭，已检测到浏览器登录会话。审核通过后会用本机 Chromium 自动发帖。'
+            : '演示已关闭，但还没有 X 登录会话。请在本机运行：npm run x:login'}
       </div>
 
       <section className="stats">
@@ -365,7 +366,7 @@ export default function App() {
         <section className="panel">
           <h2>账号、赛道与变现</h2>
           <p className="sub">
-            X 发帖需 Developer App 的 OAuth 1.0a 用户凭证（按次计费）。先用演示模式验证流程，再填密钥上线。
+            不使用 X API。发帖靠本机 Chromium 会话：先 npm run x:login 登录一次，审核通过后自动代发。
           </p>
           <form className="form-grid" onSubmit={(event) => void onSaveSettings(event)}>
             <div className="form-row">
@@ -536,65 +537,63 @@ export default function App() {
               </label>
             </div>
 
-            <h2 style={{ marginTop: '0.6rem' }}>X API（OAuth 1.0a）</h2>
-            <p className="sub">在 developer.x.com 创建 App，生成 API Key/Secret 与用户 Access Token/Secret。</p>
+            <h2 style={{ marginTop: '0.6rem' }}>X 浏览器登录（无 API）</h2>
+            <p className="sub">
+              会话状态：
+              {settingsForm.browser.sessionReady ? '已保存，可发帖' : '未登录'}
+              。在项目目录执行 <code>npm run x:login</code>，弹窗登录后回终端按 Enter。
+            </p>
             <div className="form-row">
               <label>
-                API Key
+                浏览器配置目录
                 <input
-                  value={settingsForm.x.apiKey}
+                  value={settingsForm.browser.profileDir}
                   onChange={(e) =>
                     setSettingsForm({
                       ...settingsForm,
-                      x: { ...settingsForm.x, apiKey: e.target.value },
+                      browser: {
+                        ...settingsForm.browser,
+                        profileDir: e.target.value,
+                      },
                     })
                   }
-                  placeholder={settingsForm.x.configured ? '已配置（可覆盖）' : ''}
                 />
               </label>
               <label>
-                API Secret
+                操作延迟（ms）
                 <input
-                  type="password"
-                  value={settingsForm.x.apiSecret}
+                  type="number"
+                  min={0}
+                  max={2000}
+                  value={settingsForm.browser.slowMoMs}
                   onChange={(e) =>
                     setSettingsForm({
                       ...settingsForm,
-                      x: { ...settingsForm.x, apiSecret: e.target.value },
+                      browser: {
+                        ...settingsForm.browser,
+                        slowMoMs: Number(e.target.value) || 0,
+                      },
                     })
                   }
-                  placeholder="留空表示不修改"
                 />
               </label>
             </div>
-            <div className="form-row">
-              <label>
-                Access Token
-                <input
-                  value={settingsForm.x.accessToken}
-                  onChange={(e) =>
-                    setSettingsForm({
-                      ...settingsForm,
-                      x: { ...settingsForm.x, accessToken: e.target.value },
-                    })
-                  }
-                />
-              </label>
-              <label>
-                Access Token Secret
-                <input
-                  type="password"
-                  value={settingsForm.x.accessTokenSecret}
-                  onChange={(e) =>
-                    setSettingsForm({
-                      ...settingsForm,
-                      x: { ...settingsForm.x, accessTokenSecret: e.target.value },
-                    })
-                  }
-                  placeholder="留空表示不修改"
-                />
-              </label>
-            </div>
+            <label className="toggle">
+              <input
+                type="checkbox"
+                checked={settingsForm.browser.headless}
+                onChange={(e) =>
+                  setSettingsForm({
+                    ...settingsForm,
+                    browser: {
+                      ...settingsForm.browser,
+                      headless: e.target.checked,
+                    },
+                  })
+                }
+              />
+              无头模式发帖（调试时可关掉，看着浏览器操作）
+            </label>
 
             <h2 style={{ marginTop: '0.6rem' }}>可选：AI 写稿</h2>
             <p className="sub">兼容 OpenAI 接口。不填则用本地模板写稿，照样能跑通审核流。</p>
