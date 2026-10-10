@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DeviceDefault avoids OEM quirks with bare Theme.Material on some phones -->
+    <style name="Theme.XHotpost" parent="android:Theme.DeviceDefault.NoActionBar">
+        <item name="android:statusBarColor">#071411</item>
+        <item name="android:navigationBarColor">#071411</item>
+        <item name="android:windowBackground">#071411</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+</resources>

@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="24dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1. X 账号登录（无 API）"
+            android:textColor="#D6FF4B"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtXStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="未登录"
+            android:textColor="#9BB3AA"
+            android:textSize="13sp" />
+
+        <EditText
+            android:id="@+id/editXUsername"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="你的 X 用户名（可选，如 @name）"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <Button
+            android:id="@+id/btnLoginX"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="去登录 X（浏览器 / 官方 App）" />
+
+        <Button
+            android:id="@+id/btnOpenXApp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="仅打开 X App" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="已登录 X（登录成功后会自动勾选）"
+                android:textColor="#F3F7F2" />
+
+            <Switch
+                android:id="@+id/switchXLoggedIn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="2. 跟踪话题 / 赛道"
+            android:textColor="#D6FF4B"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="选择要自动跟踪的热点方向"
+            android:textColor="#9BB3AA"
+            android:textSize="13sp" />
+
+        <RadioGroup
+            android:id="@+id/groupNiche"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <RadioButton
+                android:id="@+id/nicheTech"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="科技 / AI"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheFinance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="财经投资"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheLifestyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="生活方式"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheCreator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="自媒体变现"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheLocal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="综合热点"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/nicheCustom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="自定义关键词"
+                android:textColor="#F3F7F2" />
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/editCustomNiche"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:hint="自定义话题关键词，例如：温哥华房价"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA"
+            android:visibility="gone" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="内容语言"
+            android:textColor="#F3F7F2"
+            android:textSize="14sp" />
+
+        <RadioGroup
+            android:id="@+id/groupLanguage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/langZh"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="中文"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/langEn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="英文"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/langMixed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="混合"
+                android:textColor="#F3F7F2" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="3. 变现与发布"
+            android:textColor="#D6FF4B"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/editDisplayName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:hint="显示名"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <EditText
+            android:id="@+id/editAffiliate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="变现链接"
+            android:inputType="textUri"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <EditText
+            android:id="@+id/editCta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="CTA 模板（可用 {link}）"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="演示模式（不真发帖）"
+                android:textColor="#F3F7F2" />
+
+            <Switch
+                android:id="@+id/switchDemo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="自动写草稿"
+                android:textColor="#F3F7F2" />
+
+            <Switch
+                android:id="@+id/switchAutoDraft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="通过后打开 X 发帖"
+                android:textColor="#F3F7F2" />
+
+            <Switch
+                android:id="@+id/switchAutoPublish"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSaveSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="保存设置" />
+    </LinearLayout>
+</ScrollView>
