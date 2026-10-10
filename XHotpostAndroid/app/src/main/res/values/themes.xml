@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.XHotpost" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">#071411</item>
+        <item name="android:navigationBarColor">#071411</item>
+        <item name="android:windowBackground">#071411</item>
+    </style>
+</resources>
