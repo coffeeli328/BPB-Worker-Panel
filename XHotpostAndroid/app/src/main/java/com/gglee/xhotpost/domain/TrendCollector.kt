@@ -2,61 +2,80 @@ package com.gglee.xhotpost.domain
 
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.xmlpull.v1.XmlPullParser
-import org.xmlpull.v1.XmlPullParserFactory
 import java.net.URLEncoder
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
+/**
+ * Collects what's hot **on X** via a public trends mirror (getdaytrends),
+ * not Google News. No official X API.
+ */
 class TrendCollector(
     private val client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(20, TimeUnit.SECONDS)
+        .followRedirects(true)
         .build(),
 ) {
-    private val nicheQueries: Map<NicheId, Pair<String, String>> = mapOf(
-        NicheId.TECH to ("人工智能 OR ChatGPT OR 大模型" to "artificial intelligence OR ChatGPT OR LLM"),
-        NicheId.FINANCE to ("股市 OR 理财 OR 加密货币" to "markets OR investing OR crypto"),
-        NicheId.LIFESTYLE to ("健康 OR 旅行 OR 生活" to "wellness OR travel OR lifestyle"),
-        NicheId.CREATOR to ("自媒体 OR 内容创作 OR 副业" to "creator economy OR content creator"),
-        NicheId.LOCAL to ("热点新闻" to "breaking news"),
-        NicheId.CUSTOM to ("热点" to "trending"),
+    private val nicheKeywords: Map<NicheId, List<String>> = mapOf(
+        NicheId.TECH to listOf(
+            "ai", "chatgpt", "gpt", "openai", "llm", "robot", "科技", "人工智能",
+            "大模型", "芯片", "半导体", "apple", "google", "microsoft", "meta",
+            "nvidia", "tesla", "iphone", "android", "crypto", "bitcoin", "web3",
+            "startup", "saas", "编程", "开发", "开源", "github",
+        ),
+        NicheId.FINANCE to listOf(
+            "stock", "market", "fed", "利率", "股市", "理财", "基金", "比特币",
+            "crypto", "bitcoin", "eth", "nft", "nasdaq", "dow", "通胀", "gdp",
+            "银行", "投资", "美联储", "汇率", "gold", "oil",
+        ),
+        NicheId.LIFESTYLE to listOf(
+            "health", "fitness", "travel", "food", "咖啡", "旅行", "健康", "生活",
+            "fashion", "beauty", "recipe", "workout", "diet", "wellness", "家居",
+        ),
+        NicheId.CREATOR to listOf(
+            "creator", "influencer", "youtube", "tiktok", "自媒体", "副业",
+            "content", "podcast", "直播", "带货", "newsletter", "订阅", "粉丝",
+            "monetiz", "变现",
+        ),
+        NicheId.LOCAL to emptyList(),
+        NicheId.CUSTOM to emptyList(),
     )
 
     private val demoTopics = listOf(
         HotTopic(
-            id = topicId("开源模型掀起新一轮 AI 应用潮", "demo"),
-            title = "开源模型掀起新一轮 AI 应用潮",
-            summary = "开发者用开源模型快速搭产品，成本下降，竞争转向落地场景。",
-            source = "demo",
-            url = null,
+            id = topicId("#OpenSourceAI", "x-demo"),
+            title = "#OpenSourceAI",
+            summary = "开源模型成本下降，讨论正从概念转向谁先接到产品。",
+            source = "X 热搜 · demo",
+            url = xSearchUrl("#OpenSourceAI"),
             score = 96,
-            language = "zh",
+            language = "en",
             fetchedAt = System.currentTimeMillis(),
         ),
         HotTopic(
-            id = topicId("创作者开始把长内容拆成可复用短帖矩阵", "demo"),
-            title = "创作者开始把长内容拆成可复用短帖矩阵",
-            summary = "同一素材多平台分发，审核后定时发布，成为常见变现打法。",
-            source = "demo",
-            url = null,
+            id = topicId("创作者经济", "x-demo"),
+            title = "创作者经济",
+            summary = "长内容被拆成可复用短帖矩阵，审核后再发。",
+            source = "X 热搜 · demo",
+            url = xSearchUrl("创作者经济"),
             score = 88,
             language = "zh",
             fetchedAt = System.currentTimeMillis(),
         ),
         HotTopic(
-            id = topicId("小额付费社群回暖：信任比流量更值钱", "demo"),
-            title = "小额付费社群回暖：信任比流量更值钱",
-            summary = "高互动小群比大粉更稳定，热点解读 + 会员权益成为组合拳。",
-            source = "demo",
-            url = null,
+            id = topicId("#BuildInPublic", "x-demo"),
+            title = "#BuildInPublic",
+            summary = "公开构建 + 人工审核发帖，正在成为常见打法。",
+            source = "X 热搜 · demo",
+            url = xSearchUrl("#BuildInPublic"),
             score = 81,
-            language = "zh",
+            language = "en",
             fetchedAt = System.currentTimeMillis(),
         ),
     )
 
-    suspend fun collect(settings: AppSettings): List<HotTopic> {
+    fun collect(settings: AppSettings): List<HotTopic> {
         val now = System.currentTimeMillis()
         val collected = mutableListOf<HotTopic>()
 
@@ -64,110 +83,150 @@ class TrendCollector(
             collected += demoTopics.map { it.copy(fetchedAt = now) }
         }
 
-        val queries = if (settings.niche == NicheId.CUSTOM && settings.customNicheLabel.isNotBlank()) {
-            settings.customNicheLabel to settings.customNicheLabel
-        } else {
-            nicheQueries[settings.niche] ?: nicheQueries[NicheId.TECH]!!
-        }
-
-        try {
-            if (settings.language != ContentLanguage.EN) {
-                collected += fetchRss(queries.first, "zh", now)
-            }
-            if (settings.language != ContentLanguage.ZH) {
-                collected += fetchRss(queries.second, "en", now)
-            }
-        } catch (_: Exception) {
-            if (collected.isEmpty()) {
-                collected += demoTopics.map { it.copy(id = topicId(it.title, "fallback"), fetchedAt = now) }
+        val regions = resolveRegions(settings)
+        for (region in regions) {
+            try {
+                collected += fetchXTrends(region, now)
+            } catch (_: Exception) {
+                // try next region
             }
         }
 
-        return collected
-            .groupBy { it.id }
+        if (collected.isEmpty()) {
+            collected += demoTopics.map {
+                it.copy(
+                    id = topicId(it.title, "fallback"),
+                    fetchedAt = now,
+                    source = "X 热搜 · fallback",
+                )
+            }
+        }
+
+        val ranked = rankForNiche(collected, settings)
+        return ranked
+            .groupBy { normalizeTitle(it.title) }
             .map { (_, items) -> items.maxBy { it.score } }
             .sortedByDescending { it.score }
+            .take(40)
     }
 
-    private fun fetchRss(query: String, lang: String, now: Long): List<HotTopic> {
-        val url = if (lang == "zh") {
-            val q = URLEncoder.encode(query, Charsets.UTF_8.name())
-            "https://news.google.com/rss/search?q=$q&hl=zh-CN&gl=CN&ceid=CN:zh-Hans"
-        } else {
-            val q = URLEncoder.encode(query, Charsets.UTF_8.name())
-            "https://news.google.com/rss/search?q=$q&hl=en-US&gl=US&ceid=US:en"
+    private fun resolveRegions(settings: AppSettings): List<String> {
+        return when (settings.xTrendRegion) {
+            XTrendRegion.UNITED_STATES -> listOf("united-states")
+            XTrendRegion.UNITED_KINGDOM -> listOf("united-kingdom")
+            XTrendRegion.JAPAN -> listOf("japan")
+            XTrendRegion.SINGAPORE -> listOf("singapore")
+            XTrendRegion.INDIA -> listOf("india")
+            XTrendRegion.AUTO -> when (settings.language) {
+                ContentLanguage.ZH -> listOf("japan", "singapore", "united-states")
+                ContentLanguage.EN -> listOf("united-states", "united-kingdom")
+                ContentLanguage.MIXED -> listOf("united-states", "japan", "singapore")
+            }
         }
+    }
 
+    private fun fetchXTrends(regionSlug: String, now: Long): List<HotTopic> {
+        val url = "https://getdaytrends.com/$regionSlug/"
         val request = Request.Builder()
             .url(url)
-            .header("User-Agent", "XHotPostAndroid/1.0")
+            .header(
+                "User-Agent",
+                "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/120.0.0.0 Mobile Safari/537.36",
+            )
+            .header("Accept-Language", "en-US,en;q=0.9,zh-CN;q=0.8")
             .build()
 
         client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) error("RSS ${response.code}")
-            val body = response.body?.string() ?: error("empty rss")
-            return parseRss(body, lang, now)
+            if (!response.isSuccessful) error("X trends ${response.code}")
+            val body = response.body?.string() ?: error("empty trends")
+            return parseGetDayTrends(body, regionSlug, now)
         }
     }
 
-    private fun parseRss(xml: String, lang: String, now: Long): List<HotTopic> {
-        val factory = XmlPullParserFactory.newInstance()
-        val parser = factory.newPullParser()
-        parser.setInput(xml.reader())
+    /** Visible for unit tests. */
+    fun parseGetDayTrends(html: String, regionSlug: String, now: Long): List<HotTopic> {
+        val regionLabel = regionLabel(regionSlug)
+        val pattern = Regex(
+            """<td class="main"><a[^>]*>([^<]+)</a></td>""",
+            RegexOption.IGNORE_CASE,
+        )
+        val names = pattern.findAll(html)
+            .map { it.groupValues[1].trim() }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .take(50)
+            .toList()
 
-        val items = mutableListOf<HotTopic>()
-        var event = parser.eventType
-        var inItem = false
-        var title = ""
-        var link: String? = null
-        var summary = ""
-        var index = 0
+        return names.mapIndexed { index, name ->
+            val lang = guessLanguage(name)
+            HotTopic(
+                id = topicId(name, "x-$regionSlug"),
+                title = name,
+                summary = "",
+                source = "X 热搜 · $regionLabel · #${index + 1}",
+                url = xSearchUrl(name),
+                score = (100 - index).coerceAtLeast(40),
+                language = lang,
+                fetchedAt = now,
+            )
+        }
+    }
 
-        while (event != XmlPullParser.END_DOCUMENT && items.size < 12) {
-            when (event) {
-                XmlPullParser.START_TAG -> when (parser.name) {
-                    "item" -> {
-                        inItem = true
-                        title = ""
-                        link = null
-                        summary = ""
-                    }
-                    "title" -> if (inItem) title = parser.nextText().trim()
-                    "link" -> if (inItem) link = parser.nextText().trim()
-                    "description", "content" -> if (inItem && summary.isBlank()) {
-                        summary = stripHtml(parser.nextText()).take(220)
-                    }
-                }
-                XmlPullParser.END_TAG -> if (parser.name == "item" && inItem) {
-                    if (title.isNotBlank()) {
-                        items += HotTopic(
-                            id = topicId(title, lang),
-                            title = title,
-                            summary = summary.ifBlank { title },
-                            source = "Google News",
-                            url = link,
-                            score = (100 - index * 4).coerceAtLeast(40),
-                            language = lang,
-                            fetchedAt = now,
-                        )
-                        index++
-                    }
-                    inItem = false
-                }
+    private fun rankForNiche(topics: List<HotTopic>, settings: AppSettings): List<HotTopic> {
+        val keywords = when (settings.niche) {
+            NicheId.CUSTOM -> {
+                val custom = settings.customNicheLabel.trim()
+                if (custom.isBlank()) emptyList()
+                else custom.split(Regex("[,，\\s]+")).map { it.trim().lowercase() }.filter { it.length >= 2 }
             }
-            event = parser.next()
+            NicheId.LOCAL -> emptyList()
+            else -> nicheKeywords[settings.niche].orEmpty()
         }
-        return items
+
+        if (keywords.isEmpty()) return topics
+
+        val matched = mutableListOf<HotTopic>()
+        val rest = mutableListOf<HotTopic>()
+        for (topic in topics) {
+            val hay = topic.title.lowercase()
+            val hit = keywords.any { hay.contains(it) }
+            if (hit) {
+                matched += topic.copy(score = (topic.score + 25).coerceAtMost(120))
+            } else {
+                rest += topic
+            }
+        }
+
+        // Prefer niche hits, then keep enough general X trends so the list never feels empty.
+        return matched + rest.take(12)
     }
 
-    private fun stripHtml(raw: String): String =
-        raw.replace(Regex("<[^>]+>"), " ").replace(Regex("\\s+"), " ").trim()
+    private fun regionLabel(slug: String): String = when (slug) {
+        "united-states" -> "美国"
+        "united-kingdom" -> "英国"
+        "japan" -> "日本"
+        "singapore" -> "新加坡"
+        "india" -> "印度"
+        else -> slug
+    }
+
+    private fun guessLanguage(name: String): String {
+        return if (name.any { it.code in 0x4E00..0x9FFF || it.code in 0x3040..0x30FF }) "zh" else "en"
+    }
+
+    private fun normalizeTitle(title: String): String =
+        title.trim().lowercase().removePrefix("#")
 
     companion object {
         fun topicId(title: String, source: String): String {
             val digest = MessageDigest.getInstance("SHA-1")
                 .digest("$source::$title".toByteArray())
             return digest.joinToString("") { "%02x".format(it) }.take(16)
+        }
+
+        fun xSearchUrl(query: String): String {
+            val q = URLEncoder.encode(query, Charsets.UTF_8.name())
+            return "https://x.com/search?q=$q&src=typed_query&f=live"
         }
     }
 }

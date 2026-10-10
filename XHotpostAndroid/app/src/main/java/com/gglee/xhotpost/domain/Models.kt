@@ -15,6 +15,29 @@ enum class ContentLanguage {
     MIXED,
 }
 
+enum class WritingStyle {
+    /** 观点鲜明，像评论区里敢下判断的人 */
+    OPINION,
+    /** 干货拆解：先结论，再给可执行步骤 */
+    HOWTO,
+    /** 故事感：场景开头，再落到洞察 */
+    STORY,
+    /** 更口语、短句、像朋友聊天 */
+    CASUAL,
+    /** 偏专业、克制，少感叹 */
+    PRO,
+}
+
+/** X 热搜地区（公开趋势镜像，不用 X API） */
+enum class XTrendRegion {
+    AUTO,
+    UNITED_STATES,
+    UNITED_KINGDOM,
+    JAPAN,
+    SINGAPORE,
+    INDIA,
+}
+
 enum class DraftStatus {
     PENDING_REVIEW,
     APPROVED,
@@ -55,8 +78,11 @@ data class AppSettings(
     val niche: NicheId = NicheId.TECH,
     val customNicheLabel: String = "",
     val language: ContentLanguage = ContentLanguage.ZH,
+    /** 跟踪哪个地区的 X 热搜 */
+    val xTrendRegion: XTrendRegion = XTrendRegion.AUTO,
+    val writingStyle: WritingStyle = WritingStyle.CASUAL,
     val persona: String =
-        "你是一位务实的中文创作者，擅长把热点讲清楚，语气真诚、不夸张，偶尔带一点洞察。",
+        "像真人在 X 上说话：短句、有观点、不鸡汤、不复读热搜。犀利但克制，偶尔一句俏皮。",
     val affiliateUrl: String = "",
     val affiliateLabel: String = "了解更多",
     val ctaTemplate: String = "对这个话题感兴趣的话，可以看看：{link}",
@@ -68,6 +94,21 @@ data class AppSettings(
     /** User confirmed / WebView detected X login (no X API). */
     val xLoggedIn: Boolean = false,
     val xUsername: String = "",
+    /**
+     * Use OpenAI-compatible chat API when enabled + key set.
+     * DeepSeek: base `https://api.deepseek.com/v1`, model `deepseek-chat`.
+     */
+    val aiEnabled: Boolean = false,
+    val aiBaseUrl: String = AiDraftClient.DEEPSEEK_BASE,
+    val aiApiKey: String = "",
+    val aiModel: String = AiDraftClient.DEEPSEEK_MODEL,
+)
+
+/** Result of local/AI draft generation for UI feedback. */
+data class DraftGenOutcome(
+    val text: String,
+    val usedAi: Boolean,
+    val aiError: String? = null,
 )
 
 data class DashboardStats(

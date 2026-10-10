@@ -24,6 +24,9 @@ interface HotpostDao {
     @Query("SELECT * FROM drafts WHERE id = :id LIMIT 1")
     suspend fun draftById(id: String): DraftEntity?
 
+    @Query("SELECT * FROM hot_topics WHERE id = :id LIMIT 1")
+    suspend fun topicById(id: String): HotTopicEntity?
+
     @Query(
         """
         SELECT * FROM drafts

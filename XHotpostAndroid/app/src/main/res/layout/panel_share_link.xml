@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="24dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="发布 X 视频（文件，不是链接）"
+        android:textColor="#D6FF4B"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="复制 X 上的视频帖链接 → 下载视频文件 → 带文案打开 X 发布。不会只发链接。"
+        android:textColor="#9BB3AA"
+        android:textSize="13sp" />
+
+    <EditText
+        android:id="@+id/editShareUrl"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="top"
+        android:hint="粘贴 https://x.com/用户/status/数字"
+        android:inputType="textUri|textMultiLine"
+        android:minLines="2"
+        android:textColor="#F3F7F2"
+        android:textColorHint="#9BB3AA" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnPasteClipboard"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="从剪贴板粘贴" />
+
+        <Button
+            android:id="@+id/btnOpenOriginal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="打开原帖" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnGenShareCaption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="生成推荐文案" />
+
+    <Button
+        android:id="@+id/btnDownloadVideo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="下载视频文件" />
+
+    <TextView
+        android:id="@+id/txtShareMeta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="#9BB3AA"
+        android:textSize="12sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="文案（随视频一起发，不含原链接）"
+        android:textColor="#F3F7F2"
+        android:textSize="14sp" />
+
+    <EditText
+        android:id="@+id/editShareCaption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:background="#0A1A15"
+        android:gravity="top"
+        android:hint="生成后显示在这里；也可自己写"
+        android:inputType="textMultiLine"
+        android:minLines="4"
+        android:padding="8dp"
+        android:textColor="#F3F7F2"
+        android:textColorHint="#9BB3AA"
+        android:textSize="14sp" />
+
+    <TextView
+        android:id="@+id/txtSharePreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="#143029"
+        android:padding="10dp"
+        android:text="视频状态与文案预览"
+        android:textColor="#E8FFB0"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/txtShareCount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="0/280"
+        android:textColor="#9BB3AA"
+        android:textSize="12sp" />
+
+    <Button
+        android:id="@+id/btnShareToReview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="文案加入待审" />
+
+    <Button
+        android:id="@+id/btnSharePublish"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="用视频打开 X 发布" />
+</LinearLayout>
