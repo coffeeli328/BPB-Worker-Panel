@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Article
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Whatshot
 import androidx.compose.material3.Button
@@ -107,7 +107,7 @@ fun HotpostApp(container: AppContainer) {
                             icon = {
                                 Icon(
                                     when (tab) {
-                                        Tab.Review -> Icons.Outlined.Article
+                                        Tab.Review -> Icons.Outlined.Home
                                         Tab.Topics -> Icons.Outlined.Whatshot
                                         Tab.Settings -> Icons.Outlined.Settings
                                     },

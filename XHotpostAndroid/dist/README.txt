@@ -1,7 +1,7 @@
 热帖 Android 安装包（debug 签名，侧载用）
 
 推荐下载（GitHub Releases，比 raw 分支文件更稳）：
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.0/XHotpost.apk
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.1/XHotpost.apk
 
 备用（分支 raw，若 Release 不可用）：
 https://github.com/coffeeli328/BPB-Worker-Panel/releases/latest

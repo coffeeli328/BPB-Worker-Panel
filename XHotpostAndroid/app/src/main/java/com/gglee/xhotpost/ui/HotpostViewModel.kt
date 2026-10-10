@@ -10,12 +10,14 @@ import com.gglee.xhotpost.domain.Draft
 import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
 import com.gglee.xhotpost.work.SyncWorker
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class HotpostUiState(
     val settings: AppSettings = AppSettings(),
@@ -36,33 +38,27 @@ class HotpostViewModel(
     private val toast = MutableStateFlow<String?>(null)
     private val error = MutableStateFlow<String?>(null)
 
-    val uiState: StateFlow<HotpostUiState> = combine(
+    private val dataState = combine(
         repo.settings,
         repo.stats,
         repo.drafts,
         repo.topics,
+    ) { settings, stats, drafts, topics ->
+        DataBundle(settings, stats, drafts, topics)
+    }
+
+    val uiState: StateFlow<HotpostUiState> = combine(
+        dataState,
         busy,
         toast,
         error,
-    ) { values ->
-        @Suppress("UNCHECKED_CAST")
-        val settings = values[0] as AppSettings
-        @Suppress("UNCHECKED_CAST")
-        val stats = values[1] as DashboardStats
-        @Suppress("UNCHECKED_CAST")
-        val drafts = values[2] as List<Draft>
-        @Suppress("UNCHECKED_CAST")
-        val topics = values[3] as List<HotTopic>
-        val isBusy = values[4] as Boolean
-        val toastMsg = values[5] as String?
-        val err = values[6] as String?
-
+    ) { data, isBusy, toastMsg, err ->
         HotpostUiState(
-            settings = settings,
-            stats = stats,
-            pendingDrafts = drafts.filter { it.status == DraftStatus.PENDING_REVIEW },
-            recentDrafts = drafts.filter { it.status != DraftStatus.PENDING_REVIEW }.take(8),
-            topics = topics.take(12),
+            settings = data.settings,
+            stats = data.stats,
+            pendingDrafts = data.drafts.filter { it.status == DraftStatus.PENDING_REVIEW },
+            recentDrafts = data.drafts.filter { it.status != DraftStatus.PENDING_REVIEW }.take(8),
+            topics = data.topics.take(12),
             busy = isBusy,
             toast = toastMsg,
             error = err,
@@ -78,7 +74,7 @@ class HotpostViewModel(
             busy.value = true
             error.value = null
             try {
-                val result = repo.runTick()
+                val result = withContext(Dispatchers.IO) { repo.runTick() }
                 toast.value =
                     "完成：热点 ${result.topics} · 新草稿 ${result.drafts} · 发布 ${result.published}"
             } catch (e: Exception) {
@@ -91,14 +87,14 @@ class HotpostViewModel(
 
     fun saveDraft(id: String, text: String) {
         viewModelScope.launch {
-            repo.saveDraftText(id, text)
+            withContext(Dispatchers.IO) { repo.saveDraftText(id, text) }
             toast.value = "草稿已保存"
         }
     }
 
     fun rejectDraft(id: String) {
         viewModelScope.launch {
-            repo.rejectDraft(id)
+            withContext(Dispatchers.IO) { repo.rejectDraft(id) }
             toast.value = "已拒绝"
         }
     }
@@ -107,7 +103,7 @@ class HotpostViewModel(
         viewModelScope.launch {
             busy.value = true
             try {
-                val draft = repo.approveDraft(id, text)
+                val draft = withContext(Dispatchers.IO) { repo.approveDraft(id, text) }
                 toast.value = when {
                     draft.status == DraftStatus.PUBLISHED && draft.demo ->
                         "已通过并在演示模式发布"
@@ -127,11 +123,24 @@ class HotpostViewModel(
 
     fun saveSettings(settings: AppSettings) {
         viewModelScope.launch {
-            repo.updateSettings { settings }
-            SyncWorker.schedule(container.appContext, settings.pollIntervalMinutes.toLong())
+            withContext(Dispatchers.IO) {
+                repo.updateSettings { settings }
+            }
+            try {
+                SyncWorker.schedule(container.appContext, settings.pollIntervalMinutes.toLong())
+            } catch (_: Exception) {
+                // WorkManager 在部分设备上可能尚未就绪，忽略
+            }
             toast.value = "设置已保存"
         }
     }
+
+    private data class DataBundle(
+        val settings: AppSettings,
+        val stats: DashboardStats,
+        val drafts: List<Draft>,
+        val topics: List<HotTopic>,
+    )
 }
 
 class HotpostViewModelFactory(
