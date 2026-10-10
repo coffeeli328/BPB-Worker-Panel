@@ -5,8 +5,10 @@ import com.gglee.xhotpost.data.local.HotpostDao
 import com.gglee.xhotpost.data.local.toDomain
 import com.gglee.xhotpost.data.local.toEntity
 import com.gglee.xhotpost.domain.AiDraftClient
+import com.gglee.xhotpost.domain.AiDraftResult
 import com.gglee.xhotpost.domain.AppSettings
 import com.gglee.xhotpost.domain.Draft
+import com.gglee.xhotpost.domain.DraftGenOutcome
 import com.gglee.xhotpost.domain.DraftGenerator
 import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
@@ -14,17 +16,22 @@ import com.gglee.xhotpost.domain.TrendCollector
 import com.gglee.xhotpost.domain.XPublisher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
 data class TickResult(
     val topics: Int,
     val drafts: Int,
     val published: Int,
     val message: String? = null,
+    val aiDrafts: Int = 0,
+    val aiError: String? = null,
 )
 
 class HotpostRepository(
@@ -34,7 +41,16 @@ class HotpostRepository(
     private val trendCollector: TrendCollector = TrendCollector(),
     private val aiDraftClient: AiDraftClient = AiDraftClient(),
 ) {
+    private val lastAiStatusRef = AtomicReference("AI：未使用")
+    private val _lastAiStatus = MutableStateFlow("AI：未使用")
+    val lastAiStatus = _lastAiStatus.asStateFlow()
+
     val settings: Flow<AppSettings> = settingsStore.settings
+
+    private fun setAiStatus(msg: String) {
+        lastAiStatusRef.set(msg)
+        _lastAiStatus.value = msg
+    }
 
     val topics: Flow<List<HotTopic>> =
         dao.observeTopics().map { list -> list.map { it.toDomain() } }
@@ -66,8 +82,13 @@ class HotpostRepository(
         dao.upsertTopics(topics.map { it.toEntity() })
 
         var draftsCreated = 0
+        var aiDrafts = 0
+        var aiError: String? = null
         if (settings.autoDraft) {
-            draftsCreated = generateDrafts(settings, topics, settings.maxDraftsPerTick)
+            val gen = generateDrafts(settings, topics, settings.maxDraftsPerTick)
+            draftsCreated = gen.first
+            aiDrafts = gen.second
+            aiError = gen.third
         }
 
         var published = 0
@@ -84,6 +105,8 @@ class HotpostRepository(
             topics = topics.size,
             drafts = draftsCreated,
             published = published,
+            aiDrafts = aiDrafts,
+            aiError = aiError,
         )
     }
 
@@ -91,18 +114,22 @@ class HotpostRepository(
         settings: AppSettings,
         topics: List<HotTopic>,
         limit: Int,
-    ): Int {
+    ): Triple<Int, Int, String?> {
         var created = 0
+        var aiOk = 0
+        var lastErr: String? = null
         for (topic in topics.take(20)) {
             if (created >= limit) break
             if (dao.activeDraftForTopic(topic.id) != null) continue
-            val text = draftTextFor(topic, settings)
+            val outcome = draftTextFor(topic, settings)
+            if (outcome.usedAi) aiOk++
+            if (outcome.aiError != null) lastErr = outcome.aiError
             val now = System.currentTimeMillis()
             val draft = Draft(
                 id = UUID.randomUUID().toString(),
                 topicId = topic.id,
                 topicTitle = topic.title,
-                text = text,
+                text = outcome.text,
                 status = DraftStatus.PENDING_REVIEW,
                 monetizationHook = DraftGenerator.buildHook(settings),
                 createdAt = now,
@@ -112,24 +139,85 @@ class HotpostRepository(
             dao.upsertDraft(draft.toEntity())
             created++
         }
-        return created
+        return Triple(created, aiOk, lastErr)
     }
 
-    private suspend fun draftTextFor(topic: HotTopic, settings: AppSettings): String {
-        if (settings.aiEnabled && settings.aiApiKey.isNotBlank()) {
-            val ai = withContext(Dispatchers.IO) {
-                aiDraftClient.generate(topic, settings)
-            }
-            if (!ai.isNullOrBlank()) return ai
+    private suspend fun draftTextFor(topic: HotTopic, settings: AppSettings): DraftGenOutcome {
+        if (!settings.aiEnabled || settings.aiApiKey.isBlank()) {
+            setAiStatus("AI：未开启（填 Key 并打开开关）")
+            return DraftGenOutcome(
+                text = DraftGenerator.templateDraft(topic, settings),
+                usedAi = false,
+                aiError = null,
+            )
         }
-        return DraftGenerator.templateDraft(topic, settings)
+        if (AiDraftClient.looksLikeDeepSeekMisconfig(settings)) {
+            setAiStatus("AI：疑似 DeepSeek Key 却仍指向 OpenAI，请点「填入 DeepSeek」")
+        }
+        val result = withContext(Dispatchers.IO) {
+            aiDraftClient.generate(topic, settings)
+        }
+        return when (result) {
+            is AiDraftResult.Ok -> {
+                setAiStatus("AI：成功（${AiDraftClient.resolveModel(settings)}）")
+                DraftGenOutcome(text = result.text, usedAi = true)
+            }
+            is AiDraftResult.Err -> {
+                setAiStatus("AI：失败 → ${result.message}")
+                DraftGenOutcome(
+                    text = DraftGenerator.templateDraft(topic, settings),
+                    usedAi = false,
+                    aiError = result.message,
+                )
+            }
+            AiDraftResult.Skipped -> {
+                setAiStatus("AI：跳过")
+                DraftGenOutcome(
+                    text = DraftGenerator.templateDraft(topic, settings),
+                    usedAi = false,
+                )
+            }
+        }
+    }
+
+    suspend fun testAi(): String {
+        val settings = settingsStore.settings.first()
+        if (!settings.aiEnabled || settings.aiApiKey.isBlank()) {
+            val msg = "请先打开「启用 AI」并填写 API Key"
+            setAiStatus("AI：$msg")
+            return msg
+        }
+        val result = withContext(Dispatchers.IO) { aiDraftClient.ping(settings) }
+        return when (result) {
+            is AiDraftResult.Ok -> {
+                val msg = "连通成功 · ${AiDraftClient.resolveModel(settings)} · 样例：${result.text.take(40)}…"
+                setAiStatus("AI：$msg")
+                msg
+            }
+            is AiDraftResult.Err -> {
+                val msg = "失败：${result.message}"
+                setAiStatus("AI：$msg")
+                msg
+            }
+            AiDraftResult.Skipped -> {
+                val msg = "未启用"
+                setAiStatus("AI：$msg")
+                msg
+            }
+        }
     }
 
     /**
      * Rewrite one pending draft. Pass [forceVariant] to nudge local template angle
      * when AI is off (uses timestamp so the next bank index differs).
      */
-    suspend fun regenerateDraft(id: String): String? {
+    data class RegenOneResult(
+        val text: String,
+        val usedAi: Boolean,
+        val aiError: String?,
+    )
+
+    suspend fun regenerateDraft(id: String): RegenOneResult? {
         val entity = dao.draftById(id) ?: return null
         if (entity.status != DraftStatus.PENDING_REVIEW.name) return null
         val settings = settingsStore.settings.first()
@@ -149,32 +237,39 @@ class HotpostRepository(
             },
             fetchedAt = now,
         )).let { base ->
-            // Nudge variant selection for local templates.
             base.copy(id = "${base.id}-$now")
         }
-        val text = draftTextFor(topic, settings)
+        val outcome = draftTextFor(topic, settings)
         dao.updateDraft(
             entity.copy(
-                text = text,
+                text = outcome.text,
                 monetizationHook = DraftGenerator.buildHook(settings),
                 updatedAt = now,
             ),
         )
-        return text
+        return RegenOneResult(outcome.text, outcome.usedAi, outcome.aiError)
     }
 
+    data class RegenBatchResult(
+        val updated: Int,
+        val aiOk: Int,
+        val aiError: String?,
+    )
+
     /** Rewrite all pending drafts with current style / AI settings. */
-    suspend fun regeneratePendingDrafts(): Int {
+    suspend fun regeneratePendingDrafts(): RegenBatchResult {
         val settings = settingsStore.settings.first()
         val pending = dao.draftsByStatus(DraftStatus.PENDING_REVIEW.name)
         var updated = 0
+        var aiOk = 0
+        var lastErr: String? = null
         val now = System.currentTimeMillis()
         for (entity in pending) {
             val live = dao.topicById(entity.topicId)?.toDomain()
             val topic = live ?: HotTopic(
                 id = entity.topicId,
                 title = entity.topicTitle,
-                summary = entity.topicTitle,
+                summary = "",
                 source = "regen",
                 url = null,
                 score = 50,
@@ -185,17 +280,19 @@ class HotpostRepository(
                 },
                 fetchedAt = now,
             )
-            val text = draftTextFor(topic, settings)
+            val outcome = draftTextFor(topic, settings)
+            if (outcome.usedAi) aiOk++
+            if (outcome.aiError != null) lastErr = outcome.aiError
             dao.updateDraft(
                 entity.copy(
-                    text = text,
+                    text = outcome.text,
                     monetizationHook = DraftGenerator.buildHook(settings),
                     updatedAt = now,
                 ),
             )
             updated++
         }
-        return updated
+        return RegenBatchResult(updated, aiOk, lastErr)
     }
 
     suspend fun saveDraftText(id: String, text: String) {

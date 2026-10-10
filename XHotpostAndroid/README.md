@@ -24,9 +24,16 @@ Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力�
 
 GitHub **Releases** 比分支里的 raw 文件更稳（约 17MB）：
 
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.8/XHotpost.apk
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.9/XHotpost.apk
 
-发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.8
+发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.9
+
+### DeepSeek 写稿
+
+1. 设置 → **填入 DeepSeek**（地址 `https://api.deepseek.com/v1`，模型 `deepseek-chat`）
+2. 粘贴 API Key，打开开关（填 Key 后保存也会自动开）
+3. 点 **测试 AI 连通**，成功后再点 **按当前风格重写待审草稿**
+4. 旧草稿不会因填 Key 自动变；必须重写 / 换一版 / 新跑一轮
 
 ### X 热搜说明
 

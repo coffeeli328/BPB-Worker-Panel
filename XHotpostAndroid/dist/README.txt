@@ -1,8 +1,6 @@
-热帖 Android 安装包（debug 签名，侧载用）v1.0.8
+热帖 Android v1.0.9
 
-推荐下载：
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.8/XHotpost.apk
+下载：
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.9/XHotpost.apk
 
-v1.0.8：草稿改成更像真人短帖；审核台可「换一版」；建议开启 AI 写稿。
-
-安装：传到手机 → 允许未知来源 → 打开 APK。
+本版：顶栏显示版本号；修复 DeepSeek 写稿不生效（一键填入、测试连通、失败会提示、旧草稿需点重写/换一版）。

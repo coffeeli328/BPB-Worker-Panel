@@ -17,6 +17,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
+import com.gglee.xhotpost.domain.AiDraftClient
 import com.gglee.xhotpost.domain.AppSettings
 import com.gglee.xhotpost.domain.ContentLanguage
 import com.gglee.xhotpost.domain.Draft
@@ -42,12 +43,14 @@ class MainActivity : ComponentActivity() {
     private lateinit var txtStats: TextView
     private lateinit var txtBanner: TextView
     private lateinit var txtStatus: TextView
+    private lateinit var txtVersion: TextView
     private lateinit var content: LinearLayout
     private lateinit var btnTick: Button
 
     private var settings: AppSettings = AppSettings()
     private var drafts: List<Draft> = emptyList()
     private var topics: List<HotTopic> = emptyList()
+    private var aiStatusLine: String = "AI：未使用"
     private var tab = Tab.REVIEW
     private var collectJob: Job? = null
 
@@ -108,6 +111,8 @@ class MainActivity : ComponentActivity() {
         txtStats = findViewById(R.id.txtStats)
         txtBanner = findViewById(R.id.txtBanner)
         txtStatus = findViewById(R.id.txtStatus)
+        txtVersion = findViewById(R.id.txtVersion)
+        txtVersion.text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
         btnTick = findViewById(R.id.btnTick)
         val frame = findViewById<android.widget.FrameLayout>(R.id.content)
         content = LinearLayout(this).apply {
@@ -147,16 +152,23 @@ class MainActivity : ComponentActivity() {
                 container.repository.stats,
                 container.repository.drafts,
                 container.repository.topics,
-            ) { s, stats, d, t ->
-                Quad(s, stats, d, t)
+                container.repository.lastAiStatus,
+            ) { s, stats, d, t, ai ->
+                Quint(s, stats, d, t, ai)
             }.collectLatest { q ->
                 settings = q.settings
                 drafts = q.drafts
                 topics = q.topics
+                aiStatusLine = q.aiStatus
                 txtStats.text =
                     "待审核 ${q.stats.pendingReview} · 已发布 ${q.stats.published} · 草稿 ${q.stats.draftsCreated}"
                 txtBanner.text = buildBanner(settings)
-                render()
+                if (tab != Tab.SETTINGS) {
+                    // Avoid wiping in-progress settings edits on every AI status tick.
+                    render()
+                } else {
+                    // Still refresh banner/stats; settings panel keeps local edits.
+                }
             }
         }
     }
@@ -176,11 +188,13 @@ class MainActivity : ComponentActivity() {
             XTrendRegion.SINGAPORE -> "新加坡热搜"
             XTrendRegion.INDIA -> "印度热搜"
         }
-        return if (s.demoMode) {
-            "演示 · X热搜 · $region · $niche · $login"
-        } else {
-            "正式 · X热搜 · $region · $niche · $login"
+        val ai = when {
+            !s.aiEnabled || s.aiApiKey.isBlank() -> "AI关"
+            AiDraftClient.looksLikeDeepSeekMisconfig(s) -> "AI配置可疑"
+            else -> "AI开·${AiDraftClient.resolveModel(s)}"
         }
+        val mode = if (s.demoMode) "演示" else "正式"
+        return "$mode · v${BuildConfig.VERSION_NAME} · $ai · X热搜 · $region · $niche · $login"
     }
 
     private fun nicheLabel(s: AppSettings): String = when (s.niche) {
@@ -192,11 +206,12 @@ class MainActivity : ComponentActivity() {
         NicheId.CUSTOM -> s.customNicheLabel.ifBlank { "自定义" }
     }
 
-    private data class Quad(
+    private data class Quint(
         val settings: AppSettings,
         val stats: com.gglee.xhotpost.domain.DashboardStats,
         val drafts: List<Draft>,
         val topics: List<HotTopic>,
+        val aiStatus: String,
     )
 
     private fun render() {
@@ -333,6 +348,42 @@ class MainActivity : ComponentActivity() {
         editAiBaseUrl.setText(settings.aiBaseUrl)
         editAiModel.setText(settings.aiModel)
         editAiApiKey.setText(settings.aiApiKey)
+        val txtAiStatus = view.findViewById<TextView>(R.id.txtAiStatus)
+        txtAiStatus.text = aiStatusLine
+
+        view.findViewById<Button>(R.id.btnPresetDeepseek).setOnClickListener {
+            editAiBaseUrl.setText(AiDraftClient.DEEPSEEK_BASE)
+            editAiModel.setText(AiDraftClient.DEEPSEEK_MODEL)
+            switchAi.isChecked = true
+            toast("已填入 DeepSeek 地址与模型，请粘贴 Key 后保存")
+        }
+        view.findViewById<Button>(R.id.btnPresetOpenai).setOnClickListener {
+            editAiBaseUrl.setText(AiDraftClient.OPENAI_BASE)
+            editAiModel.setText("gpt-4o-mini")
+            switchAi.isChecked = true
+            toast("已填入 OpenAI 地址与模型，请粘贴 Key 后保存")
+        }
+        view.findViewById<Button>(R.id.btnTestAi).setOnClickListener {
+            lifecycleScope.launch {
+                // Persist current AI fields first so test uses what you see.
+                val key = editAiApiKey.text.toString().trim()
+                val probe = settings.copy(
+                    aiEnabled = switchAi.isChecked || key.isNotBlank(),
+                    aiBaseUrl = editAiBaseUrl.text.toString().trim()
+                        .ifBlank { AiDraftClient.DEEPSEEK_BASE },
+                    aiModel = editAiModel.text.toString().trim()
+                        .ifBlank { AiDraftClient.DEEPSEEK_MODEL },
+                    aiApiKey = key,
+                )
+                withContext(Dispatchers.IO) {
+                    container.repository.updateSettings { probe }
+                }
+                txtAiStatus.text = "AI：测试中…"
+                val msg = withContext(Dispatchers.IO) { container.repository.testAi() }
+                txtAiStatus.text = "AI：$msg"
+                toast(msg)
+            }
+        }
 
         editName.setText(settings.displayName)
         editAffiliate.setText(settings.affiliateUrl)
@@ -379,6 +430,7 @@ class MainActivity : ComponentActivity() {
                 R.id.stylePro -> WritingStyle.PRO
                 else -> WritingStyle.OPINION
             }
+            val apiKey = editAiApiKey.text.toString().trim()
             val next = settings.copy(
                 displayName = editName.text.toString().ifBlank { "热帖" },
                 niche = niche,
@@ -387,12 +439,13 @@ class MainActivity : ComponentActivity() {
                 xTrendRegion = xTrendRegion,
                 writingStyle = writingStyle,
                 persona = editPersona.text.toString().ifBlank { AppSettings().persona },
-                aiEnabled = switchAi.isChecked,
+                // Auto-enable AI when a key is present — common DeepSeek setup miss.
+                aiEnabled = switchAi.isChecked || apiKey.isNotBlank(),
                 aiBaseUrl = editAiBaseUrl.text.toString().trim()
-                    .ifBlank { AppSettings().aiBaseUrl },
+                    .ifBlank { AiDraftClient.DEEPSEEK_BASE },
                 aiModel = editAiModel.text.toString().trim()
-                    .ifBlank { AppSettings().aiModel },
-                aiApiKey = editAiApiKey.text.toString().trim(),
+                    .ifBlank { AiDraftClient.DEEPSEEK_MODEL },
+                aiApiKey = apiKey,
                 affiliateUrl = editAffiliate.text.toString().trim(),
                 ctaTemplate = editCta.text.toString().ifBlank { settings.ctaTemplate },
                 demoMode = switchDemo.isChecked,
@@ -405,14 +458,22 @@ class MainActivity : ComponentActivity() {
                 withContext(Dispatchers.IO) {
                     container.repository.updateSettings { next }
                 }
-                toast("设置已保存。点「跑一轮」或「重写待审草稿」")
+                val hint = when {
+                    apiKey.isBlank() -> "已保存。未填 AI Key，仍用本地模板"
+                    AiDraftClient.looksLikeDeepSeekMisconfig(next) ->
+                        "已保存。Key 可能是 DeepSeek，但地址仍是 OpenAI — 请点「填入 DeepSeek」"
+                    else -> "已保存。请点「重写待审草稿」或「换一版」才会用 AI 更新旧草稿"
+                }
+                toast(hint)
                 tab = Tab.REVIEW
                 render()
             }
         }
         view.findViewById<Button>(R.id.btnRegenDrafts).setOnClickListener {
             lifecycleScope.launch {
-                val n = withContext(Dispatchers.IO) {
+                txtStatus.text = "正在用 AI/模板重写待审草稿…"
+                val result = withContext(Dispatchers.IO) {
+                    val apiKey = editAiApiKey.text.toString().trim()
                     container.repository.updateSettings { cur ->
                         cur.copy(
                             writingStyle = when (groupStyle.checkedRadioButtonId) {
@@ -424,17 +485,24 @@ class MainActivity : ComponentActivity() {
                             },
                             persona = editPersona.text.toString()
                                 .ifBlank { AppSettings().persona },
-                            aiEnabled = switchAi.isChecked,
+                            aiEnabled = switchAi.isChecked || apiKey.isNotBlank(),
                             aiBaseUrl = editAiBaseUrl.text.toString().trim()
-                                .ifBlank { AppSettings().aiBaseUrl },
+                                .ifBlank { AiDraftClient.DEEPSEEK_BASE },
                             aiModel = editAiModel.text.toString().trim()
-                                .ifBlank { AppSettings().aiModel },
-                            aiApiKey = editAiApiKey.text.toString().trim(),
+                                .ifBlank { AiDraftClient.DEEPSEEK_MODEL },
+                            aiApiKey = apiKey,
                         )
                     }
                     container.repository.regeneratePendingDrafts()
                 }
-                toast(if (n == 0) "没有待审草稿" else "已重写 $n 条待审草稿")
+                val msg = when {
+                    result.updated == 0 -> "没有待审草稿"
+                    result.aiError != null ->
+                        "重写 ${result.updated} 条，AI 成功 ${result.aiOk}；失败：${result.aiError}"
+                    else -> "重写 ${result.updated} 条，其中 AI ${result.aiOk} 条"
+                }
+                txtStatus.text = msg
+                toast(msg)
                 tab = Tab.REVIEW
                 render()
             }
@@ -463,15 +531,22 @@ class MainActivity : ComponentActivity() {
         }
         btnRewrite.setOnClickListener {
             lifecycleScope.launch {
-                val text = withContext(Dispatchers.IO) {
+                txtStatus.text = "换一版中…"
+                val result = withContext(Dispatchers.IO) {
                     container.repository.regenerateDraft(draft.id)
                 }
-                if (text == null) {
+                if (result == null) {
                     toast("无法重写")
                 } else {
-                    edit.setText(text)
-                    view.findViewById<TextView>(R.id.txtCount).text = "${text.length}/280"
-                    toast("已换一版")
+                    edit.setText(result.text)
+                    view.findViewById<TextView>(R.id.txtCount).text = "${result.text.length}/280"
+                    val msg = when {
+                        result.usedAi -> "已用 AI 换一版"
+                        result.aiError != null -> "AI 失败（${result.aiError}），已用模板"
+                        else -> "已换一版（本地模板）"
+                    }
+                    txtStatus.text = msg
+                    toast(msg)
                 }
             }
         }
@@ -529,7 +604,13 @@ class MainActivity : ComponentActivity() {
         txtStatus.text = "正在抓 X 热搜 / 写草稿…"
         try {
             val result = withContext(Dispatchers.IO) { container.repository.runTick() }
-            val msg = "完成：热点 ${result.topics} · 新草稿 ${result.drafts} · 发布 ${result.published}"
+            val aiPart = when {
+                result.aiError != null -> " · AI失败:${result.aiError.take(40)}"
+                result.aiDrafts > 0 -> " · AI ${result.aiDrafts}"
+                else -> ""
+            }
+            val msg =
+                "完成：热点 ${result.topics} · 新草稿 ${result.drafts}$aiPart · 发布 ${result.published}"
             txtStatus.text = msg
             if (!silent) toast(msg)
         } catch (t: Throwable) {

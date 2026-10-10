@@ -94,11 +94,21 @@ data class AppSettings(
     /** User confirmed / WebView detected X login (no X API). */
     val xLoggedIn: Boolean = false,
     val xUsername: String = "",
-    /** Use OpenAI-compatible chat API when key is set. */
+    /**
+     * Use OpenAI-compatible chat API when enabled + key set.
+     * DeepSeek: base `https://api.deepseek.com/v1`, model `deepseek-chat`.
+     */
     val aiEnabled: Boolean = false,
-    val aiBaseUrl: String = "https://api.openai.com/v1",
+    val aiBaseUrl: String = AiDraftClient.DEEPSEEK_BASE,
     val aiApiKey: String = "",
-    val aiModel: String = "gpt-4o-mini",
+    val aiModel: String = AiDraftClient.DEEPSEEK_MODEL,
+)
+
+/** Result of local/AI draft generation for UI feedback. */
+data class DraftGenOutcome(
+    val text: String,
+    val usedAi: Boolean,
+    val aiError: String? = null,
 )
 
 data class DashboardStats(
