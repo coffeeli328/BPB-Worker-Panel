@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:lineSpacingExtra="4dp"
-            android:text="X 会拦截 App 内置网页，所以请用系统浏览器或官方 App 登录。登录完成后回到这里点「我已登录成功」。"
+            android:text="不要用 i/flow/login（容易失败）。请用下面稳定登录页，或直接打开官方 App。登录后回到本页点「我已登录成功」。"
             android:textColor="#9BB3AA"
             android:textSize="14sp" />
 
@@ -48,15 +48,29 @@
             android:id="@+id/btnBrowserLogin"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="① 用浏览器打开 X 登录页" />
+            android:layout_marginTop="18dp"
+            android:text="① 打开稳定登录页（mobile.twitter.com）" />
+
+        <Button
+            android:id="@+id/btnAltLogin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="①b 备用登录页（twitter.com/login）" />
 
         <Button
             android:id="@+id/btnOpenXApp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:text="② 打开 X / Twitter 官方 App" />
+
+        <Button
+            android:id="@+id/btnInstallX"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="②b 去应用商店安装 X" />
 
         <EditText
             android:id="@+id/editUsername"
@@ -79,7 +93,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:lineSpacingExtra="3dp"
-            android:text="说明：不使用 X API。真发帖时会跳到 X App / 浏览器，用你已登录的账号发送。"
+            android:text="如果网页打不开：可能是网络访问 X 受限。可先安装官方 X App 登录；或仅勾选「我已登录成功」（你平时能打开 X 即可发帖）。"
             android:textColor="#9BB3AA"
             android:textSize="12sp" />
     </LinearLayout>

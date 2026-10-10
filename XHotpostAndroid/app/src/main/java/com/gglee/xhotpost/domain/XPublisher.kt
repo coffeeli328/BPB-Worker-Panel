@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
-import androidx.browser.customtabs.CustomTabsIntent
 import java.net.URLEncoder
 
 /** Opens X / Twitter without X API. */
@@ -15,6 +14,14 @@ object XPublisher {
     private val X_PACKAGES = listOf(
         "com.twitter.android",
         "com.twitter.android.lite",
+    )
+
+    /** Prefer stable login pages. Avoid x.com/i/flow/login (often fails). */
+    private val LOGIN_URLS = listOf(
+        "https://mobile.twitter.com/login",
+        "https://twitter.com/login",
+        "https://x.com/login",
+        "https://mobile.x.com/login",
     )
 
     fun isXAppInstalled(context: Context): Boolean {
@@ -30,15 +37,16 @@ object XPublisher {
     }
 
     fun openLoginInBrowser(context: Context): Boolean {
-        val urls = listOf(
-            "https://x.com/i/flow/login",
-            "https://twitter.com/i/flow/login",
-            "https://x.com/login",
-        )
-        for (url in urls) {
-            if (openCustomTabOrBrowser(context, url)) return true
+        // Use chooser + ACTION_VIEW (more reliable than Custom Tabs on some OEMs / networks)
+        for (url in LOGIN_URLS) {
+            if (openUrlChooser(context, url, "选择浏览器打开 X 登录")) return true
         }
         return false
+    }
+
+    fun openLoginUrl(context: Context, which: Int): Boolean {
+        val url = LOGIN_URLS.getOrElse(which) { LOGIN_URLS.first() }
+        return openUrlChooser(context, url, "打开登录页")
     }
 
     fun openXApp(context: Context): Boolean {
@@ -49,30 +57,43 @@ object XPublisher {
             val launch = pm.getLaunchIntentForPackage(pkg)
             if (launch != null) {
                 launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                if (startOnMain(appContext, launch)) return true
+                if (startSafely(appContext, launch)) return true
             }
         }
 
-        // Deep links used by X/Twitter
         val deepLinks = listOf(
             "twitter://timeline",
             "twitter://login",
-            "https://x.com/home",
             "https://twitter.com/home",
+            "https://x.com/home",
         )
         for (link in deepLinks) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link)).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                X_PACKAGES.firstOrNull()?.let { setPackage(it) }
+            for (pkg in X_PACKAGES) {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link)).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    setPackage(pkg)
+                }
+                if (startSafely(appContext, intent)) return true
             }
-            // try with package, then without
-            if (startOnMain(appContext, intent)) return true
             val any = Intent(Intent.ACTION_VIEW, Uri.parse(link))
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            if (startOnMain(appContext, any)) return true
+            if (startSafely(appContext, any)) return true
         }
 
         return openLoginInBrowser(context)
+    }
+
+    fun openPlayStoreForX(context: Context): Boolean {
+        val market = Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("market://details?id=com.twitter.android"),
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (startSafely(context, market)) return true
+        return openUrlChooser(
+            context,
+            "https://play.google.com/store/apps/details?id=com.twitter.android",
+            "安装 X",
+        )
     }
 
     fun openCompose(context: Context, text: String): Boolean {
@@ -85,40 +106,42 @@ object XPublisher {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             if (share.resolveActivity(appContext.packageManager) != null) {
-                if (startOnMain(appContext, share)) return true
+                if (startSafely(appContext, share)) return true
             }
         }
 
         val encoded = URLEncoder.encode(text, Charsets.UTF_8.name())
         val urls = listOf(
-            "https://x.com/intent/post?text=$encoded",
             "https://twitter.com/intent/tweet?text=$encoded",
+            "https://x.com/intent/post?text=$encoded",
+            "https://mobile.twitter.com/compose/tweet?text=$encoded",
         )
         for (url in urls) {
-            if (openCustomTabOrBrowser(context, url)) return true
+            if (openUrlChooser(context, url, "选择应用发帖")) return true
         }
         return false
     }
 
-    fun openCustomTabOrBrowser(context: Context, url: String): Boolean {
+    private fun openUrlChooser(context: Context, url: String, title: String): Boolean {
         val uri = Uri.parse(url)
+        val view = Intent(Intent.ACTION_VIEW, uri)
         return try {
-            val tabs = CustomTabsIntent.Builder().build()
-            tabs.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            tabs.launchUrl(context, uri)
+            val chooser = Intent.createChooser(view, title).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooser)
             true
-        } catch (_: Exception) {
+        } catch (_: ActivityNotFoundException) {
             try {
-                val view = Intent(Intent.ACTION_VIEW, uri).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(view)
+                context.startActivity(view.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                 true
-            } catch (_: ActivityNotFoundException) {
+            } catch (_: Exception) {
                 false
             }
+        } catch (_: Exception) {
+            false
         }
     }
 
-    private fun startOnMain(context: Context, intent: Intent): Boolean {
+    private fun startSafely(context: Context, intent: Intent): Boolean {
         return try {
             if (Looper.myLooper() == Looper.getMainLooper()) {
                 context.startActivity(intent)

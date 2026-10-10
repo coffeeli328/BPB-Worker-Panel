@@ -13,8 +13,8 @@ import com.gglee.xhotpost.domain.XPublisher
 import kotlinx.coroutines.launch
 
 /**
- * X blocks most in-app WebViews. This screen opens the system browser / official app,
- * then lets the user confirm login (no X API).
+ * Opens stable Twitter/X login pages (not i/flow/login) or the official app,
+ * then lets the user confirm login. No X API.
  */
 class XLoginActivity : ComponentActivity() {
     private lateinit var txtHint: TextView
@@ -34,43 +34,49 @@ class XLoginActivity : ComponentActivity() {
 
         val installed = XPublisher.isXAppInstalled(this)
         txtAppStatus.text = if (installed) {
-            "检测到本机已安装 X/Twitter App"
+            "已检测到 X/Twitter App，优先用 App 登录更稳"
         } else {
-            "未检测到 X App。可先用浏览器登录；真发帖建议安装官方 App。"
+            "未安装 X App。网页若打不开，请先点「去应用商店安装 X」"
         }
 
         findViewById<Button>(R.id.btnBrowserLogin).setOnClickListener {
-            openedExternal = true
-            val ok = XPublisher.openLoginInBrowser(this)
-            Toast.makeText(
-                this,
-                if (ok) "已打开浏览器，请登录后返回本页点「我已登录成功」"
-                else "无法打开浏览器，请检查是否安装了 Chrome / 系统浏览器",
-                Toast.LENGTH_LONG,
-            ).show()
+            openLogin(0, "已打开 mobile.twitter.com/login")
         }
-
+        findViewById<Button>(R.id.btnAltLogin).setOnClickListener {
+            openLogin(1, "已打开 twitter.com/login")
+        }
         findViewById<Button>(R.id.btnOpenXApp).setOnClickListener {
             openedExternal = true
             val ok = XPublisher.openXApp(this)
-            Toast.makeText(
-                this,
-                if (ok) "已尝试打开 X。请在 App 内登录后返回，点「我已登录成功」"
-                else "打不开 X App。请先安装官方 X，或改用浏览器登录",
-                Toast.LENGTH_LONG,
-            ).show()
+            toast(
+                if (ok) "已尝试打开 X。登录后返回点「我已登录成功」"
+                else "打不开 X App，请先安装",
+            )
         }
-
+        findViewById<Button>(R.id.btnInstallX).setOnClickListener {
+            openedExternal = true
+            val ok = XPublisher.openPlayStoreForX(this)
+            toast(if (ok) "请安装 X 后返回再登录" else "打不开应用商店")
+        }
         findViewById<Button>(R.id.btnConfirmLoggedIn).setOnClickListener {
             confirmLoggedIn()
         }
+    }
+
+    private fun openLogin(index: Int, okMsg: String) {
+        openedExternal = true
+        val ok = XPublisher.openLoginUrl(this, index)
+        toast(
+            if (ok) "$okMsg。登录后返回点「我已登录成功」"
+            else "打不开浏览器。请安装 Chrome，或改用 X App",
+        )
     }
 
     override fun onResume() {
         super.onResume()
         if (openedExternal) {
             txtHint.text =
-                "如果你已经在浏览器或 X App 里登录成功，请点下方「我已登录成功」。"
+                "若浏览器里 flow/login 报错，请改用「mobile.twitter.com」或官方 App。登录成功后点下方按钮。"
         }
     }
 
@@ -84,7 +90,7 @@ class XLoginActivity : ComponentActivity() {
                     demoMode = false,
                 )
             }
-            Toast.makeText(this@XLoginActivity, "已保存：X 已登录", Toast.LENGTH_LONG).show()
+            toast("已保存：X 已登录")
             setResult(
                 RESULT_OK,
                 Intent()
@@ -93,6 +99,10 @@ class XLoginActivity : ComponentActivity() {
             )
             finish()
         }
+    }
+
+    private fun toast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
     }
 
     companion object {
