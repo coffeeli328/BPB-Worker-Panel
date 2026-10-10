@@ -4,6 +4,7 @@ import android.content.Context
 import com.gglee.xhotpost.data.local.HotpostDao
 import com.gglee.xhotpost.data.local.toDomain
 import com.gglee.xhotpost.data.local.toEntity
+import com.gglee.xhotpost.domain.AiDraftClient
 import com.gglee.xhotpost.domain.AppSettings
 import com.gglee.xhotpost.domain.Draft
 import com.gglee.xhotpost.domain.DraftGenerator
@@ -11,10 +12,12 @@ import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
 import com.gglee.xhotpost.domain.TrendCollector
 import com.gglee.xhotpost.domain.XPublisher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.util.UUID
 
 data class TickResult(
@@ -29,6 +32,7 @@ class HotpostRepository(
     private val dao: HotpostDao,
     private val settingsStore: SettingsStore,
     private val trendCollector: TrendCollector = TrendCollector(),
+    private val aiDraftClient: AiDraftClient = AiDraftClient(),
 ) {
     val settings: Flow<AppSettings> = settingsStore.settings
 
@@ -92,12 +96,13 @@ class HotpostRepository(
         for (topic in topics.take(20)) {
             if (created >= limit) break
             if (dao.activeDraftForTopic(topic.id) != null) continue
+            val text = draftTextFor(topic, settings)
             val now = System.currentTimeMillis()
             val draft = Draft(
                 id = UUID.randomUUID().toString(),
                 topicId = topic.id,
                 topicTitle = topic.title,
-                text = DraftGenerator.templateDraft(topic, settings),
+                text = text,
                 status = DraftStatus.PENDING_REVIEW,
                 monetizationHook = DraftGenerator.buildHook(settings),
                 createdAt = now,
@@ -108,6 +113,51 @@ class HotpostRepository(
             created++
         }
         return created
+    }
+
+    private suspend fun draftTextFor(topic: HotTopic, settings: AppSettings): String {
+        if (settings.aiEnabled && settings.aiApiKey.isNotBlank()) {
+            val ai = withContext(Dispatchers.IO) {
+                aiDraftClient.generate(topic, settings)
+            }
+            if (!ai.isNullOrBlank()) return ai
+        }
+        return DraftGenerator.templateDraft(topic, settings)
+    }
+
+    /** Rewrite all pending drafts with current style / AI settings. */
+    suspend fun regeneratePendingDrafts(): Int {
+        val settings = settingsStore.settings.first()
+        val pending = dao.draftsByStatus(DraftStatus.PENDING_REVIEW.name)
+        var updated = 0
+        val now = System.currentTimeMillis()
+        for (entity in pending) {
+            val live = dao.topicById(entity.topicId)?.toDomain()
+            val topic = live ?: HotTopic(
+                id = entity.topicId,
+                title = entity.topicTitle,
+                summary = entity.topicTitle,
+                source = "regen",
+                url = null,
+                score = 50,
+                language = if (settings.language == com.gglee.xhotpost.domain.ContentLanguage.EN) {
+                    "en"
+                } else {
+                    "zh"
+                },
+                fetchedAt = now,
+            )
+            val text = draftTextFor(topic, settings)
+            dao.updateDraft(
+                entity.copy(
+                    text = text,
+                    monetizationHook = DraftGenerator.buildHook(settings),
+                    updatedAt = now,
+                ),
+            )
+            updated++
+        }
+        return updated
     }
 
     suspend fun saveDraftText(id: String, text: String) {

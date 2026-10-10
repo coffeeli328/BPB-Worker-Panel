@@ -3,18 +3,29 @@
 Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力对齐：
 
 - 本机抓热点（Google News RSS + 演示样本）
-- 自动生成待审草稿
+- 自动生成待审草稿（多风格模板；可选 OpenAI 兼容 AI 写稿）
 - **人工审核**后发布
 - **不用 X API**：关闭演示模式后，跳转到 X/Twitter 应用发帖（文案已填好，你在 X 里点发送）
 - WorkManager 后台定时「跑一轮」（抓热点 + 写草稿；演示模式可自动记为已发布）
+
+## 提升文案质量
+
+模板发帖容易「像机器」。v1.0.6 起在 **设置 → 内容风格** 可调：
+
+1. **写作风格**：观点 / 干货 / 故事 / 口语 / 专业（同一热点会换不同角度）
+2. **人设**：用一两句话描述语气（例如「犀利但真诚，爱用短句」）
+3. **可选 AI 写稿**：打开开关，填 OpenAI 兼容 Base URL + Model + API Key（DeepSeek / 通义兼容网关等均可）；失败会自动回退本地模板
+4. 改完点 **「按当前风格重写待审草稿」**，或先拒绝旧草稿再「跑一轮」
+
+仍不满意时：在审核台直接改文案再通过——人工微调是变现质量的最后一道闸。
 
 ## 下载 APK（推荐 Releases）
 
 GitHub **Releases** 比分支里的 raw 文件更稳（约 17MB）：
 
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.2/XHotpost.apk
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.6/XHotpost.apk
 
-发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.2
+发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.6
 
 若浏览器一直卡在 0%：换 Chrome/Safari、换网络，或用电脑下载后传到手机。
 

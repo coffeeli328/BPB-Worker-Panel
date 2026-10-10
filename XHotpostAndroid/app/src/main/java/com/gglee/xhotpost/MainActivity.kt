@@ -23,6 +23,7 @@ import com.gglee.xhotpost.domain.Draft
 import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
 import com.gglee.xhotpost.domain.NicheId
+import com.gglee.xhotpost.domain.WritingStyle
 import com.gglee.xhotpost.domain.XPublisher
 import com.gglee.xhotpost.work.SyncWorker
 import kotlinx.coroutines.Dispatchers
@@ -233,6 +234,12 @@ class MainActivity : ComponentActivity() {
         val groupNiche = view.findViewById<RadioGroup>(R.id.groupNiche)
         val editCustomNiche = view.findViewById<EditText>(R.id.editCustomNiche)
         val groupLanguage = view.findViewById<RadioGroup>(R.id.groupLanguage)
+        val groupStyle = view.findViewById<RadioGroup>(R.id.groupStyle)
+        val editPersona = view.findViewById<EditText>(R.id.editPersona)
+        val switchAi = view.findViewById<Switch>(R.id.switchAi)
+        val editAiBaseUrl = view.findViewById<EditText>(R.id.editAiBaseUrl)
+        val editAiModel = view.findViewById<EditText>(R.id.editAiModel)
+        val editAiApiKey = view.findViewById<EditText>(R.id.editAiApiKey)
         val editName = view.findViewById<EditText>(R.id.editDisplayName)
         val editAffiliate = view.findViewById<EditText>(R.id.editAffiliate)
         val editCta = view.findViewById<EditText>(R.id.editCta)
@@ -270,6 +277,19 @@ class MainActivity : ComponentActivity() {
             ContentLanguage.MIXED -> view.findViewById<RadioButton>(R.id.langMixed).isChecked = true
         }
 
+        when (settings.writingStyle) {
+            WritingStyle.OPINION -> view.findViewById<RadioButton>(R.id.styleOpinion).isChecked = true
+            WritingStyle.HOWTO -> view.findViewById<RadioButton>(R.id.styleHowto).isChecked = true
+            WritingStyle.STORY -> view.findViewById<RadioButton>(R.id.styleStory).isChecked = true
+            WritingStyle.CASUAL -> view.findViewById<RadioButton>(R.id.styleCasual).isChecked = true
+            WritingStyle.PRO -> view.findViewById<RadioButton>(R.id.stylePro).isChecked = true
+        }
+        editPersona.setText(settings.persona)
+        switchAi.isChecked = settings.aiEnabled
+        editAiBaseUrl.setText(settings.aiBaseUrl)
+        editAiModel.setText(settings.aiModel)
+        editAiApiKey.setText(settings.aiApiKey)
+
         editName.setText(settings.displayName)
         editAffiliate.setText(settings.affiliateUrl)
         editCta.setText(settings.ctaTemplate)
@@ -300,11 +320,26 @@ class MainActivity : ComponentActivity() {
                 R.id.langMixed -> ContentLanguage.MIXED
                 else -> ContentLanguage.ZH
             }
+            val writingStyle = when (groupStyle.checkedRadioButtonId) {
+                R.id.styleHowto -> WritingStyle.HOWTO
+                R.id.styleStory -> WritingStyle.STORY
+                R.id.styleCasual -> WritingStyle.CASUAL
+                R.id.stylePro -> WritingStyle.PRO
+                else -> WritingStyle.OPINION
+            }
             val next = settings.copy(
                 displayName = editName.text.toString().ifBlank { "热帖" },
                 niche = niche,
                 customNicheLabel = editCustomNiche.text.toString().trim(),
                 language = language,
+                writingStyle = writingStyle,
+                persona = editPersona.text.toString().ifBlank { AppSettings().persona },
+                aiEnabled = switchAi.isChecked,
+                aiBaseUrl = editAiBaseUrl.text.toString().trim()
+                    .ifBlank { AppSettings().aiBaseUrl },
+                aiModel = editAiModel.text.toString().trim()
+                    .ifBlank { AppSettings().aiModel },
+                aiApiKey = editAiApiKey.text.toString().trim(),
                 affiliateUrl = editAffiliate.text.toString().trim(),
                 ctaTemplate = editCta.text.toString().ifBlank { settings.ctaTemplate },
                 demoMode = switchDemo.isChecked,
@@ -317,7 +352,36 @@ class MainActivity : ComponentActivity() {
                 withContext(Dispatchers.IO) {
                     container.repository.updateSettings { next }
                 }
-                toast("设置已保存。可点「跑一轮」按新话题抓热点")
+                toast("设置已保存。点「跑一轮」或「重写待审草稿」")
+                tab = Tab.REVIEW
+                render()
+            }
+        }
+        view.findViewById<Button>(R.id.btnRegenDrafts).setOnClickListener {
+            lifecycleScope.launch {
+                val n = withContext(Dispatchers.IO) {
+                    container.repository.updateSettings { cur ->
+                        cur.copy(
+                            writingStyle = when (groupStyle.checkedRadioButtonId) {
+                                R.id.styleHowto -> WritingStyle.HOWTO
+                                R.id.styleStory -> WritingStyle.STORY
+                                R.id.styleCasual -> WritingStyle.CASUAL
+                                R.id.stylePro -> WritingStyle.PRO
+                                else -> WritingStyle.OPINION
+                            },
+                            persona = editPersona.text.toString()
+                                .ifBlank { AppSettings().persona },
+                            aiEnabled = switchAi.isChecked,
+                            aiBaseUrl = editAiBaseUrl.text.toString().trim()
+                                .ifBlank { AppSettings().aiBaseUrl },
+                            aiModel = editAiModel.text.toString().trim()
+                                .ifBlank { AppSettings().aiModel },
+                            aiApiKey = editAiApiKey.text.toString().trim(),
+                        )
+                    }
+                    container.repository.regeneratePendingDrafts()
+                }
+                toast(if (n == 0) "没有待审草稿" else "已重写 $n 条待审草稿")
                 tab = Tab.REVIEW
                 render()
             }

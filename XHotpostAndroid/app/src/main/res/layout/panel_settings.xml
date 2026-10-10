@@ -187,7 +187,127 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="18dp"
-            android:text="3. 变现与发布"
+            android:text="3. 内容风格（提升文案质量）"
+            android:textColor="#D6FF4B"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="写作风格决定模板角度；人设会注入语气。开启 AI 后用你的 Key 写稿，失败自动回退本地模板。"
+            android:textColor="#9BB3AA"
+            android:textSize="13sp" />
+
+        <RadioGroup
+            android:id="@+id/groupStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <RadioButton
+                android:id="@+id/styleOpinion"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="观点鲜明"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/styleHowto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="干货拆解"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/styleStory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="故事场景"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/styleCasual"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="口语随性"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/stylePro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="专业克制"
+                android:textColor="#F3F7F2" />
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/editPersona"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="top"
+            android:hint="人设 / 语气（例如：犀利但不人身攻击，爱用短句）"
+            android:inputType="textMultiLine"
+            android:minLines="3"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="启用 AI 写稿（OpenAI 兼容）"
+                android:textColor="#F3F7F2" />
+
+            <Switch
+                android:id="@+id/switchAi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/editAiBaseUrl"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="API Base URL（如 https://api.openai.com/v1）"
+            android:inputType="textUri"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <EditText
+            android:id="@+id/editAiModel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="模型名（如 gpt-4o-mini / deepseek-chat）"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <EditText
+            android:id="@+id/editAiApiKey"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:hint="API Key（仅存本机）"
+            android:inputType="textPassword"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:text="4. 变现与发布"
             android:textColor="#D6FF4B"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -286,5 +406,12 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:text="保存设置" />
+
+        <Button
+            android:id="@+id/btnRegenDrafts"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="按当前风格重写待审草稿" />
     </LinearLayout>
 </ScrollView>
