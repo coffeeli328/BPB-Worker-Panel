@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="转发 X 视频 / 帖子"
+        android:text="发布 X 视频（文件，不是链接）"
         android:textColor="#D6FF4B"
         android:textSize="16sp"
         android:textStyle="bold" />
@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:text="在 X 上点分享 → 复制链接，粘贴到这里。生成推荐文案后可加入待审，或直接打开 X 发布（正文会带上原视频链接）。"
+        android:text="复制 X 上的视频帖链接 → 下载视频文件 → 带文案打开 X 发布。不会只发链接。"
         android:textColor="#9BB3AA"
         android:textSize="13sp" />
 
@@ -62,6 +62,13 @@
         android:layout_marginTop="8dp"
         android:text="生成推荐文案" />
 
+    <Button
+        android:id="@+id/btnDownloadVideo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="下载视频文件" />
+
     <TextView
         android:id="@+id/txtShareMeta"
         android:layout_width="match_parent"
@@ -74,7 +81,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="文案（可改）"
+        android:text="文案（随视频一起发，不含原链接）"
         android:textColor="#F3F7F2"
         android:textSize="14sp" />
 
@@ -100,7 +107,7 @@
         android:layout_marginTop="8dp"
         android:background="#143029"
         android:padding="10dp"
-        android:text="完整发帖预览会显示在这里"
+        android:text="视频状态与文案预览"
         android:textColor="#E8FFB0"
         android:textSize="13sp" />
 
@@ -118,12 +125,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="加入待审草稿" />
+        android:text="文案加入待审" />
 
     <Button
         android:id="@+id/btnSharePublish"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="打开 X 发布" />
+        android:text="用视频打开 X 发布" />
 </LinearLayout>

@@ -62,6 +62,8 @@ class MainActivity : ComponentActivity() {
     private var collectJob: Job? = null
     private var pendingShareInput: String? = null
     private var shareParsed: ParsedXLink? = null
+    private var lastVideoFile: java.io.File? = null
+    private var lastVideoMeta: String = ""
 
     private val loginLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
@@ -276,20 +278,28 @@ class MainActivity : ComponentActivity() {
         fun refreshPreview() {
             val parsed = shareParsed ?: XLinkParser.extract(editUrl.text.toString())
             if (parsed?.statusId == null) {
-                txtPreview.text = "完整发帖预览会显示在这里"
+                txtPreview.text = "视频状态与文案预览"
                 txtCount.text = "0/280"
-                txtMeta.text = ""
+                txtMeta.text = lastVideoMeta
                 return
             }
             shareParsed = parsed
-            txtMeta.text = "已识别：${parsed.shortLabel}"
-            val full = DraftGenerator.linkSharePost(
+            val caption = DraftGenerator.videoShareCaptionText(
                 parsed,
                 editCaption.text.toString(),
                 settings,
             )
-            txtPreview.text = full
-            txtCount.text = "${full.length}/280"
+            val videoLine = lastVideoFile?.let {
+                if (it.exists()) "视频已就绪：${it.name}（${it.length() / 1024} KB）"
+                else null
+            } ?: "尚未下载视频"
+            txtMeta.text = listOfNotNull(
+                "帖子：${parsed.shortLabel}",
+                lastVideoMeta.takeIf { it.isNotBlank() },
+                videoLine,
+            ).joinToString("\n")
+            txtPreview.text = "将发送【视频文件】+ 文案：\n\n$caption"
+            txtCount.text = "${caption.length}/280"
         }
 
         pendingShareInput?.let {
@@ -304,6 +314,9 @@ class MainActivity : ComponentActivity() {
 
         editUrl.doAfterTextChanged {
             shareParsed = XLinkParser.extract(it?.toString().orEmpty())
+            // New URL → clear previous download.
+            lastVideoFile = null
+            lastVideoMeta = ""
             refreshPreview()
         }
         editCaption.doAfterTextChanged { refreshPreview() }
@@ -322,6 +335,8 @@ class MainActivity : ComponentActivity() {
             } else {
                 editUrl.setText(parsed.canonicalUrl)
                 shareParsed = parsed
+                lastVideoFile = null
+                lastVideoMeta = ""
                 toast("已粘贴：${parsed.shortLabel}")
             }
             refreshPreview()
@@ -361,6 +376,40 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        view.findViewById<Button>(R.id.btnDownloadVideo).setOnClickListener {
+            lifecycleScope.launch {
+                txtStatus.text = "正在解析并下载视频…"
+                try {
+                    val ready = withContext(Dispatchers.IO) {
+                        container.repository.prepareVideoShare(
+                            editUrl.text.toString(),
+                            captionOverride = editCaption.text.toString().ifBlank { null },
+                        )
+                    }
+                    shareParsed = ready.parsed
+                    editUrl.setText(ready.parsed.canonicalUrl)
+                    if (editCaption.text.isNullOrBlank()) {
+                        editCaption.setText(ready.caption)
+                    }
+                    lastVideoFile = ready.videoFile
+                    val dur = ready.info.durationSec?.let { "${"%.1f".format(it)}s" } ?: "?"
+                    val size = ready.videoFile.length() / 1024
+                    lastVideoMeta =
+                        "来自 @${ready.info.author ?: ready.parsed.username} · ${dur} · ${size}KB"
+                    refreshPreview()
+                    val msg = "视频已下载（${size} KB），可点「用视频打开 X 发布」"
+                    txtStatus.text = msg
+                    toast(msg)
+                } catch (t: Throwable) {
+                    lastVideoFile = null
+                    lastVideoMeta = ""
+                    refreshPreview()
+                    txtStatus.text = t.message
+                    toast(t.message ?: "下载失败")
+                }
+            }
+        }
+
         view.findViewById<Button>(R.id.btnShareToReview).setOnClickListener {
             lifecycleScope.launch {
                 try {
@@ -374,7 +423,7 @@ class MainActivity : ComponentActivity() {
                     withContext(Dispatchers.IO) {
                         container.repository.saveLinkShareDraft(prep.fullText, prep.parsed)
                     }
-                    toast("已加入待审")
+                    toast("文案已加入待审（发布时请先下载视频）")
                     tab = Tab.REVIEW
                     render()
                 } catch (t: Throwable) {
@@ -392,36 +441,60 @@ class MainActivity : ComponentActivity() {
             }
             lifecycleScope.launch {
                 try {
-                    val prep = withContext(Dispatchers.IO) {
-                        container.repository.prepareLinkShare(
-                            editUrl.text.toString(),
-                            captionOverride = editCaption.text.toString(),
-                        )
+                    txtStatus.text = "准备视频发布…"
+                    val ready = if (lastVideoFile?.exists() == true) {
+                        val prep = withContext(Dispatchers.IO) {
+                            container.repository.prepareLinkShare(
+                                editUrl.text.toString(),
+                                captionOverride = editCaption.text.toString(),
+                            )
+                        }
+                        shareParsed = prep.parsed
+                        Triple(prep.parsed, prep.fullText, lastVideoFile!!)
+                    } else {
+                        val downloaded = withContext(Dispatchers.IO) {
+                            container.repository.prepareVideoShare(
+                                editUrl.text.toString(),
+                                captionOverride = editCaption.text.toString().ifBlank { null },
+                            )
+                        }
+                        shareParsed = downloaded.parsed
+                        lastVideoFile = downloaded.videoFile
+                        if (editCaption.text.isNullOrBlank()) {
+                            editCaption.setText(downloaded.caption)
+                        }
+                        Triple(downloaded.parsed, downloaded.caption, downloaded.videoFile)
                     }
-                    shareParsed = prep.parsed
-                    editCaption.setText(prep.caption)
+                    val caption = DraftGenerator.videoShareCaptionText(
+                        ready.first,
+                        editCaption.text.toString().ifBlank { ready.second },
+                        settings,
+                    )
                     refreshPreview()
                     if (settings.demoMode) {
                         withContext(Dispatchers.IO) {
-                            container.repository.publishLinkShareNow(prep.fullText, prep.parsed)
+                            container.repository.publishVideoShareDemo(caption, ready.first)
                         }
-                        toast("演示模式：已记为发布")
+                        toast("演示模式：视频已下载到本机缓存，并记为已发布")
                         tab = Tab.REVIEW
                         render()
                     } else {
                         withContext(Dispatchers.IO) {
-                            container.repository.saveLinkShareDraft(prep.fullText, prep.parsed)
+                            container.repository.saveLinkShareDraft(caption, ready.first)
                         }
-                        val opened = XPublisher.openCompose(this@MainActivity, prep.fullText)
+                        val opened = XPublisher.openComposeWithVideo(
+                            this@MainActivity,
+                            ready.third,
+                            caption,
+                        )
                         if (opened) {
-                            toast("已打开 X，请确认发送")
-                            tab = Tab.REVIEW
-                            render()
+                            toast("已打开 X，请确认附带视频后发送")
                         } else {
-                            toast("无法打开 X，请安装 X App 或浏览器")
+                            toast("无法把视频交给 X，请确认已安装 X App")
                         }
                     }
                 } catch (t: Throwable) {
+                    txtStatus.text = t.message
                     toast(t.message ?: "发布失败")
                 }
             }

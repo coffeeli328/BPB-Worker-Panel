@@ -50,4 +50,16 @@ class XLinkParserTest {
         assertEquals(1, Regex("https://x.com/demo/status/111").findAll(text).count())
         assertTrue(text.length <= 280)
     }
+
+    @Test
+    fun videoShareCaption_doesNotAppendUrl() {
+        val parsed = XLinkParser.extract("https://x.com/demo/status/111")!!
+        val text = DraftGenerator.videoShareCaptionText(
+            parsed,
+            "这条视频信息密度不错",
+            AppSettings(),
+        )
+        assertFalse(text.contains("https://x.com/demo/status/111"))
+        assertTrue(text.contains("信息密度"))
+    }
 }

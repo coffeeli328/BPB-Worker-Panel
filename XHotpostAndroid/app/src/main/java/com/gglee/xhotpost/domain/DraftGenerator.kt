@@ -421,6 +421,21 @@ object DraftGenerator {
         return stripExcess(merged)
     }
 
+    /** Caption only — video file is attached separately, so do not append the status URL. */
+    fun videoShareCaptionText(parsed: ParsedXLink, caption: String, settings: AppSettings): String {
+        val captionClean = caption.trim().ifBlank { linkShareCaption(parsed, settings) }
+            .replace(parsed.canonicalUrl, "")
+            .replace(Regex("https?://(?:x|twitter)\\.com\\S+"), "")
+            .trim()
+        val hook = buildHook(settings)
+        val merged = if (hook.isNotBlank() && captionClean.length + hook.length + 2 <= 280) {
+            "$captionClean\n$hook"
+        } else {
+            captionClean
+        }
+        return stripExcess(merged)
+    }
+
     fun aiLinkShareSystemPrompt(settings: AppSettings): String {
         val niche = nicheName(settings)
         val lang = when (settings.language) {

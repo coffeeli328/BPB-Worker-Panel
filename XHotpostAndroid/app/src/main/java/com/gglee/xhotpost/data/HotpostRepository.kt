@@ -16,6 +16,9 @@ import com.gglee.xhotpost.domain.ParsedXLink
 import com.gglee.xhotpost.domain.TrendCollector
 import com.gglee.xhotpost.domain.XLinkParser
 import com.gglee.xhotpost.domain.XPublisher
+import com.gglee.xhotpost.domain.XVideoFetcher
+import com.gglee.xhotpost.domain.XVideoInfo
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,6 +45,7 @@ class HotpostRepository(
     private val settingsStore: SettingsStore,
     private val trendCollector: TrendCollector = TrendCollector(),
     private val aiDraftClient: AiDraftClient = AiDraftClient(),
+    private val videoFetcher: XVideoFetcher = XVideoFetcher(),
 ) {
     private val lastAiStatusRef = AtomicReference("AI：未使用")
     private val _lastAiStatus = MutableStateFlow("AI：未使用")
@@ -190,7 +194,16 @@ class HotpostRepository(
         val aiError: String?,
     )
 
-    /** Build caption + post text for a pasted X video/status link. */
+    data class VideoShareReady(
+        val parsed: ParsedXLink,
+        val info: XVideoInfo,
+        val caption: String,
+        val videoFile: File,
+        val usedAi: Boolean,
+        val aiError: String?,
+    )
+
+    /** Build caption for a pasted X status (used before/after video download). */
     suspend fun prepareLinkShare(
         rawInput: String,
         captionOverride: String? = null,
@@ -198,7 +211,7 @@ class HotpostRepository(
         val parsed = XLinkParser.extract(rawInput)
             ?: error("请粘贴有效的 X/Twitter 帖子链接（含 /status/）")
         if (parsed.statusId.isNullOrBlank()) {
-            error("请使用带视频/帖子的链接，例如 https://x.com/用户名/status/数字")
+            error("请使用带视频的帖子链接，例如 https://x.com/用户名/status/数字")
         }
         val settings = settingsStore.settings.first()
         val caption: String
@@ -212,12 +225,12 @@ class HotpostRepository(
                 is AiDraftResult.Ok -> {
                     caption = ai.text
                     usedAi = true
-                    setAiStatus("AI：链接转发文案成功")
+                    setAiStatus("AI：视频文案成功")
                 }
                 is AiDraftResult.Err -> {
                     caption = DraftGenerator.linkShareCaption(parsed, settings)
                     aiError = ai.message
-                    setAiStatus("AI：链接文案失败 → ${ai.message}")
+                    setAiStatus("AI：视频文案失败 → ${ai.message}")
                 }
                 AiDraftResult.Skipped -> {
                     caption = DraftGenerator.linkShareCaption(parsed, settings)
@@ -226,18 +239,39 @@ class HotpostRepository(
         } else {
             caption = DraftGenerator.linkShareCaption(parsed, settings)
         }
-        val fullText = DraftGenerator.linkSharePost(parsed, caption, settings)
+        // Caption-only text for video attach; keep fullText without forcing URL.
+        val fullText = DraftGenerator.videoShareCaptionText(parsed, caption, settings)
         return LinkSharePrep(parsed, caption, fullText, usedAi, aiError)
+    }
+
+    /** Resolve + download the MP4 so we can share the video file into X. */
+    suspend fun prepareVideoShare(
+        rawInput: String,
+        captionOverride: String? = null,
+    ): VideoShareReady {
+        val prep = prepareLinkShare(rawInput, captionOverride)
+        val info = withContext(Dispatchers.IO) { videoFetcher.resolve(prep.parsed) }
+        val dir = File(context.cacheDir, "share_videos").apply { mkdirs() }
+        val dest = File(dir, "x_${prep.parsed.statusId}.mp4")
+        withContext(Dispatchers.IO) { videoFetcher.download(info, dest) }
+        return VideoShareReady(
+            parsed = prep.parsed,
+            info = info,
+            caption = DraftGenerator.videoShareCaptionText(prep.parsed, prep.caption, settingsStore.settings.first()),
+            videoFile = dest,
+            usedAi = prep.usedAi,
+            aiError = prep.aiError,
+        )
     }
 
     suspend fun saveLinkShareDraft(fullText: String, parsed: ParsedXLink): Draft {
         val settings = settingsStore.settings.first()
         val now = System.currentTimeMillis()
-        val topicId = "xlink-${parsed.statusId}"
+        val topicId = "xvideo-${parsed.statusId}"
         val draft = Draft(
             id = UUID.randomUUID().toString(),
             topicId = topicId,
-            topicTitle = "视频链接 · ${parsed.shortLabel}",
+            topicTitle = "视频 · ${parsed.shortLabel}",
             text = fullText.take(280),
             status = DraftStatus.PENDING_REVIEW,
             monetizationHook = DraftGenerator.buildHook(settings),
@@ -246,14 +280,13 @@ class HotpostRepository(
             demo = settings.demoMode,
         )
         dao.upsertDraft(draft.toEntity())
-        // Keep a lightweight topic row so regenerate can resolve title.
         dao.upsertTopics(
             listOf(
                 HotTopic(
                     id = topicId,
                     title = "视频 · ${parsed.shortLabel}",
                     summary = parsed.canonicalUrl,
-                    source = "X 链接",
+                    source = "X 视频",
                     url = parsed.canonicalUrl,
                     score = 95,
                     language = if (settings.language == com.gglee.xhotpost.domain.ContentLanguage.EN) {
@@ -268,9 +301,9 @@ class HotpostRepository(
         return draft
     }
 
-    suspend fun publishLinkShareNow(fullText: String, parsed: ParsedXLink): Draft {
-        val draft = saveLinkShareDraft(fullText, parsed)
-        return approveDraft(draft.id, fullText)
+    suspend fun publishVideoShareDemo(caption: String, parsed: ParsedXLink): Draft {
+        val draft = saveLinkShareDraft(caption, parsed)
+        return approveDraft(draft.id, caption)
     }
 
     suspend fun testAi(): String {

@@ -24,15 +24,15 @@ Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力�
 
 GitHub **Releases** 比分支里的 raw 文件更稳（约 17MB）：
 
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.10/XHotpost.apk
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.11/XHotpost.apk
 
-发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.10
+发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.11
 
-### 转发 X 视频链接
+### 发布 X 视频文件（不是链接）
 
-1. 在 X 上打开视频帖 → 分享 → 复制链接
-2. App 里打开 **视频链接** 页 → 粘贴（或系统「分享到热帖」）
-3. 点 **生成推荐文案**（可开 AI）→ **加入待审** 或 **打开 X 发布**
+1. 在 X 打开视频帖 → 分享 → 复制链接
+2. App **发视频** 页粘贴链接 → **下载视频文件**
+3. 可生成文案 → **用视频打开 X 发布**（把 MP4 交给 X App，确认发送）
 
 
 ### DeepSeek 写稿
