@@ -19,7 +19,11 @@ const nicheLabel: Record<Settings['niche'], string> = {
 }
 
 function stripExcess(text: string): string {
-  return text.replace(/\s+/g, ' ').trim().slice(0, 280)
+  return text
+    .replace(/[^\S\n]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .slice(0, 280)
 }
 
 function buildHook(settings: Settings): string {

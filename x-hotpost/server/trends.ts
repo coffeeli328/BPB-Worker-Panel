@@ -11,7 +11,7 @@ const parser = new Parser({
 })
 
 const nicheQueries: Record<NicheId, { zh: string; en: string }> = {
-  tech: { zh: '人工智能 OR 科技 OR 创业', en: 'AI OR startup OR technology' },
+  tech: { zh: '人工智能 OR ChatGPT OR 大模型', en: 'artificial intelligence OR ChatGPT OR LLM' },
   finance: {
     zh: '股市 OR 理财 OR 加密货币',
     en: 'markets OR investing OR crypto',
