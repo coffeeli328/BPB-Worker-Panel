@@ -17,9 +17,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Sideload signing — required for phone install. Without this, assembleRelease
+    // produces an unsigned APK that Android refuses to install.
+    signingConfigs {
+        create("sideload") {
+            storeFile = rootProject.file("keystore/xhotpost.jks")
+            storePassword = "xhotpost123"
+            keyAlias = "xhotpost"
+            keyPassword = "xhotpost123"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("sideload")
+        }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("sideload")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
