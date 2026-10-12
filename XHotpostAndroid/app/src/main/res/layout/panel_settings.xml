@@ -213,6 +213,34 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="自选话题（每行一个）"
+            android:textColor="#F3F7F2"
+            android:textSize="14sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="会固定出现在「热点」里，并优先匹配 X 热搜。例如：#AI、温哥华房价、OpenAI"
+            android:textColor="#9BB3AA"
+            android:textSize="12sp" />
+
+        <EditText
+            android:id="@+id/editWatchTopics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="top"
+            android:hint="#AI&#10;创作者经济&#10;温哥华房价"
+            android:inputType="textMultiLine"
+            android:minLines="3"
+            android:textColor="#F3F7F2"
+            android:textColorHint="#9BB3AA" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:text="内容语言"
             android:textColor="#F3F7F2"

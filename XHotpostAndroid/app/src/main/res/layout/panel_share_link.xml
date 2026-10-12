@@ -8,7 +8,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="发布 X 视频（文件，不是链接）"
+        android:text="下载视频并发布到 X"
         android:textColor="#D6FF4B"
         android:textSize="16sp"
         android:textStyle="bold" />
@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:text="复制 X 上的视频帖链接 → 下载视频文件 → 带文案打开 X 发布。不会只发链接。"
+        android:text="支持 X / YouTube / 抖音链接：下载 MP4 后带文案打开 X 发布。抖音若解析失败，可用「选择本地视频」。"
         android:textColor="#9BB3AA"
         android:textSize="13sp" />
 
@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:gravity="top"
-        android:hint="粘贴 https://x.com/用户/status/数字"
+        android:hint="粘贴 x.com / youtube.com / douyin.com / v.douyin.com 链接"
         android:inputType="textUri|textMultiLine"
         android:minLines="2"
         android:textColor="#F3F7F2"
@@ -54,6 +54,13 @@
             android:layout_weight="1"
             android:text="打开原帖" />
     </LinearLayout>
+
+    <Button
+        android:id="@+id/btnPickLocalVideo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="选择本地视频（备用）" />
 
     <Button
         android:id="@+id/btnGenShareCaption"

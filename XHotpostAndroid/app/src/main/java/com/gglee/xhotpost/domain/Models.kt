@@ -77,6 +77,11 @@ data class AppSettings(
     val displayName: String = "热帖",
     val niche: NicheId = NicheId.TECH,
     val customNicheLabel: String = "",
+    /**
+     * Extra topics the user always wants tracked (shown in 热点, boosted in ranking).
+     * Stored as separate lines in settings UI.
+     */
+    val watchTopics: List<String> = emptyList(),
     val language: ContentLanguage = ContentLanguage.ZH,
     /** 跟踪哪个地区的 X 热搜 */
     val xTrendRegion: XTrendRegion = XTrendRegion.AUTO,

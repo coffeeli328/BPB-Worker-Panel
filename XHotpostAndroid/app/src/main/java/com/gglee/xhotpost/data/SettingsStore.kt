@@ -27,6 +27,11 @@ class SettingsStore(private val context: Context) {
             prefs[stringKey("displayName")] = next.displayName
             prefs[stringKey("niche")] = next.niche.name
             prefs[stringKey("customNicheLabel")] = next.customNicheLabel
+            prefs[stringKey("watchTopics")] = next.watchTopics
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .joinToString("\n")
             prefs[stringKey("language")] = next.language.name
             prefs[stringKey("xTrendRegion")] = next.xTrendRegion.name
             prefs[stringKey("writingStyle")] = next.writingStyle.name
@@ -58,6 +63,11 @@ class SettingsStore(private val context: Context) {
                 NicheId.valueOf(prefs[stringKey("niche")] ?: NicheId.TECH.name)
             }.getOrDefault(NicheId.TECH),
             customNicheLabel = prefs[stringKey("customNicheLabel")] ?: "",
+            watchTopics = (prefs[stringKey("watchTopics")] ?: "")
+                .split('\n', ',', '，')
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct(),
             language = runCatching {
                 ContentLanguage.valueOf(
                     prefs[stringKey("language")] ?: ContentLanguage.ZH.name,

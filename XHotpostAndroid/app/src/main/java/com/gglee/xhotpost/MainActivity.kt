@@ -30,13 +30,15 @@ import com.gglee.xhotpost.domain.Draft
 import com.gglee.xhotpost.domain.DraftGenerator
 import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
+import com.gglee.xhotpost.domain.MediaLink
+import com.gglee.xhotpost.domain.MediaLinkParser
 import com.gglee.xhotpost.domain.NicheId
-import com.gglee.xhotpost.domain.ParsedXLink
+import com.gglee.xhotpost.domain.VideoPlatform
 import com.gglee.xhotpost.domain.WritingStyle
-import com.gglee.xhotpost.domain.XLinkParser
 import com.gglee.xhotpost.domain.XPublisher
 import com.gglee.xhotpost.domain.XTrendRegion
 import com.gglee.xhotpost.work.SyncWorker
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -61,9 +63,10 @@ class MainActivity : ComponentActivity() {
     private var tab = Tab.REVIEW
     private var collectJob: Job? = null
     private var pendingShareInput: String? = null
-    private var shareParsed: ParsedXLink? = null
-    private var lastVideoFile: java.io.File? = null
+    private var shareLink: MediaLink? = null
+    private var lastVideoFile: File? = null
     private var lastVideoMeta: String = ""
+    private var sharePanelRefresh: (() -> Unit)? = null
 
     private val loginLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
@@ -78,6 +81,34 @@ class MainActivity : ComponentActivity() {
                 }
                 txtBanner.text = buildBanner(settings)
                 if (tab == Tab.SETTINGS) render()
+            }
+        }
+    }
+
+    private val pickVideoLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri == null) return@registerForActivityResult
+        lifecycleScope.launch {
+            try {
+                val file = withContext(Dispatchers.IO) { copyUriToCache(uri) }
+                lastVideoFile = file
+                lastVideoMeta = "本地视频 · ${file.name} · ${file.length() / 1024}KB"
+                if (shareLink == null) {
+                    shareLink = MediaLink(
+                        platform = VideoPlatform.UNKNOWN,
+                        id = "local",
+                        canonicalUrl = "local://video",
+                        raw = "local",
+                    )
+                }
+                toast("已选择本地视频，可写文案后发布到 X")
+                sharePanelRefresh?.invoke()
+                if (tab == Tab.SHARE) {
+                    // keep panel; refreshPreview via callback
+                }
+            } catch (t: Throwable) {
+                toast(t.message ?: "读取本地视频失败")
             }
         }
     }
@@ -142,10 +173,23 @@ class MainActivity : ComponentActivity() {
             Intent.ACTION_VIEW -> intent.data?.toString()
             else -> null
         }?.trim().orEmpty()
-        if (shared.isNotBlank() && XLinkParser.extract(shared) != null) {
+        if (shared.isNotBlank() && MediaLinkParser.extract(shared) != null) {
             pendingShareInput = shared
             tab = Tab.SHARE
         }
+    }
+
+    private fun copyUriToCache(uri: Uri): File {
+        val dir = File(cacheDir, "share_videos").apply { mkdirs() }
+        val dest = File(dir, "local_${System.currentTimeMillis()}.mp4")
+        contentResolver.openInputStream(uri)?.use { input ->
+            dest.outputStream().use { output -> input.copyTo(output) }
+        } ?: error("无法读取所选文件")
+        if (!dest.exists() || dest.length() < 1024L) {
+            dest.delete()
+            error("本地视频无效或过小")
+        }
+        return dest
     }
 
     private fun bindViews() {
@@ -276,47 +320,51 @@ class MainActivity : ComponentActivity() {
         val txtCount = view.findViewById<TextView>(R.id.txtShareCount)
 
         fun refreshPreview() {
-            val parsed = shareParsed ?: XLinkParser.extract(editUrl.text.toString())
-            if (parsed?.statusId == null) {
-                txtPreview.text = "视频状态与文案预览"
-                txtCount.text = "0/280"
-                txtMeta.text = lastVideoMeta
-                return
+            val link = shareLink ?: MediaLinkParser.extract(editUrl.text.toString())
+            val caption = if (link != null) {
+                shareLink = link
+                DraftGenerator.mediaShareCaptionText(link, editCaption.text.toString(), settings)
+            } else {
+                editCaption.text.toString().trim()
             }
-            shareParsed = parsed
-            val caption = DraftGenerator.videoShareCaptionText(
-                parsed,
-                editCaption.text.toString(),
-                settings,
-            )
             val videoLine = lastVideoFile?.let {
                 if (it.exists()) "视频已就绪：${it.name}（${it.length() / 1024} KB）"
                 else null
-            } ?: "尚未下载视频"
+            } ?: "尚未下载 / 选择视频"
             txtMeta.text = listOfNotNull(
-                "帖子：${parsed.shortLabel}",
+                link?.let { "来源：${it.shortLabel}" },
                 lastVideoMeta.takeIf { it.isNotBlank() },
                 videoLine,
-            ).joinToString("\n")
-            txtPreview.text = "将发送【视频文件】+ 文案：\n\n$caption"
-            txtCount.text = "${caption.length}/280"
+            ).joinToString("\n").ifBlank { "粘贴 X / YouTube / 抖音链接，或选择本地视频" }
+            if (caption.isBlank() && link == null) {
+                txtPreview.text = "视频状态与文案预览"
+                txtCount.text = "0/280"
+            } else {
+                txtPreview.text = "将发送【视频文件】+ 文案：\n\n${caption.ifBlank { "（无文案）" }}"
+                txtCount.text = "${caption.length}/280"
+            }
         }
+        sharePanelRefresh = { refreshPreview() }
 
         pendingShareInput?.let {
             editUrl.setText(it)
-            shareParsed = XLinkParser.extract(it)
+            shareLink = MediaLinkParser.extract(it)
             pendingShareInput = null
             refreshPreview()
         }
-        shareParsed?.let {
-            if (editUrl.text.isNullOrBlank()) editUrl.setText(it.canonicalUrl)
+        shareLink?.let {
+            if (editUrl.text.isNullOrBlank() && it.canonicalUrl.startsWith("http")) {
+                editUrl.setText(it.canonicalUrl)
+            }
         }
 
         editUrl.doAfterTextChanged {
-            shareParsed = XLinkParser.extract(it?.toString().orEmpty())
-            // New URL → clear previous download.
-            lastVideoFile = null
-            lastVideoMeta = ""
+            val next = MediaLinkParser.extract(it?.toString().orEmpty())
+            if (next?.canonicalUrl != shareLink?.canonicalUrl) {
+                lastVideoFile = null
+                lastVideoMeta = ""
+            }
+            shareLink = next
             refreshPreview()
         }
         editCaption.doAfterTextChanged { refreshPreview() }
@@ -328,13 +376,13 @@ class MainActivity : ComponentActivity() {
                 toast("剪贴板为空")
                 return@setOnClickListener
             }
-            val parsed = XLinkParser.extract(text)
+            val parsed = MediaLinkParser.extract(text)
             if (parsed == null) {
                 editUrl.setText(text)
-                toast("未识别到 X 帖子链接，请检查")
+                toast("未识别到 X / YouTube / 抖音链接")
             } else {
                 editUrl.setText(parsed.canonicalUrl)
-                shareParsed = parsed
+                shareLink = parsed
                 lastVideoFile = null
                 lastVideoMeta = ""
                 toast("已粘贴：${parsed.shortLabel}")
@@ -343,12 +391,16 @@ class MainActivity : ComponentActivity() {
         }
 
         view.findViewById<Button>(R.id.btnOpenOriginal).setOnClickListener {
-            val parsed = shareParsed ?: XLinkParser.extract(editUrl.text.toString())
-            if (parsed == null) {
+            val link = shareLink ?: MediaLinkParser.extract(editUrl.text.toString())
+            if (link == null || !link.canonicalUrl.startsWith("http")) {
                 toast("请先粘贴有效链接")
                 return@setOnClickListener
             }
-            openUrl(parsed.canonicalUrl)
+            openUrl(link.canonicalUrl)
+        }
+
+        view.findViewById<Button>(R.id.btnPickLocalVideo).setOnClickListener {
+            pickVideoLauncher.launch("video/*")
         }
 
         view.findViewById<Button>(R.id.btnGenShareCaption).setOnClickListener {
@@ -358,8 +410,8 @@ class MainActivity : ComponentActivity() {
                     val prep = withContext(Dispatchers.IO) {
                         container.repository.prepareLinkShare(editUrl.text.toString())
                     }
-                    shareParsed = prep.parsed
-                    editUrl.setText(prep.parsed.canonicalUrl)
+                    shareLink = prep.link
+                    editUrl.setText(prep.link.canonicalUrl)
                     editCaption.setText(prep.caption)
                     refreshPreview()
                     val msg = when {
@@ -386,16 +438,27 @@ class MainActivity : ComponentActivity() {
                             captionOverride = editCaption.text.toString().ifBlank { null },
                         )
                     }
-                    shareParsed = ready.parsed
-                    editUrl.setText(ready.parsed.canonicalUrl)
+                    shareLink = ready.link
+                    editUrl.setText(ready.link.canonicalUrl)
                     if (editCaption.text.isNullOrBlank()) {
                         editCaption.setText(ready.caption)
                     }
                     lastVideoFile = ready.videoFile
+                    val platform = when (ready.link.platform) {
+                        VideoPlatform.YOUTUBE -> "YouTube"
+                        VideoPlatform.DOUYIN -> "抖音"
+                        VideoPlatform.X -> "X"
+                        else -> "视频"
+                    }
                     val dur = ready.info.durationSec?.let { "${"%.1f".format(it)}s" } ?: "?"
                     val size = ready.videoFile.length() / 1024
-                    lastVideoMeta =
-                        "来自 @${ready.info.author ?: ready.parsed.username} · ${dur} · ${size}KB"
+                    val who = ready.info.author ?: ready.link.username
+                    lastVideoMeta = listOfNotNull(
+                        platform,
+                        who?.let { "@$it" },
+                        dur,
+                        "${size}KB",
+                    ).joinToString(" · ")
                     refreshPreview()
                     val msg = "视频已下载（${size} KB），可点「用视频打开 X 发布」"
                     txtStatus.text = msg
@@ -413,17 +476,22 @@ class MainActivity : ComponentActivity() {
         view.findViewById<Button>(R.id.btnShareToReview).setOnClickListener {
             lifecycleScope.launch {
                 try {
+                    val link = shareLink ?: MediaLinkParser.extract(editUrl.text.toString())
+                    if (link == null) {
+                        toast("请先粘贴有效链接")
+                        return@launch
+                    }
                     val prep = withContext(Dispatchers.IO) {
                         container.repository.prepareLinkShare(
-                            editUrl.text.toString(),
+                            editUrl.text.toString().ifBlank { link.canonicalUrl },
                             captionOverride = editCaption.text.toString(),
                         )
                     }
-                    shareParsed = prep.parsed
+                    shareLink = prep.link
                     withContext(Dispatchers.IO) {
-                        container.repository.saveLinkShareDraft(prep.fullText, prep.parsed)
+                        container.repository.saveLinkShareDraft(prep.fullText, prep.link)
                     }
-                    toast("文案已加入待审（发布时请先下载视频）")
+                    toast("文案已加入待审（发布时请先下载或选择视频）")
                     tab = Tab.REVIEW
                     render()
                 } catch (t: Throwable) {
@@ -442,15 +510,36 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 try {
                     txtStatus.text = "准备视频发布…"
-                    val ready = if (lastVideoFile?.exists() == true) {
-                        val prep = withContext(Dispatchers.IO) {
-                            container.repository.prepareLinkShare(
-                                editUrl.text.toString(),
-                                captionOverride = editCaption.text.toString(),
+                    val videoFile: File
+                    val link: MediaLink
+                    val captionBase: String
+                    if (lastVideoFile?.exists() == true) {
+                        videoFile = lastVideoFile!!
+                        val existing = shareLink
+                            ?: MediaLinkParser.extract(editUrl.text.toString())
+                            ?: MediaLink(
+                                platform = VideoPlatform.UNKNOWN,
+                                id = "local",
+                                canonicalUrl = "local://video",
+                                raw = "local",
                             )
+                        link = existing
+                        shareLink = existing
+                        captionBase = if (
+                            existing.platform != VideoPlatform.UNKNOWN &&
+                            existing.canonicalUrl.startsWith("http")
+                        ) {
+                            val prep = withContext(Dispatchers.IO) {
+                                container.repository.prepareLinkShare(
+                                    editUrl.text.toString().ifBlank { existing.canonicalUrl },
+                                    captionOverride = editCaption.text.toString(),
+                                )
+                            }
+                            shareLink = prep.link
+                            prep.fullText
+                        } else {
+                            editCaption.text.toString().trim()
                         }
-                        shareParsed = prep.parsed
-                        Triple(prep.parsed, prep.fullText, lastVideoFile!!)
                     } else {
                         val downloaded = withContext(Dispatchers.IO) {
                             container.repository.prepareVideoShare(
@@ -458,33 +547,35 @@ class MainActivity : ComponentActivity() {
                                 captionOverride = editCaption.text.toString().ifBlank { null },
                             )
                         }
-                        shareParsed = downloaded.parsed
+                        shareLink = downloaded.link
                         lastVideoFile = downloaded.videoFile
                         if (editCaption.text.isNullOrBlank()) {
                             editCaption.setText(downloaded.caption)
                         }
-                        Triple(downloaded.parsed, downloaded.caption, downloaded.videoFile)
+                        videoFile = downloaded.videoFile
+                        link = downloaded.link
+                        captionBase = downloaded.caption
                     }
-                    val caption = DraftGenerator.videoShareCaptionText(
-                        ready.first,
-                        editCaption.text.toString().ifBlank { ready.second },
+                    val caption = DraftGenerator.mediaShareCaptionText(
+                        link,
+                        editCaption.text.toString().ifBlank { captionBase },
                         settings,
                     )
                     refreshPreview()
                     if (settings.demoMode) {
                         withContext(Dispatchers.IO) {
-                            container.repository.publishVideoShareDemo(caption, ready.first)
+                            container.repository.publishVideoShareDemo(caption, link)
                         }
-                        toast("演示模式：视频已下载到本机缓存，并记为已发布")
+                        toast("演示模式：视频已就绪本机缓存，并记为已发布")
                         tab = Tab.REVIEW
                         render()
                     } else {
                         withContext(Dispatchers.IO) {
-                            container.repository.saveLinkShareDraft(caption, ready.first)
+                            container.repository.saveLinkShareDraft(caption, link)
                         }
                         val opened = XPublisher.openComposeWithVideo(
                             this@MainActivity,
-                            ready.third,
+                            videoFile,
                             caption,
                         )
                         if (opened) {
@@ -519,11 +610,64 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun renderTopics() {
+        content.addView(simpleText("自选话题（会固定跟踪并优先匹配）", bold = true))
+        val addRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 8, 0, 8)
+        }
+        val editWatch = EditText(this).apply {
+            hint = "输入话题，如 #AI 或 温哥华房价"
+            setTextColor(0xFFF3F7F2.toInt())
+            setHintTextColor(0xFF9BB3AA.toInt())
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        val btnAddWatch = Button(this).apply { text = "添加" }
+        addRow.addView(editWatch)
+        addRow.addView(btnAddWatch)
+        content.addView(addRow)
+
+        fun refreshWatchList() {
+            // Rebuild is handled by full render after save.
+        }
+
+        if (settings.watchTopics.isNotEmpty()) {
+            content.addView(
+                simpleText(
+                    "当前自选：${settings.watchTopics.joinToString(" · ")}",
+                ),
+            )
+        } else {
+            content.addView(simpleText("尚未添加自选话题。也可在「设置」里批量填写。"))
+        }
+
+        btnAddWatch.setOnClickListener {
+            val name = editWatch.text.toString().trim()
+            if (name.isBlank()) {
+                toast("请输入话题")
+                return@setOnClickListener
+            }
+            lifecycleScope.launch {
+                val next = (settings.watchTopics + name)
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .distinct()
+                withContext(Dispatchers.IO) {
+                    container.repository.updateSettings { it.copy(watchTopics = next) }
+                }
+                settings = settings.copy(watchTopics = next)
+                toast("已加入自选：$name")
+                editWatch.setText("")
+                refreshWatchList()
+                runTick(silent = true)
+                render()
+            }
+        }
+
         if (topics.isEmpty()) {
             content.addView(simpleText("暂无 X 热搜，先跑一轮。"))
             return
         }
-        content.addView(simpleText("来自 X 平台热搜（点标题打开 X 实时搜索）", bold = true))
+        content.addView(simpleText("来自 X 平台热搜（点标题打开搜索；长按加入自选）", bold = true))
         val inflater = LayoutInflater.from(this)
         topics.take(30).forEach { topic ->
             val view = inflater.inflate(R.layout.item_topic, content, false)
@@ -534,6 +678,21 @@ class MainActivity : ComponentActivity() {
                 val link = topic.url
                     ?: com.gglee.xhotpost.domain.TrendCollector.xSearchUrl(topic.title)
                 openUrl(link)
+            }
+            view.setOnLongClickListener {
+                lifecycleScope.launch {
+                    val next = (settings.watchTopics + topic.title)
+                        .map { it.trim() }
+                        .filter { it.isNotBlank() }
+                        .distinct()
+                    withContext(Dispatchers.IO) {
+                        container.repository.updateSettings { it.copy(watchTopics = next) }
+                    }
+                    settings = settings.copy(watchTopics = next)
+                    toast("已加入自选：${topic.title}")
+                    render()
+                }
+                true
             }
             content.addView(view)
         }
@@ -564,6 +723,7 @@ class MainActivity : ComponentActivity() {
         val groupXRegion = view.findViewById<RadioGroup>(R.id.groupXRegion)
         val groupNiche = view.findViewById<RadioGroup>(R.id.groupNiche)
         val editCustomNiche = view.findViewById<EditText>(R.id.editCustomNiche)
+        val editWatchTopics = view.findViewById<EditText>(R.id.editWatchTopics)
         val groupLanguage = view.findViewById<RadioGroup>(R.id.groupLanguage)
         val groupStyle = view.findViewById<RadioGroup>(R.id.groupStyle)
         val editPersona = view.findViewById<EditText>(R.id.editPersona)
@@ -604,6 +764,7 @@ class MainActivity : ComponentActivity() {
             NicheId.CUSTOM -> view.findViewById<RadioButton>(R.id.nicheCustom).isChecked = true
         }
         editCustomNiche.setText(settings.customNicheLabel)
+        editWatchTopics.setText(settings.watchTopics.joinToString("\n"))
         editCustomNiche.visibility =
             if (settings.niche == NicheId.CUSTOM) View.VISIBLE else View.GONE
         groupNiche.setOnCheckedChangeListener { _, checkedId ->
@@ -712,10 +873,16 @@ class MainActivity : ComponentActivity() {
                 else -> WritingStyle.OPINION
             }
             val apiKey = editAiApiKey.text.toString().trim()
+            val watchTopics = editWatchTopics.text.toString()
+                .split('\n', ',', '，')
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
             val next = settings.copy(
                 displayName = editName.text.toString().ifBlank { "热帖" },
                 niche = niche,
                 customNicheLabel = editCustomNiche.text.toString().trim(),
+                watchTopics = watchTopics,
                 language = language,
                 xTrendRegion = xTrendRegion,
                 writingStyle = writingStyle,

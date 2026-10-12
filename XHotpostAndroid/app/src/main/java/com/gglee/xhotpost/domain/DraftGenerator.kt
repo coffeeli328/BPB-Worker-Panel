@@ -436,6 +436,54 @@ object DraftGenerator {
         return stripExcess(merged)
     }
 
+    fun mediaShareCaption(link: MediaLink, settings: AppSettings): String {
+        val asParsed = if (link.platform == VideoPlatform.X) {
+            ParsedXLink(link.canonicalUrl, link.username, link.id, link.raw)
+        } else {
+            null
+        }
+        if (asParsed != null) return linkShareCaption(asParsed, settings)
+
+        val niche = nicheName(settings)
+        val source = when (link.platform) {
+            VideoPlatform.YOUTUBE -> "YouTube"
+            VideoPlatform.DOUYIN -> "抖音"
+            else -> "这条视频"
+        }
+        val english = settings.language == ContentLanguage.EN
+        return if (english) {
+            when (settings.writingStyle) {
+                WritingStyle.CASUAL -> "Grabbed this from $source — useful if you follow $niche."
+                WritingStyle.OPINION -> "Most $source clips are noise. This one actually makes a point for $niche."
+                WritingStyle.HOWTO -> "Creator tip: watch once, write your angle, then post. Source: $source."
+                WritingStyle.STORY -> "Stopped scrolling for this $source clip. Rare."
+                WritingStyle.PRO -> "Reference clip via $source — relevant to $niche."
+            }
+        } else {
+            when (settings.writingStyle) {
+                WritingStyle.CASUAL -> "从$source 搬过来的。做「$niche」的可以对照一下。"
+                WritingStyle.OPINION -> "$source 这条比一堆空喊有用——至少把观点说清楚了。"
+                WritingStyle.HOWTO -> "用法：先看$source 这条，记下你的一句话判断，再发。"
+                WritingStyle.STORY -> "刷到$source 这条停下来了。准备转出来给「$niche」同行。"
+                WritingStyle.PRO -> "材料｜来自$source，与「$niche」相关。转发前请自核。"
+            }
+        }
+    }
+
+    fun mediaShareCaptionText(link: MediaLink, caption: String, settings: AppSettings): String {
+        val captionClean = caption.trim().ifBlank { mediaShareCaption(link, settings) }
+            .replace(link.canonicalUrl, "")
+            .replace(Regex("https?://\\S+"), "")
+            .trim()
+        val hook = buildHook(settings)
+        val merged = if (hook.isNotBlank() && captionClean.length + hook.length + 2 <= 280) {
+            "$captionClean\n$hook"
+        } else {
+            captionClean
+        }
+        return stripExcess(merged)
+    }
+
     fun aiLinkShareSystemPrompt(settings: AppSettings): String {
         val niche = nicheName(settings)
         val lang = when (settings.language) {

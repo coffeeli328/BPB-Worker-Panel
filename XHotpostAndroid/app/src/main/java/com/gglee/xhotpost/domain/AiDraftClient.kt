@@ -39,6 +39,25 @@ class AiDraftClient(
         )
     }
 
+    fun generateMediaShare(link: MediaLink, settings: AppSettings): AiDraftResult {
+        val platform = when (link.platform) {
+            VideoPlatform.YOUTUBE -> "YouTube"
+            VideoPlatform.DOUYIN -> "抖音"
+            VideoPlatform.X -> "X"
+            else -> "视频平台"
+        }
+        val system = DraftGenerator.aiLinkShareSystemPrompt(settings) +
+            "\n来源平台：$platform。不要在正文放 URL。"
+        val user = buildString {
+            appendLine("平台：$platform")
+            appendLine("链接：${link.canonicalUrl}")
+            if (!link.username.isNullOrBlank()) appendLine("作者：@${link.username}")
+            appendLine("ID：${link.id}")
+            append("写一条推荐转发短帖（不含 URL），将随视频文件一起发到 X。")
+        }
+        return chat(settings = settings, system = system, user = user)
+    }
+
     private fun chat(settings: AppSettings, system: String, user: String): AiDraftResult {
         val key = settings.aiApiKey.trim()
         if (!settings.aiEnabled || key.isEmpty()) return AiDraftResult.Skipped

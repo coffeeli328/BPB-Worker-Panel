@@ -102,12 +102,28 @@ class TrendCollector(
             }
         }
 
+        // Always inject user-selected watch topics so they appear even if not trending.
+        for ((index, topic) in settings.watchTopics.withIndex()) {
+            val name = topic.trim()
+            if (name.isBlank()) continue
+            collected += HotTopic(
+                id = topicId(name, "watch"),
+                title = name,
+                summary = "自选话题 · 点开可在 X 搜索实时讨论",
+                source = "自选话题",
+                url = xSearchUrl(name),
+                score = 130 - index.coerceAtMost(20),
+                language = guessLanguage(name),
+                fetchedAt = now,
+            )
+        }
+
         val ranked = rankForNiche(collected, settings)
         return ranked
             .groupBy { normalizeTitle(it.title) }
             .map { (_, items) -> items.maxBy { it.score } }
             .sortedByDescending { it.score }
-            .take(40)
+            .take(50)
     }
 
     private fun resolveRegions(settings: AppSettings): List<String> {
@@ -173,7 +189,7 @@ class TrendCollector(
     }
 
     private fun rankForNiche(topics: List<HotTopic>, settings: AppSettings): List<HotTopic> {
-        val keywords = when (settings.niche) {
+        val nicheKeys = when (settings.niche) {
             NicheId.CUSTOM -> {
                 val custom = settings.customNicheLabel.trim()
                 if (custom.isBlank()) emptyList()
@@ -182,22 +198,28 @@ class TrendCollector(
             NicheId.LOCAL -> emptyList()
             else -> nicheKeywords[settings.niche].orEmpty()
         }
+        val watchKeys = settings.watchTopics
+            .map { it.trim().lowercase().removePrefix("#") }
+            .filter { it.length >= 2 }
+        val keywords = (nicheKeys + watchKeys).distinct()
 
         if (keywords.isEmpty()) return topics
 
         val matched = mutableListOf<HotTopic>()
         val rest = mutableListOf<HotTopic>()
         for (topic in topics) {
-            val hay = topic.title.lowercase()
-            val hit = keywords.any { hay.contains(it) }
-            if (hit) {
-                matched += topic.copy(score = (topic.score + 25).coerceAtMost(120))
-            } else {
-                rest += topic
+            val hay = topic.title.lowercase().removePrefix("#")
+            val watchHit = watchKeys.any { hay.contains(it) || it.contains(hay) }
+            val nicheHit = nicheKeys.any { hay.contains(it) }
+            when {
+                topic.source == "自选话题" -> matched += topic
+                watchHit -> matched += topic.copy(score = (topic.score + 35).coerceAtMost(140))
+                nicheHit -> matched += topic.copy(score = (topic.score + 25).coerceAtMost(120))
+                else -> rest += topic
             }
         }
 
-        // Prefer niche hits, then keep enough general X trends so the list never feels empty.
+        // Prefer watch/niche hits, then keep enough general X trends so the list never feels empty.
         return matched + rest.take(12)
     }
 

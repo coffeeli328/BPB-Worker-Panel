@@ -34,6 +34,19 @@ class TrendCollectorTest {
     }
 
     @Test
+    fun collect_injectsWatchTopics() {
+        val topics = TrendCollector().collect(
+            AppSettings(
+                demoMode = true,
+                niche = NicheId.LOCAL,
+                watchTopics = listOf("温哥华房价", "#创作者经济"),
+            ),
+        )
+        assertTrue(topics.any { it.title == "温哥华房价" && it.source == "自选话题" })
+        assertTrue(topics.any { it.title == "#创作者经济" && it.source == "自选话题" })
+    }
+
+    @Test
     fun xSearchUrl_encodesQuery() {
         val url = TrendCollector.xSearchUrl("#AI 大模型")
         assertTrue(url.contains("x.com/search"))

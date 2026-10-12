@@ -12,12 +12,15 @@ import com.gglee.xhotpost.domain.DraftGenOutcome
 import com.gglee.xhotpost.domain.DraftGenerator
 import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
+import com.gglee.xhotpost.domain.MediaLink
+import com.gglee.xhotpost.domain.MediaLinkParser
+import com.gglee.xhotpost.domain.MultiVideoFetcher
 import com.gglee.xhotpost.domain.ParsedXLink
+import com.gglee.xhotpost.domain.RemoteVideo
 import com.gglee.xhotpost.domain.TrendCollector
+import com.gglee.xhotpost.domain.VideoPlatform
 import com.gglee.xhotpost.domain.XLinkParser
 import com.gglee.xhotpost.domain.XPublisher
-import com.gglee.xhotpost.domain.XVideoFetcher
-import com.gglee.xhotpost.domain.XVideoInfo
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -45,7 +48,7 @@ class HotpostRepository(
     private val settingsStore: SettingsStore,
     private val trendCollector: TrendCollector = TrendCollector(),
     private val aiDraftClient: AiDraftClient = AiDraftClient(),
-    private val videoFetcher: XVideoFetcher = XVideoFetcher(),
+    private val videoFetcher: MultiVideoFetcher = MultiVideoFetcher(),
 ) {
     private val lastAiStatusRef = AtomicReference("AI：未使用")
     private val _lastAiStatus = MutableStateFlow("AI：未使用")
@@ -187,7 +190,7 @@ class HotpostRepository(
     }
 
     data class LinkSharePrep(
-        val parsed: ParsedXLink,
+        val link: MediaLink,
         val caption: String,
         val fullText: String,
         val usedAi: Boolean,
@@ -195,24 +198,21 @@ class HotpostRepository(
     )
 
     data class VideoShareReady(
-        val parsed: ParsedXLink,
-        val info: XVideoInfo,
+        val link: MediaLink,
+        val info: RemoteVideo,
         val caption: String,
         val videoFile: File,
         val usedAi: Boolean,
         val aiError: String?,
     )
 
-    /** Build caption for a pasted X status (used before/after video download). */
+    /** Build caption for a pasted video link (X / YouTube / Douyin). */
     suspend fun prepareLinkShare(
         rawInput: String,
         captionOverride: String? = null,
     ): LinkSharePrep {
-        val parsed = XLinkParser.extract(rawInput)
-            ?: error("请粘贴有效的 X/Twitter 帖子链接（含 /status/）")
-        if (parsed.statusId.isNullOrBlank()) {
-            error("请使用带视频的帖子链接，例如 https://x.com/用户名/status/数字")
-        }
+        val link = MediaLinkParser.extract(rawInput)
+            ?: error("请粘贴 X / YouTube / 抖音 视频链接")
         val settings = settingsStore.settings.first()
         val caption: String
         var usedAi = false
@@ -221,57 +221,67 @@ class HotpostRepository(
         if (override.isNotBlank()) {
             caption = override
         } else if (settings.aiEnabled && settings.aiApiKey.isNotBlank()) {
-            when (val ai = withContext(Dispatchers.IO) { aiDraftClient.generateLinkShare(parsed, settings) }) {
+            when (
+                val ai = withContext(Dispatchers.IO) {
+                    aiDraftClient.generateMediaShare(link, settings)
+                }
+            ) {
                 is AiDraftResult.Ok -> {
                     caption = ai.text
                     usedAi = true
                     setAiStatus("AI：视频文案成功")
                 }
                 is AiDraftResult.Err -> {
-                    caption = DraftGenerator.linkShareCaption(parsed, settings)
+                    caption = DraftGenerator.mediaShareCaption(link, settings)
                     aiError = ai.message
                     setAiStatus("AI：视频文案失败 → ${ai.message}")
                 }
                 AiDraftResult.Skipped -> {
-                    caption = DraftGenerator.linkShareCaption(parsed, settings)
+                    caption = DraftGenerator.mediaShareCaption(link, settings)
                 }
             }
         } else {
-            caption = DraftGenerator.linkShareCaption(parsed, settings)
+            caption = DraftGenerator.mediaShareCaption(link, settings)
         }
-        // Caption-only text for video attach; keep fullText without forcing URL.
-        val fullText = DraftGenerator.videoShareCaptionText(parsed, caption, settings)
-        return LinkSharePrep(parsed, caption, fullText, usedAi, aiError)
+        val fullText = DraftGenerator.mediaShareCaptionText(link, caption, settings)
+        return LinkSharePrep(link, caption, fullText, usedAi, aiError)
     }
 
-    /** Resolve + download the MP4 so we can share the video file into X. */
+    /** Resolve + download MP4 from X / YouTube / Douyin for sharing into X. */
     suspend fun prepareVideoShare(
         rawInput: String,
         captionOverride: String? = null,
     ): VideoShareReady {
         val prep = prepareLinkShare(rawInput, captionOverride)
-        val info = withContext(Dispatchers.IO) { videoFetcher.resolve(prep.parsed) }
+        val info = withContext(Dispatchers.IO) { videoFetcher.resolve(rawInput) }
         val dir = File(context.cacheDir, "share_videos").apply { mkdirs() }
-        val dest = File(dir, "x_${prep.parsed.statusId}.mp4")
+        val prefix = when (info.link.platform) {
+            VideoPlatform.YOUTUBE -> "yt"
+            VideoPlatform.DOUYIN -> "dy"
+            VideoPlatform.X -> "x"
+            else -> "vid"
+        }
+        val dest = File(dir, "${prefix}_${info.link.id.filter { it.isLetterOrDigit() }.take(24)}.mp4")
         withContext(Dispatchers.IO) { videoFetcher.download(info, dest) }
+        val settings = settingsStore.settings.first()
         return VideoShareReady(
-            parsed = prep.parsed,
+            link = info.link,
             info = info,
-            caption = DraftGenerator.videoShareCaptionText(prep.parsed, prep.caption, settingsStore.settings.first()),
+            caption = DraftGenerator.mediaShareCaptionText(info.link, prep.caption, settings),
             videoFile = dest,
             usedAi = prep.usedAi,
             aiError = prep.aiError,
         )
     }
 
-    suspend fun saveLinkShareDraft(fullText: String, parsed: ParsedXLink): Draft {
+    suspend fun saveLinkShareDraft(fullText: String, link: MediaLink): Draft {
         val settings = settingsStore.settings.first()
         val now = System.currentTimeMillis()
-        val topicId = "xvideo-${parsed.statusId}"
+        val topicId = "video-${link.platform.name.lowercase()}-${link.id.take(20)}"
         val draft = Draft(
             id = UUID.randomUUID().toString(),
             topicId = topicId,
-            topicTitle = "视频 · ${parsed.shortLabel}",
+            topicTitle = "视频 · ${link.shortLabel}",
             text = fullText.take(280),
             status = DraftStatus.PENDING_REVIEW,
             monetizationHook = DraftGenerator.buildHook(settings),
@@ -284,10 +294,15 @@ class HotpostRepository(
             listOf(
                 HotTopic(
                     id = topicId,
-                    title = "视频 · ${parsed.shortLabel}",
-                    summary = parsed.canonicalUrl,
-                    source = "X 视频",
-                    url = parsed.canonicalUrl,
+                    title = "视频 · ${link.shortLabel}",
+                    summary = link.canonicalUrl,
+                    source = when (link.platform) {
+                        VideoPlatform.YOUTUBE -> "YouTube 视频"
+                        VideoPlatform.DOUYIN -> "抖音视频"
+                        VideoPlatform.X -> "X 视频"
+                        else -> "视频"
+                    },
+                    url = link.canonicalUrl,
                     score = 95,
                     language = if (settings.language == com.gglee.xhotpost.domain.ContentLanguage.EN) {
                         "en"
@@ -301,9 +316,15 @@ class HotpostRepository(
         return draft
     }
 
-    suspend fun publishVideoShareDemo(caption: String, parsed: ParsedXLink): Draft {
-        val draft = saveLinkShareDraft(caption, parsed)
+    suspend fun publishVideoShareDemo(caption: String, link: MediaLink): Draft {
+        val draft = saveLinkShareDraft(caption, link)
         return approveDraft(draft.id, caption)
+    }
+
+    /** Backward-compatible helper for X-only ParsedXLink call sites. */
+    private fun MediaLink.toParsedOrNull(): ParsedXLink? {
+        if (platform != VideoPlatform.X) return null
+        return ParsedXLink(canonicalUrl, username, id, raw)
     }
 
     suspend fun testAi(): String {
