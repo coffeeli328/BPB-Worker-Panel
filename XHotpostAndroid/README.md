@@ -54,6 +54,8 @@ https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0
 
 若浏览器一直卡在 0%：换 Chrome/Safari、换网络，或用电脑下载后传到手机。
 
+安装失败时：确认下载的是 **已签名** 的 Releases APK；若提示解析包失败/未签名，请重新下载最新包。若提示与已安装版本签名不一致，先卸载旧版「热帖」再装。
+
 ## 安装到已连接的手机（本机 USB）
 
 云 Agent **无法**访问你电脑上的 USB，需要在你自己的电脑上执行（手机已连上并开启 USB 调试）：
