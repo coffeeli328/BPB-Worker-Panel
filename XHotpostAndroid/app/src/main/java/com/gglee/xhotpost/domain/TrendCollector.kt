@@ -127,17 +127,12 @@ class TrendCollector(
     }
 
     private fun resolveRegions(settings: AppSettings): List<String> {
-        return when (settings.xTrendRegion) {
-            XTrendRegion.UNITED_STATES -> listOf("united-states")
-            XTrendRegion.UNITED_KINGDOM -> listOf("united-kingdom")
-            XTrendRegion.JAPAN -> listOf("japan")
-            XTrendRegion.SINGAPORE -> listOf("singapore")
-            XTrendRegion.INDIA -> listOf("india")
-            XTrendRegion.AUTO -> when (settings.language) {
-                ContentLanguage.ZH -> listOf("japan", "singapore", "united-states")
-                ContentLanguage.EN -> listOf("united-states", "united-kingdom")
-                ContentLanguage.MIXED -> listOf("united-states", "japan", "singapore")
-            }
+        val fixed = settings.xTrendRegion.slug
+        if (fixed != null) return listOf(fixed)
+        return when (settings.language) {
+            ContentLanguage.ZH -> listOf("japan", "singapore", "south-korea", "united-states")
+            ContentLanguage.EN -> listOf("united-states", "united-kingdom", "canada")
+            ContentLanguage.MIXED -> listOf("worldwide", "united-states", "japan", "singapore")
         }
     }
 
@@ -223,14 +218,8 @@ class TrendCollector(
         return matched + rest.take(12)
     }
 
-    private fun regionLabel(slug: String): String = when (slug) {
-        "united-states" -> "美国"
-        "united-kingdom" -> "英国"
-        "japan" -> "日本"
-        "singapore" -> "新加坡"
-        "india" -> "印度"
-        else -> slug
-    }
+    private fun regionLabel(slug: String): String =
+        XTrendRegion.entries.firstOrNull { it.slug == slug }?.labelZh ?: slug
 
     private fun guessLanguage(name: String): String {
         return if (name.any { it.code in 0x4E00..0x9FFF || it.code in 0x3040..0x30FF }) "zh" else "en"

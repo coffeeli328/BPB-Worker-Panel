@@ -3,7 +3,9 @@ package com.gglee.xhotpost
 import com.gglee.xhotpost.domain.AppSettings
 import com.gglee.xhotpost.domain.NicheId
 import com.gglee.xhotpost.domain.TrendCollector
+import com.gglee.xhotpost.domain.XTrendRegion
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -51,5 +53,15 @@ class TrendCollectorTest {
         val url = TrendCollector.xSearchUrl("#AI 大模型")
         assertTrue(url.contains("x.com/search"))
         assertTrue(url.contains("%23AI") || url.contains("AI"))
+    }
+
+    @Test
+    fun regionEnum_hasSlugsForSelectableAreas() {
+        assertEquals("worldwide", XTrendRegion.WORLDWIDE.slug)
+        assertEquals("canada", XTrendRegion.CANADA.slug)
+        assertEquals("south-korea", XTrendRegion.SOUTH_KOREA.slug)
+        assertEquals(null, XTrendRegion.AUTO.slug)
+        assertNotNull(XTrendRegion.entries.find { it.labelZh == "日本" })
+        assertTrue(XTrendRegion.entries.size >= 10)
     }
 }

@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -17,6 +18,7 @@ import android.widget.ScrollView
 import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
+import android.util.TypedValue
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.browser.customtabs.CustomTabsIntent
@@ -269,11 +271,7 @@ class MainActivity : ComponentActivity() {
         }
         val region = when (s.xTrendRegion) {
             XTrendRegion.AUTO -> "自动地区"
-            XTrendRegion.UNITED_STATES -> "美国热搜"
-            XTrendRegion.UNITED_KINGDOM -> "英国热搜"
-            XTrendRegion.JAPAN -> "日本热搜"
-            XTrendRegion.SINGAPORE -> "新加坡热搜"
-            XTrendRegion.INDIA -> "印度热搜"
+            else -> "${s.xTrendRegion.labelZh}热搜"
         }
         val ai = when {
             !s.aiEnabled || s.aiApiKey.isBlank() -> "AI关"
@@ -610,6 +608,27 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun renderTopics() {
+        content.addView(simpleText("热搜排行榜 · 地区", bold = true))
+        content.addView(
+            simpleText("点选地区后会立即刷新该地区 X 热搜（也可在「设置」里改）"),
+        )
+        content.addView(buildRegionChooser(settings.xTrendRegion) { region ->
+            if (region == settings.xTrendRegion) {
+                lifecycleScope.launch { runTick(silent = false) }
+                return@buildRegionChooser
+            }
+            lifecycleScope.launch {
+                withContext(Dispatchers.IO) {
+                    container.repository.updateSettings { it.copy(xTrendRegion = region) }
+                }
+                settings = settings.copy(xTrendRegion = region)
+                txtBanner.text = buildBanner(settings)
+                toast("已切换到${region.labelZh}，正在刷新…")
+                render()
+                runTick(silent = false)
+            }
+        })
+
         content.addView(simpleText("自选话题（会固定跟踪并优先匹配）", bold = true))
         val addRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -625,10 +644,6 @@ class MainActivity : ComponentActivity() {
         addRow.addView(editWatch)
         addRow.addView(btnAddWatch)
         content.addView(addRow)
-
-        fun refreshWatchList() {
-            // Rebuild is handled by full render after save.
-        }
 
         if (settings.watchTopics.isNotEmpty()) {
             content.addView(
@@ -657,17 +672,25 @@ class MainActivity : ComponentActivity() {
                 settings = settings.copy(watchTopics = next)
                 toast("已加入自选：$name")
                 editWatch.setText("")
-                refreshWatchList()
                 runTick(silent = true)
                 render()
             }
         }
 
+        val regionHint = when (settings.xTrendRegion) {
+            XTrendRegion.AUTO -> "自动（跟内容语言）"
+            else -> settings.xTrendRegion.labelZh
+        }
         if (topics.isEmpty()) {
-            content.addView(simpleText("暂无 X 热搜，先跑一轮。"))
+            content.addView(simpleText("暂无「$regionHint」热搜，点上方地区或「跑一轮」。"))
             return
         }
-        content.addView(simpleText("来自 X 平台热搜（点标题打开搜索；长按加入自选）", bold = true))
+        content.addView(
+            simpleText(
+                "当前：$regionHint · 点标题打开搜索；长按加入自选",
+                bold = true,
+            ),
+        )
         val inflater = LayoutInflater.from(this)
         topics.take(30).forEach { topic ->
             val view = inflater.inflate(R.layout.item_topic, content, false)
@@ -696,6 +719,46 @@ class MainActivity : ComponentActivity() {
             }
             content.addView(view)
         }
+    }
+
+    /** Horizontal chip row to pick X trend region. */
+    private fun buildRegionChooser(
+        selected: XTrendRegion,
+        onPick: (XTrendRegion) -> Unit,
+    ): View {
+        val scroll = HorizontalScrollView(this).apply {
+            isHorizontalScrollBarEnabled = false
+            setPadding(0, 8, 0, 12)
+        }
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        XTrendRegion.entries.forEach { region ->
+            val selectedNow = region == selected
+            val btn = Button(this).apply {
+                text = region.labelZh
+                isAllCaps = false
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                setPadding(28, 8, 28, 8)
+                minimumWidth = 0
+                minWidth = 0
+                if (selectedNow) {
+                    setBackgroundColor(0xFFD6FF4B.toInt())
+                    setTextColor(0xFF0A1A15.toInt())
+                } else {
+                    setBackgroundColor(0xFF143029.toInt())
+                    setTextColor(0xFFF3F7F2.toInt())
+                }
+                setOnClickListener { onPick(region) }
+            }
+            val lp = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { marginEnd = 12 }
+            row.addView(btn, lp)
+        }
+        scroll.addView(row)
+        return scroll
     }
 
     private fun openUrl(url: String) {
@@ -748,11 +811,19 @@ class MainActivity : ComponentActivity() {
 
         when (settings.xTrendRegion) {
             XTrendRegion.AUTO -> view.findViewById<RadioButton>(R.id.regionAuto).isChecked = true
+            XTrendRegion.WORLDWIDE -> view.findViewById<RadioButton>(R.id.regionWorldwide).isChecked = true
             XTrendRegion.UNITED_STATES -> view.findViewById<RadioButton>(R.id.regionUs).isChecked = true
             XTrendRegion.UNITED_KINGDOM -> view.findViewById<RadioButton>(R.id.regionUk).isChecked = true
+            XTrendRegion.CANADA -> view.findViewById<RadioButton>(R.id.regionCa).isChecked = true
+            XTrendRegion.AUSTRALIA -> view.findViewById<RadioButton>(R.id.regionAu).isChecked = true
             XTrendRegion.JAPAN -> view.findViewById<RadioButton>(R.id.regionJp).isChecked = true
+            XTrendRegion.SOUTH_KOREA -> view.findViewById<RadioButton>(R.id.regionKr).isChecked = true
             XTrendRegion.SINGAPORE -> view.findViewById<RadioButton>(R.id.regionSg).isChecked = true
             XTrendRegion.INDIA -> view.findViewById<RadioButton>(R.id.regionIn).isChecked = true
+            XTrendRegion.INDONESIA -> view.findViewById<RadioButton>(R.id.regionId).isChecked = true
+            XTrendRegion.GERMANY -> view.findViewById<RadioButton>(R.id.regionDe).isChecked = true
+            XTrendRegion.BRAZIL -> view.findViewById<RadioButton>(R.id.regionBr).isChecked = true
+            XTrendRegion.TURKEY -> view.findViewById<RadioButton>(R.id.regionTr).isChecked = true
         }
 
         when (settings.niche) {
@@ -853,11 +924,19 @@ class MainActivity : ComponentActivity() {
                 else -> NicheId.TECH
             }
             val xTrendRegion = when (groupXRegion.checkedRadioButtonId) {
+                R.id.regionWorldwide -> XTrendRegion.WORLDWIDE
                 R.id.regionUs -> XTrendRegion.UNITED_STATES
                 R.id.regionUk -> XTrendRegion.UNITED_KINGDOM
+                R.id.regionCa -> XTrendRegion.CANADA
+                R.id.regionAu -> XTrendRegion.AUSTRALIA
                 R.id.regionJp -> XTrendRegion.JAPAN
+                R.id.regionKr -> XTrendRegion.SOUTH_KOREA
                 R.id.regionSg -> XTrendRegion.SINGAPORE
                 R.id.regionIn -> XTrendRegion.INDIA
+                R.id.regionId -> XTrendRegion.INDONESIA
+                R.id.regionDe -> XTrendRegion.GERMANY
+                R.id.regionBr -> XTrendRegion.BRAZIL
+                R.id.regionTr -> XTrendRegion.TURKEY
                 else -> XTrendRegion.AUTO
             }
             val language = when (groupLanguage.checkedRadioButtonId) {

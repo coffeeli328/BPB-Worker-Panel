@@ -29,13 +29,26 @@ enum class WritingStyle {
 }
 
 /** X 热搜地区（公开趋势镜像，不用 X API） */
-enum class XTrendRegion {
-    AUTO,
-    UNITED_STATES,
-    UNITED_KINGDOM,
-    JAPAN,
-    SINGAPORE,
-    INDIA,
+enum class XTrendRegion(
+    /** UI 短名 */
+    val labelZh: String,
+    /** getdaytrends.com path slug；AUTO 为 null */
+    val slug: String?,
+) {
+    AUTO("自动", null),
+    WORLDWIDE("全球", "worldwide"),
+    UNITED_STATES("美国", "united-states"),
+    UNITED_KINGDOM("英国", "united-kingdom"),
+    CANADA("加拿大", "canada"),
+    AUSTRALIA("澳洲", "australia"),
+    JAPAN("日本", "japan"),
+    SOUTH_KOREA("韩国", "south-korea"),
+    SINGAPORE("新加坡", "singapore"),
+    INDIA("印度", "india"),
+    INDONESIA("印尼", "indonesia"),
+    GERMANY("德国", "germany"),
+    BRAZIL("巴西", "brazil"),
+    TURKEY("土耳其", "turkey"),
 }
 
 enum class DraftStatus {

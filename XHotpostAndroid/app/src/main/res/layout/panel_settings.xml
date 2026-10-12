@@ -94,6 +94,14 @@
             android:textColor="#F3F7F2"
             android:textSize="14sp" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="也可在「热点」页顶部直接切换地区并立即刷新。"
+            android:textColor="#9BB3AA"
+            android:textSize="12sp" />
+
         <RadioGroup
             android:id="@+id/groupXRegion"
             android:layout_width="match_parent"
@@ -105,6 +113,13 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="自动（跟内容语言）"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/regionWorldwide"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="全球"
                 android:textColor="#F3F7F2" />
 
             <RadioButton
@@ -122,10 +137,31 @@
                 android:textColor="#F3F7F2" />
 
             <RadioButton
+                android:id="@+id/regionCa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="加拿大"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/regionAu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="澳洲"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
                 android:id="@+id/regionJp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="日本"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/regionKr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="韩国"
                 android:textColor="#F3F7F2" />
 
             <RadioButton
@@ -140,6 +176,34 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="印度"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/regionId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="印尼"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/regionDe"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="德国"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/regionBr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="巴西"
+                android:textColor="#F3F7F2" />
+
+            <RadioButton
+                android:id="@+id/regionTr"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="土耳其"
                 android:textColor="#F3F7F2" />
         </RadioGroup>
 

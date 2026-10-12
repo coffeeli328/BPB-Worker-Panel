@@ -24,9 +24,9 @@ Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力�
 
 GitHub **Releases** 比分支里的 raw 文件更稳（约 17MB）：
 
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.12/XHotpost.apk
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.13/XHotpost.apk
 
-发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.12
+发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.13
 
 ### 发布视频文件到 X（X / YouTube / 抖音）
 
@@ -49,8 +49,8 @@ https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0
 
 ### X 热搜说明
 
-设置 →「跟踪 X 热搜」可选地区（美国 / 英国 / 日本 / 新加坡 / 印度，或自动）。
-赛道用于**优先排序**匹配词；选「综合 X 热搜」则不过滤。点话题标题会打开 X 实时搜索。
+**热点**页顶部可直接切换热搜地区（全球 / 美英加澳 / 日韩新 / 印尼德巴土等，或自动），点选后立即刷新。
+也可在设置 →「跟踪 X 热搜」里改。赛道用于**优先排序**匹配词；选「综合 X 热搜」则不过滤。点话题标题会打开 X 实时搜索。
 
 若浏览器一直卡在 0%：换 Chrome/Safari、换网络，或用电脑下载后传到手机。
 
