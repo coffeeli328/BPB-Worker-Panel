@@ -168,7 +168,7 @@ class MultiVideoFetcher(
                 in 240..359 -> 500 + (height ?: 0)
                 else -> (height ?: 0)
             }
-            if (best == null || score > best!!.second) {
+            if (best == null || score > best.second) {
                 best = Triple(url, score, width to height)
             }
         }

@@ -54,8 +54,15 @@ object MediaLinkParser {
 
     private fun parseYouTube(url: String, raw: String): MediaLink? {
         val patterns = listOf(
-            Regex("""(?:youtube\.com/watch\?[^\s#]*?[?&]v=|youtube\.com/shorts/|youtu\.be/|youtube\.com/embed/|music\.youtube\.com/watch\?[^\s#]*?[?&]v=)([A-Za-z0-9_-]{6,})""", RegexOption.IGNORE_CASE),
-            Regex("""youtube\.com/live/([A-Za-z0-9_-]{6,})""", RegexOption.IGNORE_CASE),
+            // watch?v=ID  or  watch?foo=1&v=ID  (the ? after watch is already consumed)
+            Regex(
+                """(?:youtube\.com|music\.youtube\.com)/watch\?[^\s#]*?\bv=([A-Za-z0-9_-]{6,})""",
+                RegexOption.IGNORE_CASE,
+            ),
+            Regex(
+                """(?:youtube\.com/(?:shorts|embed|live)/|youtu\.be/)([A-Za-z0-9_-]{6,})""",
+                RegexOption.IGNORE_CASE,
+            ),
         )
         for (p in patterns) {
             val m = p.find(url) ?: continue
