@@ -31,6 +31,7 @@ import com.gglee.xhotpost.domain.ContentLanguage
 import com.gglee.xhotpost.domain.Draft
 import com.gglee.xhotpost.domain.DraftGenerator
 import com.gglee.xhotpost.domain.DraftStatus
+import com.gglee.xhotpost.domain.GallerySaver
 import com.gglee.xhotpost.domain.HotTopic
 import com.gglee.xhotpost.domain.MediaLink
 import com.gglee.xhotpost.domain.MediaLinkParser
@@ -69,6 +70,7 @@ class MainActivity : ComponentActivity() {
     private var lastVideoFile: File? = null
     private var lastVideoMeta: String = ""
     private var sharePanelRefresh: (() -> Unit)? = null
+    private var pendingGallerySaveAfterPermission: Boolean = false
 
     private val loginLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult(),
@@ -111,6 +113,19 @@ class MainActivity : ComponentActivity() {
                 }
             } catch (t: Throwable) {
                 toast(t.message ?: "读取本地视频失败")
+            }
+        }
+    }
+
+    private val writeStorageLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { granted ->
+        if (pendingGallerySaveAfterPermission) {
+            pendingGallerySaveAfterPermission = false
+            if (granted) {
+                saveCurrentVideoToGallery()
+            } else {
+                toast("需要存储权限才能保存到相册")
             }
         }
     }
@@ -192,6 +207,55 @@ class MainActivity : ComponentActivity() {
             error("本地视频无效或过小")
         }
         return dest
+    }
+
+    private fun requestSaveCurrentVideoToGallery() {
+        val file = lastVideoFile
+        if (file == null || !file.exists()) {
+            toast("请先下载或选择视频")
+            return
+        }
+        if (GallerySaver.needsWritePermission(this)) {
+            pendingGallerySaveAfterPermission = true
+            writeStorageLauncher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            return
+        }
+        saveCurrentVideoToGallery()
+    }
+
+    private fun saveCurrentVideoToGallery() {
+        val file = lastVideoFile
+        if (file == null || !file.exists()) {
+            toast("请先下载或选择视频")
+            return
+        }
+        lifecycleScope.launch {
+            txtStatus.text = "正在保存到相册…"
+            try {
+                val nameHint = shareLink?.let { link ->
+                    when (link.platform) {
+                        VideoPlatform.YOUTUBE -> "yt_${link.id}"
+                        VideoPlatform.DOUYIN -> "dy_${link.id}"
+                        VideoPlatform.X -> "x_${link.id}"
+                        else -> "video"
+                    }
+                }
+                val saved = withContext(Dispatchers.IO) {
+                    GallerySaver.saveVideo(this@MainActivity, file, nameHint)
+                }
+                val msg = "已保存到相册 Movies/XHotpost：${saved.displayName}"
+                lastVideoMeta = listOfNotNull(
+                    lastVideoMeta.takeIf { it.isNotBlank() },
+                    "已存相册",
+                ).joinToString(" · ")
+                sharePanelRefresh?.invoke()
+                txtStatus.text = msg
+                toast(msg)
+            } catch (t: Throwable) {
+                txtStatus.text = t.message
+                toast(t.message ?: "保存到相册失败")
+            }
+        }
     }
 
     private fun bindViews() {
@@ -458,7 +522,7 @@ class MainActivity : ComponentActivity() {
                         "${size}KB",
                     ).joinToString(" · ")
                     refreshPreview()
-                    val msg = "视频已下载（${size} KB），可点「用视频打开 X 发布」"
+                    val msg = "视频已下载（${size} KB），可保存到相册或打开 X 发布"
                     txtStatus.text = msg
                     toast(msg)
                 } catch (t: Throwable) {
@@ -469,6 +533,10 @@ class MainActivity : ComponentActivity() {
                     toast(t.message ?: "下载失败")
                 }
             }
+        }
+
+        view.findViewById<Button>(R.id.btnSaveToGallery).setOnClickListener {
+            requestSaveCurrentVideoToGallery()
         }
 
         view.findViewById<Button>(R.id.btnShareToReview).setOnClickListener {

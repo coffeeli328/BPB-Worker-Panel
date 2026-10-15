@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:text="支持 X / YouTube / 抖音链接：下载 MP4 后带文案打开 X 发布。抖音若解析失败，可用「选择本地视频」。"
+        android:text="支持 X / YouTube / 抖音链接：下载 MP4 后可保存到相册，或带文案打开 X 发布。抖音若解析失败，可用「选择本地视频」。"
         android:textColor="#9BB3AA"
         android:textSize="13sp" />
 
@@ -75,6 +75,13 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="下载视频文件" />
+
+    <Button
+        android:id="@+id/btnSaveToGallery"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="保存到相册" />
 
     <TextView
         android:id="@+id/txtShareMeta"

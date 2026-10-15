@@ -24,15 +24,16 @@ Kotlin + Jetpack Compose 版「热帖」，与 `x-hotpost/` Web 控制台能力�
 
 GitHub **Releases** 比分支里的 raw 文件更稳（约 17MB）：
 
-https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.13/XHotpost.apk
+https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/x-hotpost-v1.0.14/XHotpost.apk
 
-发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.13
+发布页：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/x-hotpost-v1.0.14
 
 ### 发布视频文件到 X（X / YouTube / 抖音）
 
 1. App **发视频** 页粘贴 **x.com / youtube.com / douyin.com / v.douyin.com** 链接
 2. **下载视频文件**（抖音若解析失败，用「选择本地视频」备用）
-3. 可生成文案 → **用视频打开 X 发布**（把 MP4 交给 X App，确认发送）
+3. 可选 **保存到相册**（写入 `Movies/XHotpost`，系统相册/文件管理可见）
+4. 可生成文案 → **用视频打开 X 发布**（把 MP4 交给 X App，确认发送）
 
 ### 自选话题
 
