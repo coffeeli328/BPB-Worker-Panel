@@ -13,7 +13,8 @@ Jetpack Compose 本地八字排盘与流年 / 流月 / 流日规则预测。
 
 - Android Studio Hedgehog+（或命令行 SDK）
 - JDK 17
-- compileSdk / targetSdk **34**，minSdk **26**
+- compileSdk / targetSdk **34**，minSdk **24**
+- 侧载安装若提示「未安装应用」：先卸载旧版 `com.gglee.baziyuce`，再装完整 APK（见 GitHub Release）
 
 ## 打开与运行
 
