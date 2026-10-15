@@ -68,4 +68,31 @@ final class BaZiEngineTests: XCTestCase {
         let notes = BranchRelations.describe(flowing: .zi, natal: [.wu, .mao])
         XCTAssertTrue(notes.contains(where: { $0.contains("冲") }))
     }
+
+    func testSeparateBirthFieldsComposeAndValidate() {
+        let session = BaZiSession()
+        session.birthYear = 1990
+        session.birthMonth = 5
+        session.birthDay = 15
+        session.birthShiChenIndex = EarthlyBranch.si.rawValue
+        XCTAssertTrue(session.validateAndComposeBirthDate())
+        XCTAssertNil(session.inputError)
+
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = session.timeZone
+        let comps = cal.dateComponents([.year, .month, .day, .hour], from: session.birthDate)
+        XCTAssertEqual(comps.year, 1990)
+        XCTAssertEqual(comps.month, 5)
+        XCTAssertEqual(comps.day, 15)
+        XCTAssertEqual(comps.hour, 9) // 巳时代表钟点
+
+        session.birthMonth = 2
+        session.birthDay = 31
+        session.clampBirthDay()
+        XCTAssertEqual(session.birthDay, 28) // 1990 非闰年
+
+        session.birthYear = 1800
+        XCTAssertFalse(session.validateAndComposeBirthDate())
+        XCTAssertNotNil(session.inputError)
+    }
 }
