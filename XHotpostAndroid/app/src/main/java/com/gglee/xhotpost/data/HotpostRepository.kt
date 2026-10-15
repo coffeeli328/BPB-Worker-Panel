@@ -4,24 +4,42 @@ import android.content.Context
 import com.gglee.xhotpost.data.local.HotpostDao
 import com.gglee.xhotpost.data.local.toDomain
 import com.gglee.xhotpost.data.local.toEntity
+import com.gglee.xhotpost.domain.AiDraftClient
+import com.gglee.xhotpost.domain.AiDraftResult
 import com.gglee.xhotpost.domain.AppSettings
 import com.gglee.xhotpost.domain.Draft
+import com.gglee.xhotpost.domain.DraftGenOutcome
 import com.gglee.xhotpost.domain.DraftGenerator
 import com.gglee.xhotpost.domain.DraftStatus
 import com.gglee.xhotpost.domain.HotTopic
+import com.gglee.xhotpost.domain.MediaLink
+import com.gglee.xhotpost.domain.MediaLinkParser
+import com.gglee.xhotpost.domain.MultiVideoFetcher
+import com.gglee.xhotpost.domain.ParsedXLink
+import com.gglee.xhotpost.domain.RemoteVideo
 import com.gglee.xhotpost.domain.TrendCollector
+import com.gglee.xhotpost.domain.VideoPlatform
+import com.gglee.xhotpost.domain.XLinkParser
 import com.gglee.xhotpost.domain.XPublisher
+import java.io.File
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicReference
 
 data class TickResult(
     val topics: Int,
     val drafts: Int,
     val published: Int,
     val message: String? = null,
+    val aiDrafts: Int = 0,
+    val aiError: String? = null,
 )
 
 class HotpostRepository(
@@ -29,8 +47,19 @@ class HotpostRepository(
     private val dao: HotpostDao,
     private val settingsStore: SettingsStore,
     private val trendCollector: TrendCollector = TrendCollector(),
+    private val aiDraftClient: AiDraftClient = AiDraftClient(),
+    private val videoFetcher: MultiVideoFetcher = MultiVideoFetcher(),
 ) {
+    private val lastAiStatusRef = AtomicReference("AI：未使用")
+    private val _lastAiStatus = MutableStateFlow("AI：未使用")
+    val lastAiStatus = _lastAiStatus.asStateFlow()
+
     val settings: Flow<AppSettings> = settingsStore.settings
+
+    private fun setAiStatus(msg: String) {
+        lastAiStatusRef.set(msg)
+        _lastAiStatus.value = msg
+    }
 
     val topics: Flow<List<HotTopic>> =
         dao.observeTopics().map { list -> list.map { it.toDomain() } }
@@ -62,8 +91,13 @@ class HotpostRepository(
         dao.upsertTopics(topics.map { it.toEntity() })
 
         var draftsCreated = 0
+        var aiDrafts = 0
+        var aiError: String? = null
         if (settings.autoDraft) {
-            draftsCreated = generateDrafts(settings, topics, settings.maxDraftsPerTick)
+            val gen = generateDrafts(settings, topics, settings.maxDraftsPerTick)
+            draftsCreated = gen.first
+            aiDrafts = gen.second
+            aiError = gen.third
         }
 
         var published = 0
@@ -80,6 +114,8 @@ class HotpostRepository(
             topics = topics.size,
             drafts = draftsCreated,
             published = published,
+            aiDrafts = aiDrafts,
+            aiError = aiError,
         )
     }
 
@@ -87,17 +123,22 @@ class HotpostRepository(
         settings: AppSettings,
         topics: List<HotTopic>,
         limit: Int,
-    ): Int {
+    ): Triple<Int, Int, String?> {
         var created = 0
+        var aiOk = 0
+        var lastErr: String? = null
         for (topic in topics.take(20)) {
             if (created >= limit) break
             if (dao.activeDraftForTopic(topic.id) != null) continue
+            val outcome = draftTextFor(topic, settings)
+            if (outcome.usedAi) aiOk++
+            if (outcome.aiError != null) lastErr = outcome.aiError
             val now = System.currentTimeMillis()
             val draft = Draft(
                 id = UUID.randomUUID().toString(),
                 topicId = topic.id,
                 topicTitle = topic.title,
-                text = DraftGenerator.templateDraft(topic, settings),
+                text = outcome.text,
                 status = DraftStatus.PENDING_REVIEW,
                 monetizationHook = DraftGenerator.buildHook(settings),
                 createdAt = now,
@@ -107,7 +148,298 @@ class HotpostRepository(
             dao.upsertDraft(draft.toEntity())
             created++
         }
-        return created
+        return Triple(created, aiOk, lastErr)
+    }
+
+    private suspend fun draftTextFor(topic: HotTopic, settings: AppSettings): DraftGenOutcome {
+        if (!settings.aiEnabled || settings.aiApiKey.isBlank()) {
+            setAiStatus("AI：未开启（填 Key 并打开开关）")
+            return DraftGenOutcome(
+                text = DraftGenerator.templateDraft(topic, settings),
+                usedAi = false,
+                aiError = null,
+            )
+        }
+        if (AiDraftClient.looksLikeDeepSeekMisconfig(settings)) {
+            setAiStatus("AI：疑似 DeepSeek Key 却仍指向 OpenAI，请点「填入 DeepSeek」")
+        }
+        val result = withContext(Dispatchers.IO) {
+            aiDraftClient.generate(topic, settings)
+        }
+        return when (result) {
+            is AiDraftResult.Ok -> {
+                setAiStatus("AI：成功（${AiDraftClient.resolveModel(settings)}）")
+                DraftGenOutcome(text = result.text, usedAi = true)
+            }
+            is AiDraftResult.Err -> {
+                setAiStatus("AI：失败 → ${result.message}")
+                DraftGenOutcome(
+                    text = DraftGenerator.templateDraft(topic, settings),
+                    usedAi = false,
+                    aiError = result.message,
+                )
+            }
+            AiDraftResult.Skipped -> {
+                setAiStatus("AI：跳过")
+                DraftGenOutcome(
+                    text = DraftGenerator.templateDraft(topic, settings),
+                    usedAi = false,
+                )
+            }
+        }
+    }
+
+    data class LinkSharePrep(
+        val link: MediaLink,
+        val caption: String,
+        val fullText: String,
+        val usedAi: Boolean,
+        val aiError: String?,
+    )
+
+    data class VideoShareReady(
+        val link: MediaLink,
+        val info: RemoteVideo,
+        val caption: String,
+        val videoFile: File,
+        val usedAi: Boolean,
+        val aiError: String?,
+    )
+
+    /** Build caption for a pasted video link (X / YouTube / Douyin). */
+    suspend fun prepareLinkShare(
+        rawInput: String,
+        captionOverride: String? = null,
+    ): LinkSharePrep {
+        val link = MediaLinkParser.extract(rawInput)
+            ?: error("请粘贴 X / YouTube / 抖音 视频链接")
+        val settings = settingsStore.settings.first()
+        val caption: String
+        var usedAi = false
+        var aiError: String? = null
+        val override = captionOverride?.trim().orEmpty()
+        if (override.isNotBlank()) {
+            caption = override
+        } else if (settings.aiEnabled && settings.aiApiKey.isNotBlank()) {
+            when (
+                val ai = withContext(Dispatchers.IO) {
+                    aiDraftClient.generateMediaShare(link, settings)
+                }
+            ) {
+                is AiDraftResult.Ok -> {
+                    caption = ai.text
+                    usedAi = true
+                    setAiStatus("AI：视频文案成功")
+                }
+                is AiDraftResult.Err -> {
+                    caption = DraftGenerator.mediaShareCaption(link, settings)
+                    aiError = ai.message
+                    setAiStatus("AI：视频文案失败 → ${ai.message}")
+                }
+                AiDraftResult.Skipped -> {
+                    caption = DraftGenerator.mediaShareCaption(link, settings)
+                }
+            }
+        } else {
+            caption = DraftGenerator.mediaShareCaption(link, settings)
+        }
+        val fullText = DraftGenerator.mediaShareCaptionText(link, caption, settings)
+        return LinkSharePrep(link, caption, fullText, usedAi, aiError)
+    }
+
+    /** Resolve + download MP4 from X / YouTube / Douyin for sharing into X. */
+    suspend fun prepareVideoShare(
+        rawInput: String,
+        captionOverride: String? = null,
+    ): VideoShareReady {
+        val prep = prepareLinkShare(rawInput, captionOverride)
+        val info = withContext(Dispatchers.IO) { videoFetcher.resolve(rawInput) }
+        val dir = File(context.cacheDir, "share_videos").apply { mkdirs() }
+        val prefix = when (info.link.platform) {
+            VideoPlatform.YOUTUBE -> "yt"
+            VideoPlatform.DOUYIN -> "dy"
+            VideoPlatform.X -> "x"
+            else -> "vid"
+        }
+        val dest = File(dir, "${prefix}_${info.link.id.filter { it.isLetterOrDigit() }.take(24)}.mp4")
+        withContext(Dispatchers.IO) { videoFetcher.download(info, dest) }
+        val settings = settingsStore.settings.first()
+        return VideoShareReady(
+            link = info.link,
+            info = info,
+            caption = DraftGenerator.mediaShareCaptionText(info.link, prep.caption, settings),
+            videoFile = dest,
+            usedAi = prep.usedAi,
+            aiError = prep.aiError,
+        )
+    }
+
+    suspend fun saveLinkShareDraft(fullText: String, link: MediaLink): Draft {
+        val settings = settingsStore.settings.first()
+        val now = System.currentTimeMillis()
+        val topicId = "video-${link.platform.name.lowercase()}-${link.id.take(20)}"
+        val draft = Draft(
+            id = UUID.randomUUID().toString(),
+            topicId = topicId,
+            topicTitle = "视频 · ${link.shortLabel}",
+            text = fullText.take(280),
+            status = DraftStatus.PENDING_REVIEW,
+            monetizationHook = DraftGenerator.buildHook(settings),
+            createdAt = now,
+            updatedAt = now,
+            demo = settings.demoMode,
+        )
+        dao.upsertDraft(draft.toEntity())
+        dao.upsertTopics(
+            listOf(
+                HotTopic(
+                    id = topicId,
+                    title = "视频 · ${link.shortLabel}",
+                    summary = link.canonicalUrl,
+                    source = when (link.platform) {
+                        VideoPlatform.YOUTUBE -> "YouTube 视频"
+                        VideoPlatform.DOUYIN -> "抖音视频"
+                        VideoPlatform.X -> "X 视频"
+                        else -> "视频"
+                    },
+                    url = link.canonicalUrl,
+                    score = 95,
+                    language = if (settings.language == com.gglee.xhotpost.domain.ContentLanguage.EN) {
+                        "en"
+                    } else {
+                        "zh"
+                    },
+                    fetchedAt = now,
+                ).toEntity(),
+            ),
+        )
+        return draft
+    }
+
+    suspend fun publishVideoShareDemo(caption: String, link: MediaLink): Draft {
+        val draft = saveLinkShareDraft(caption, link)
+        return approveDraft(draft.id, caption)
+    }
+
+    /** Backward-compatible helper for X-only ParsedXLink call sites. */
+    private fun MediaLink.toParsedOrNull(): ParsedXLink? {
+        if (platform != VideoPlatform.X) return null
+        return ParsedXLink(canonicalUrl, username, id, raw)
+    }
+
+    suspend fun testAi(): String {
+        val settings = settingsStore.settings.first()
+        if (!settings.aiEnabled || settings.aiApiKey.isBlank()) {
+            val msg = "请先打开「启用 AI」并填写 API Key"
+            setAiStatus("AI：$msg")
+            return msg
+        }
+        val result = withContext(Dispatchers.IO) { aiDraftClient.ping(settings) }
+        return when (result) {
+            is AiDraftResult.Ok -> {
+                val msg = "连通成功 · ${AiDraftClient.resolveModel(settings)} · 样例：${result.text.take(40)}…"
+                setAiStatus("AI：$msg")
+                msg
+            }
+            is AiDraftResult.Err -> {
+                val msg = "失败：${result.message}"
+                setAiStatus("AI：$msg")
+                msg
+            }
+            AiDraftResult.Skipped -> {
+                val msg = "未启用"
+                setAiStatus("AI：$msg")
+                msg
+            }
+        }
+    }
+
+    /**
+     * Rewrite one pending draft. Pass [forceVariant] to nudge local template angle
+     * when AI is off (uses timestamp so the next bank index differs).
+     */
+    data class RegenOneResult(
+        val text: String,
+        val usedAi: Boolean,
+        val aiError: String?,
+    )
+
+    suspend fun regenerateDraft(id: String): RegenOneResult? {
+        val entity = dao.draftById(id) ?: return null
+        if (entity.status != DraftStatus.PENDING_REVIEW.name) return null
+        val settings = settingsStore.settings.first()
+        val now = System.currentTimeMillis()
+        val live = dao.topicById(entity.topicId)?.toDomain()
+        val topic = (live ?: HotTopic(
+            id = entity.topicId,
+            title = entity.topicTitle,
+            summary = "",
+            source = "regen",
+            url = null,
+            score = 50,
+            language = if (settings.language == com.gglee.xhotpost.domain.ContentLanguage.EN) {
+                "en"
+            } else {
+                "zh"
+            },
+            fetchedAt = now,
+        )).let { base ->
+            base.copy(id = "${base.id}-$now")
+        }
+        val outcome = draftTextFor(topic, settings)
+        dao.updateDraft(
+            entity.copy(
+                text = outcome.text,
+                monetizationHook = DraftGenerator.buildHook(settings),
+                updatedAt = now,
+            ),
+        )
+        return RegenOneResult(outcome.text, outcome.usedAi, outcome.aiError)
+    }
+
+    data class RegenBatchResult(
+        val updated: Int,
+        val aiOk: Int,
+        val aiError: String?,
+    )
+
+    /** Rewrite all pending drafts with current style / AI settings. */
+    suspend fun regeneratePendingDrafts(): RegenBatchResult {
+        val settings = settingsStore.settings.first()
+        val pending = dao.draftsByStatus(DraftStatus.PENDING_REVIEW.name)
+        var updated = 0
+        var aiOk = 0
+        var lastErr: String? = null
+        val now = System.currentTimeMillis()
+        for (entity in pending) {
+            val live = dao.topicById(entity.topicId)?.toDomain()
+            val topic = live ?: HotTopic(
+                id = entity.topicId,
+                title = entity.topicTitle,
+                summary = "",
+                source = "regen",
+                url = null,
+                score = 50,
+                language = if (settings.language == com.gglee.xhotpost.domain.ContentLanguage.EN) {
+                    "en"
+                } else {
+                    "zh"
+                },
+                fetchedAt = now,
+            )
+            val outcome = draftTextFor(topic, settings)
+            if (outcome.usedAi) aiOk++
+            if (outcome.aiError != null) lastErr = outcome.aiError
+            dao.updateDraft(
+                entity.copy(
+                    text = outcome.text,
+                    monetizationHook = DraftGenerator.buildHook(settings),
+                    updatedAt = now,
+                ),
+            )
+            updated++
+        }
+        return RegenBatchResult(updated, aiOk, lastErr)
     }
 
     suspend fun saveDraftText(id: String, text: String) {

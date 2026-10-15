@@ -7,6 +7,8 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import androidx.core.content.FileProvider
+import java.io.File
 import java.net.URLEncoder
 
 /** Opens X / Twitter without X API. */
@@ -120,6 +122,59 @@ object XPublisher {
             if (openUrlChooser(context, url, "选择应用发帖")) return true
         }
         return false
+    }
+
+    /**
+     * Share a local video file into X compose (video attachment + optional caption).
+     * Requires FileProvider authority `${applicationId}.fileprovider`.
+     */
+    fun openComposeWithVideo(context: Context, videoFile: File, caption: String): Boolean {
+        if (!videoFile.exists() || videoFile.length() < 1) return false
+        val appContext = context.applicationContext
+        val uri = FileProvider.getUriForFile(
+            appContext,
+            "${appContext.packageName}.fileprovider",
+            videoFile,
+        )
+        val text = caption.trim().take(280)
+
+        for (pkg in X_PACKAGES) {
+            val share = Intent(Intent.ACTION_SEND).apply {
+                type = "video/*"
+                putExtra(Intent.EXTRA_STREAM, uri)
+                if (text.isNotBlank()) putExtra(Intent.EXTRA_TEXT, text)
+                putExtra(Intent.EXTRA_SUBJECT, "热帖视频")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                setPackage(pkg)
+            }
+            if (share.resolveActivity(appContext.packageManager) != null) {
+                try {
+                    appContext.grantUriPermission(
+                        pkg,
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION,
+                    )
+                } catch (_: Exception) {
+                }
+                if (startSafely(appContext, share)) return true
+            }
+        }
+
+        val chooserShare = Intent(Intent.ACTION_SEND).apply {
+            type = "video/mp4"
+            putExtra(Intent.EXTRA_STREAM, uri)
+            if (text.isNotBlank()) putExtra(Intent.EXTRA_TEXT, text)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        return try {
+            val chooser = Intent.createChooser(chooserShare, "用 X 发布视频")
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            appContext.startActivity(chooser)
+            true
+        } catch (_: Exception) {
+            false
+        }
     }
 
     private fun openUrlChooser(context: Context, url: String, title: String): Boolean {

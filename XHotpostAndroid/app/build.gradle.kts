@@ -12,14 +12,29 @@ android {
         applicationId = "com.gglee.xhotpost"
         minSdk = 26
         targetSdk = 34
-        versionCode = 6
-        versionName = "1.0.5"
+        versionCode = 15
+        versionName = "1.0.14"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Sideload signing — required for phone install. Without this, assembleRelease
+    // produces an unsigned APK that Android refuses to install.
+    signingConfigs {
+        create("sideload") {
+            storeFile = rootProject.file("keystore/xhotpost.jks")
+            storePassword = "xhotpost123"
+            keyAlias = "xhotpost"
+            keyPassword = "xhotpost123"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("sideload")
+        }
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("sideload")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",
@@ -36,6 +51,7 @@ android {
     buildFeatures {
         compose = false
         viewBinding = false
+        buildConfig = true
     }
     packaging {
         resources {
@@ -46,6 +62,7 @@ android {
 
 dependencies {
     implementation("androidx.activity:activity-ktx:1.9.0")
+    implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.browser:browser:1.8.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
     implementation("androidx.room:room-runtime:2.6.1")
@@ -56,4 +73,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303")
 }

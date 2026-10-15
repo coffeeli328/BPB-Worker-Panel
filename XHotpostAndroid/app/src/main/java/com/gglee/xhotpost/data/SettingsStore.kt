@@ -9,6 +9,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.gglee.xhotpost.domain.AppSettings
 import com.gglee.xhotpost.domain.ContentLanguage
 import com.gglee.xhotpost.domain.NicheId
+import com.gglee.xhotpost.domain.WritingStyle
+import com.gglee.xhotpost.domain.XTrendRegion
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -25,7 +27,14 @@ class SettingsStore(private val context: Context) {
             prefs[stringKey("displayName")] = next.displayName
             prefs[stringKey("niche")] = next.niche.name
             prefs[stringKey("customNicheLabel")] = next.customNicheLabel
+            prefs[stringKey("watchTopics")] = next.watchTopics
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+                .joinToString("\n")
             prefs[stringKey("language")] = next.language.name
+            prefs[stringKey("xTrendRegion")] = next.xTrendRegion.name
+            prefs[stringKey("writingStyle")] = next.writingStyle.name
             prefs[stringKey("persona")] = next.persona
             prefs[stringKey("affiliateUrl")] = next.affiliateUrl
             prefs[stringKey("affiliateLabel")] = next.affiliateLabel
@@ -37,27 +46,47 @@ class SettingsStore(private val context: Context) {
             prefs[booleanKey("demoMode")] = next.demoMode
             prefs[booleanKey("xLoggedIn")] = next.xLoggedIn
             prefs[stringKey("xUsername")] = next.xUsername
+            prefs[booleanKey("aiEnabled")] = next.aiEnabled
+            prefs[stringKey("aiBaseUrl")] = next.aiBaseUrl
+            prefs[stringKey("aiApiKey")] = next.aiApiKey
+            prefs[stringKey("aiModel")] = next.aiModel
         }
     }
 
     private fun read(
         prefs: androidx.datastore.preferences.core.Preferences,
     ): AppSettings {
+        val defaults = AppSettings()
         return AppSettings(
             displayName = prefs[stringKey("displayName")] ?: "热帖",
             niche = runCatching {
                 NicheId.valueOf(prefs[stringKey("niche")] ?: NicheId.TECH.name)
             }.getOrDefault(NicheId.TECH),
             customNicheLabel = prefs[stringKey("customNicheLabel")] ?: "",
+            watchTopics = (prefs[stringKey("watchTopics")] ?: "")
+                .split('\n', ',', '，')
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct(),
             language = runCatching {
                 ContentLanguage.valueOf(
                     prefs[stringKey("language")] ?: ContentLanguage.ZH.name,
                 )
             }.getOrDefault(ContentLanguage.ZH),
-            persona = prefs[stringKey("persona")] ?: AppSettings().persona,
+            xTrendRegion = runCatching {
+                XTrendRegion.valueOf(
+                    prefs[stringKey("xTrendRegion")] ?: XTrendRegion.AUTO.name,
+                )
+            }.getOrDefault(XTrendRegion.AUTO),
+            writingStyle = runCatching {
+                WritingStyle.valueOf(
+                    prefs[stringKey("writingStyle")] ?: WritingStyle.OPINION.name,
+                )
+            }.getOrDefault(WritingStyle.OPINION),
+            persona = prefs[stringKey("persona")] ?: defaults.persona,
             affiliateUrl = prefs[stringKey("affiliateUrl")] ?: "",
             affiliateLabel = prefs[stringKey("affiliateLabel")] ?: "了解更多",
-            ctaTemplate = prefs[stringKey("ctaTemplate")] ?: AppSettings().ctaTemplate,
+            ctaTemplate = prefs[stringKey("ctaTemplate")] ?: defaults.ctaTemplate,
             autoDraft = prefs[booleanKey("autoDraft")] ?: true,
             autoPublishApproved = prefs[booleanKey("autoPublishApproved")] ?: true,
             pollIntervalMinutes = prefs[intKey("pollIntervalMinutes")] ?: 30,
@@ -65,6 +94,10 @@ class SettingsStore(private val context: Context) {
             demoMode = prefs[booleanKey("demoMode")] ?: true,
             xLoggedIn = prefs[booleanKey("xLoggedIn")] ?: false,
             xUsername = prefs[stringKey("xUsername")] ?: "",
+            aiEnabled = prefs[booleanKey("aiEnabled")] ?: false,
+            aiBaseUrl = prefs[stringKey("aiBaseUrl")] ?: defaults.aiBaseUrl,
+            aiApiKey = prefs[stringKey("aiApiKey")] ?: "",
+            aiModel = prefs[stringKey("aiModel")] ?: defaults.aiModel,
         )
     }
 
