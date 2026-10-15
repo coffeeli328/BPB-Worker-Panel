@@ -14,8 +14,8 @@ android {
         targetSdk = 34
         // Bump so sideload can replace older debug installs when signatures match;
         // if signature differs, user must uninstall first (see docs).
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // Prefer a single universal APK for sideload (no ABI split downloads).

@@ -4,20 +4,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.gglee.baziyuce.ui.theme.CeladonSoft
+import com.gglee.baziyuce.ui.theme.FrostedCard
 import com.gglee.baziyuce.ui.theme.Ink
 import com.gglee.baziyuce.ui.theme.ScreenBackground
 import com.gglee.baziyuce.ui.theme.Slate
@@ -49,7 +46,7 @@ fun AboutScreen(modifier: Modifier = Modifier) {
             )
             InfoGroup(
                 title = "工程",
-                body = "路径：BaZiYuCeAndroid/\n需要 Android Studio Hedgehog+、JDK 17、SDK 34。包名 com.gglee.baziyuce，可在本机改为你的唯一 applicationId。与 iOS BaZiYuCe 同规则口径。",
+                body = "路径：BaZiYuCeAndroid/\n需要 Android Studio + JDK 17、SDK 34。包名 com.gglee.baziyuce。界面与计算口径对齐 iOS BaZiYuCe。",
             )
             Spacer(Modifier.height(24.dp))
         }
@@ -58,15 +55,8 @@ fun AboutScreen(modifier: Modifier = Modifier) {
 
 @Composable
 private fun InfoGroup(title: String, body: String) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = Color.White.copy(alpha = 0.45f),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
+    FrostedCard(radius = 14.dp, alpha = 0.45f) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = CeladonSoft)
             Text(body, style = MaterialTheme.typography.bodyLarge, color = Ink)
         }

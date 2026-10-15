@@ -8,7 +8,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,15 +20,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AutoAwesome
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
@@ -50,13 +44,15 @@ import androidx.compose.ui.unit.sp
 import com.gglee.baziyuce.BaZiSessionViewModel
 import com.gglee.baziyuce.engine.FortuneForecast
 import com.gglee.baziyuce.engine.FortunePeriod
+import com.gglee.baziyuce.ui.components.SegmentedControl
 import com.gglee.baziyuce.ui.theme.Accent
 import com.gglee.baziyuce.ui.theme.Celadon
 import com.gglee.baziyuce.ui.theme.CeladonSoft
+import com.gglee.baziyuce.ui.theme.FrostedCard
 import com.gglee.baziyuce.ui.theme.Ink
-import com.gglee.baziyuce.ui.theme.Line
 import com.gglee.baziyuce.ui.theme.MistDeep
 import com.gglee.baziyuce.ui.theme.ScreenBackground
+import com.gglee.baziyuce.ui.theme.SectionLabeled
 import com.gglee.baziyuce.ui.theme.Slate
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -74,9 +70,11 @@ fun PredictionHubScreen(
     ScreenBackground {
         if (session.chart == null) {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Outlined.AutoAwesome, contentDescription = null, tint = CeladonSoft, modifier = Modifier.size(40.dp))
-                    Spacer(Modifier.height(12.dp))
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Icon(Icons.Outlined.AutoAwesome, null, tint = CeladonSoft, modifier = Modifier.size(40.dp))
                     Text("排盘后可查看流年、流月、流日运势", color = Slate)
                 }
             }
@@ -88,53 +86,36 @@ fun PredictionHubScreen(
                     .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FortunePeriod.entries.forEach { p ->
-                        FilterChip(
-                            selected = period == p,
-                            onClick = { period = p },
-                            label = { Text(p.displayName) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Celadon,
-                                selectedLabelColor = Color.White,
-                                containerColor = Color.White.copy(alpha = 0.45f),
-                                labelColor = Ink,
-                            ),
-                        )
-                    }
-                }
+                SegmentedControl(
+                    options = FortunePeriod.entries.map { it to it.displayName },
+                    selected = period,
+                    onSelect = { period = it },
+                )
 
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("参考日期", style = MaterialTheme.typography.titleMedium, color = CeladonSoft)
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                val cal = Calendar.getInstance().apply { time = session.referenceDate }
-                                DatePickerDialog(
-                                    context,
-                                    { _, y, m, d ->
-                                        val next = Calendar.getInstance().apply {
-                                            time = session.referenceDate
-                                            set(Calendar.YEAR, y)
-                                            set(Calendar.MONTH, m)
-                                            set(Calendar.DAY_OF_MONTH, d)
-                                        }
-                                        session.updateReferenceDate(next.time)
-                                    },
-                                    cal.get(Calendar.YEAR),
-                                    cal.get(Calendar.MONTH),
-                                    cal.get(Calendar.DAY_OF_MONTH),
-                                ).show()
-                            },
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color.White.copy(alpha = 0.55f),
+                SectionLabeled("参考日期", spacing = 8.dp) {
+                    FrostedCard(
+                        modifier = Modifier.clickable {
+                            val cal = Calendar.getInstance().apply { time = session.referenceDate }
+                            DatePickerDialog(
+                                context,
+                                { _, y, m, d ->
+                                    val next = Calendar.getInstance().apply {
+                                        time = session.referenceDate
+                                        set(Calendar.YEAR, y)
+                                        set(Calendar.MONTH, m)
+                                        set(Calendar.DAY_OF_MONTH, d)
+                                    }
+                                    session.updateReferenceDate(next.time)
+                                },
+                                cal.get(Calendar.YEAR),
+                                cal.get(Calendar.MONTH),
+                                cal.get(Calendar.DAY_OF_MONTH),
+                            ).show()
+                        },
+                        radius = 12.dp,
+                        alpha = 0.55f,
                     ) {
-                        Text(
-                            dateFmt.format(session.referenceDate),
-                            modifier = Modifier.padding(14.dp),
-                            color = Ink,
-                        )
+                        Text(dateFmt.format(session.referenceDate), color = Ink)
                     }
                 }
 
@@ -159,17 +140,8 @@ fun PredictionHubScreen(
 private fun ForecastCard(f: FortuneForecast) {
     var rulesExpanded by remember { mutableStateOf(false) }
 
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, Line, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White.copy(alpha = 0.55f),
-    ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
+    FrostedCard(radius = 16.dp, alpha = 0.55f) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -178,7 +150,11 @@ private fun ForecastCard(f: FortuneForecast) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(f.period.sectionTitle, style = MaterialTheme.typography.titleMedium, color = CeladonSoft)
                     Text(f.flowingPillar.name, style = MaterialTheme.typography.headlineLarge, color = Ink)
-                    Text("${f.stemGod.displayName} · ${f.tone}", style = MaterialTheme.typography.headlineMedium, color = Celadon)
+                    Text(
+                        "${f.stemGod.displayName} · ${f.tone}",
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Celadon,
+                    )
                 }
                 ScoreRing(f.score)
             }
@@ -189,7 +165,7 @@ private fun ForecastCard(f: FortuneForecast) {
                 Text("运势提示", style = MaterialTheme.typography.titleMedium, color = CeladonSoft)
                 f.tips.forEach { tip ->
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Canvas(modifier = Modifier.size(6.dp).padding(top = 7.dp)) {
+                        Canvas(modifier = Modifier.padding(top = 7.dp).size(6.dp)) {
                             drawCircle(Accent)
                         }
                         Text(tip, style = MaterialTheme.typography.bodyLarge, color = Ink, modifier = Modifier.weight(1f))
@@ -201,6 +177,7 @@ private fun ForecastCard(f: FortuneForecast) {
                 if (rulesExpanded) "收起规则说明" else "规则说明（可扩展）",
                 color = Celadon,
                 fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
                 modifier = Modifier.clickable { rulesExpanded = !rulesExpanded },
             )
             if (rulesExpanded) {

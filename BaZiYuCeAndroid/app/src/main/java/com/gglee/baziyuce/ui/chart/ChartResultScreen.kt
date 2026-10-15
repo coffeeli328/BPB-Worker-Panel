@@ -1,7 +1,6 @@
 package com.gglee.baziyuce.ui.chart
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,13 +17,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.gglee.baziyuce.BaZiSessionViewModel
@@ -34,9 +31,10 @@ import com.gglee.baziyuce.engine.WuXing
 import com.gglee.baziyuce.ui.theme.Accent
 import com.gglee.baziyuce.ui.theme.Celadon
 import com.gglee.baziyuce.ui.theme.CeladonSoft
+import com.gglee.baziyuce.ui.theme.FrostedCard
 import com.gglee.baziyuce.ui.theme.Ink
-import com.gglee.baziyuce.ui.theme.Line
 import com.gglee.baziyuce.ui.theme.MistDeep
+import com.gglee.baziyuce.ui.theme.PillarTextStyle
 import com.gglee.baziyuce.ui.theme.ScreenBackground
 import com.gglee.baziyuce.ui.theme.Slate
 import java.text.SimpleDateFormat
@@ -51,9 +49,8 @@ fun ChartResultScreen(
         val chart = session.chart
         if (chart == null) {
             Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Icon(Icons.Outlined.CalendarMonth, contentDescription = null, tint = CeladonSoft, modifier = Modifier.height(40.dp))
-                    Spacer(Modifier.height(12.dp))
                     Text("请先在「起盘」输入出生时间", color = Slate)
                 }
             }
@@ -89,21 +86,20 @@ private fun Header(chart: BaZiChart) {
 private fun PillarsRow(chart: BaZiChart) {
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
         chart.pillars.forEach { p ->
-            Surface(
-                modifier = Modifier
-                    .weight(1f)
-                    .border(1.dp, Line, RoundedCornerShape(12.dp)),
-                shape = RoundedCornerShape(12.dp),
-                color = Color.White.copy(alpha = 0.5f),
+            FrostedCard(
+                modifier = Modifier.weight(1f),
+                radius = 12.dp,
+                alpha = 0.5f,
+                contentPadding = 8.dp,
             ) {
                 Column(
-                    modifier = Modifier.padding(vertical = 14.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(p.kind.displayName, color = Slate, fontSize = 12.sp)
-                    Text(p.stemBranch.stem.displayName, color = Ink, fontSize = 28.sp, fontFamily = MaterialTheme.typography.headlineLarge.fontFamily)
-                    Text(p.stemBranch.branch.displayName, color = Celadon, fontSize = 28.sp, fontFamily = MaterialTheme.typography.headlineLarge.fontFamily)
+                    Text(p.stemBranch.stem.displayName, style = PillarTextStyle, color = Ink)
+                    Text(p.stemBranch.branch.displayName, style = PillarTextStyle, color = Celadon)
                     Text(
                         p.stemGod?.displayName ?: "日主",
                         color = Accent,
@@ -135,22 +131,15 @@ private fun DayMasterBlock(chart: BaZiChart) {
 @Composable
 private fun FiveElementsBlock(chart: BaZiChart) {
     val maxV = WuXing.entries.maxOf { chart.balance.score(it) }.coerceAtLeast(0.1)
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(14.dp),
-        color = Color.White.copy(alpha = 0.45f),
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
+    FrostedCard(radius = 14.dp, alpha = 0.45f) {
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("五行概览", style = MaterialTheme.typography.titleMedium, color = CeladonSoft)
             Text(chart.balance.summary, style = MaterialTheme.typography.bodyLarge, color = Ink)
             WuXing.entries.forEach { wx ->
                 val value = chart.balance.score(wx)
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(wx.displayName, color = Ink)
+                        Text(wx.displayName, color = Ink, fontSize = 14.sp)
                         Text(String.format(Locale.CHINA, "%.1f", value), color = Slate, fontSize = 12.sp)
                     }
                     Box(

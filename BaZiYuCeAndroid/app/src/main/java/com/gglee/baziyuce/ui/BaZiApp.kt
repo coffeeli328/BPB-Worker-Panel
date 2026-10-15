@@ -2,10 +2,10 @@ package com.gglee.baziyuce.ui
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -18,6 +18,8 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.gglee.baziyuce.BaZiSessionViewModel
 import com.gglee.baziyuce.ui.about.AboutScreen
 import com.gglee.baziyuce.ui.birth.BirthInputScreen
@@ -28,6 +30,7 @@ import com.gglee.baziyuce.ui.theme.Celadon
 import com.gglee.baziyuce.ui.theme.Mist
 import com.gglee.baziyuce.ui.theme.Slate
 
+/** Mirrors iOS RootTabView: 起盘 / 八字 / 运势 / 关于. */
 @Composable
 fun BaZiApp(session: BaZiSessionViewModel) {
     BaZiTheme {
@@ -35,8 +38,9 @@ fun BaZiApp(session: BaZiSessionViewModel) {
         val hasChart = session.chart != null
 
         Scaffold(
+            containerColor = Color.Transparent,
             bottomBar = {
-                NavigationBar(containerColor = Mist.copy(alpha = 0.92f)) {
+                NavigationBar(containerColor = Mist.copy(alpha = 0.94f), tonalElevation = 0.dp) {
                     val items = listOf(
                         Triple("起盘", Icons.Outlined.CalendarMonth, true),
                         Triple("八字", Icons.Outlined.GridView, hasChart),
@@ -55,6 +59,8 @@ fun BaZiApp(session: BaZiSessionViewModel) {
                                 selectedTextColor = Celadon,
                                 unselectedIconColor = Slate,
                                 unselectedTextColor = Slate,
+                                disabledIconColor = Slate.copy(alpha = 0.35f),
+                                disabledTextColor = Slate.copy(alpha = 0.35f),
                                 indicatorColor = Celadon.copy(alpha = 0.12f),
                             ),
                         )
@@ -68,14 +74,8 @@ fun BaZiApp(session: BaZiSessionViewModel) {
                     modifier = Modifier.padding(padding),
                     onOpenChart = { tab = 1 },
                 )
-                1 -> ChartResultScreen(
-                    session = session,
-                    modifier = Modifier.padding(padding),
-                )
-                2 -> PredictionHubScreen(
-                    session = session,
-                    modifier = Modifier.padding(padding),
-                )
+                1 -> ChartResultScreen(session = session, modifier = Modifier.padding(padding))
+                2 -> PredictionHubScreen(session = session, modifier = Modifier.padding(padding))
                 else -> AboutScreen(modifier = Modifier.padding(padding))
             }
         }
