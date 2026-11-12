@@ -65,7 +65,7 @@ fun ChartResultScreen(
                             tint = CeladonSoft,
                             modifier = Modifier.height(40.dp),
                         )
-                        Text("请先在「起盘」输入出生时间", color = Slate, fontSize = 17.sp)
+                        Text("请先在「档案」或「起盘」排出八字", color = Slate, fontSize = 17.sp)
                     }
                 }
             } else {

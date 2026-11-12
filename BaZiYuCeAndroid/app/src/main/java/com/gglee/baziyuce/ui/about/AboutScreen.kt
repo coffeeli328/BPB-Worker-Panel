@@ -47,7 +47,7 @@ fun AboutScreen(modifier: Modifier = Modifier) {
                     fontFamily = FontFamily.Serif,
                 )
                 Text(
-                    "本地四柱排盘与规则化流年 / 流月 / 流日提示。预测文案由十神、地支关系与五行中和规则生成，可在 `PredictionEngine` 中扩展。",
+                    "本地四柱排盘与规则化流年 / 流月 / 流日提示。支持多人档案与日历强弱指数；预测文案由十神、地支关系与五行中和规则生成。",
                     color = Slate,
                     fontSize = 17.sp,
                     lineHeight = 22.sp,
@@ -55,7 +55,7 @@ fun AboutScreen(modifier: Modifier = Modifier) {
 
                 InfoGroup(
                     title = "计算口径",
-                    body = "· 年柱：立春换年\n· 月柱：十二节换月（五虎遁）\n· 日柱：儒略日干支；子时换日\n· 时柱：五鼠遁",
+                    body = "· 年柱：立春换年\n· 月柱：十二节换月（五虎遁）\n· 日柱：儒略日干支；子时换日\n· 时柱：五鼠遁\n· 日历强弱：PredictionEngine 日/月/年评分",
                 )
                 InfoGroup(
                     title = "残差说明",

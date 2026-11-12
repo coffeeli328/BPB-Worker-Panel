@@ -7,6 +7,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
@@ -32,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,13 +54,14 @@ import com.gglee.baziyuce.ui.theme.ScreenBackground
 import com.gglee.baziyuce.ui.theme.Slate
 
 /**
- * Strict mirror of iOS `BirthInputView.swift`.
+ * Strict mirror of iOS `BirthInputView.swift` (+ 姓名 for 多人档案).
  */
 @Composable
 fun BirthInputScreen(
     session: BaZiSessionViewModel,
     modifier: Modifier = Modifier,
     onOpenChart: () -> Unit,
+    onOpenCalendar: (() -> Unit)? = null,
 ) {
     var appeared by remember { mutableStateOf(false) }
     var didCalculate by remember { mutableStateOf(false) }
@@ -108,6 +113,35 @@ fun BirthInputScreen(
 
             // Form — iOS VStack spacing 18
             Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                Labeled("姓名") {
+                    BasicTextField(
+                        value = session.personName,
+                        onValueChange = { session.updatePersonName(it) },
+                        singleLine = true,
+                        cursorBrush = SolidColor(Celadon),
+                        textStyle = TextStyle(
+                            color = Ink,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.Medium,
+                        ),
+                        decorationBox = { inner ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Color.White.copy(alpha = 0.55f))
+                                    .border(1.dp, Line, RoundedCornerShape(12.dp))
+                                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                            ) {
+                                if (session.personName.isEmpty()) {
+                                    Text("例如：张三", color = Slate.copy(alpha = 0.65f), fontSize = 17.sp)
+                                }
+                                inner()
+                            }
+                        },
+                    )
+                }
+
                 Labeled("出生年月日") {
                     Row(
                         modifier = Modifier
@@ -212,41 +246,61 @@ fun BirthInputScreen(
                 ) {
                     val chart = session.chart
                     if (chart != null) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(Color.White.copy(alpha = 0.55f))
-                                .border(1.dp, Line, RoundedCornerShape(14.dp))
-                                .clickable(onClick = onOpenChart)
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(
-                                modifier = Modifier.weight(1f),
-                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(Color.White.copy(alpha = 0.55f))
+                                    .border(1.dp, Line, RoundedCornerShape(14.dp))
+                                    .clickable(onClick = onOpenChart)
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
                             ) {
-                                Text(
-                                    "四柱已成",
-                                    color = Celadon,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    letterSpacing = 1.2.sp,
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                                ) {
+                                    Text(
+                                        "四柱已成",
+                                        color = Celadon,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        letterSpacing = 1.2.sp,
+                                    )
+                                    Text(
+                                        chart.fourPillarsText,
+                                        color = Ink,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = FontFamily.Serif,
+                                    )
+                                    Text(session.birthSummary, color = Slate, fontSize = 12.sp)
+                                }
+                                Icon(
+                                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                                    contentDescription = null,
+                                    tint = Slate,
                                 )
-                                Text(
-                                    chart.fourPillarsText,
-                                    color = Ink,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    fontFamily = FontFamily.Serif,
-                                )
-                                Text(session.birthSummary, color = Slate, fontSize = 12.sp)
                             }
-                            Icon(
-                                Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                                contentDescription = null,
-                                tint = Slate,
-                            )
+                            if (onOpenCalendar != null) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .border(1.dp, Celadon.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                                        .clickable(onClick = onOpenCalendar)
+                                        .padding(vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                ) {
+                                    Text(
+                                        "查看日历强弱",
+                                        color = Celadon,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                    )
+                                }
+                            }
                         }
                     }
                 }
