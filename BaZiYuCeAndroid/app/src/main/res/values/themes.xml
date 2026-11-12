@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.BaZiYuCe" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">#FFE6EDEF</item>
+        <item name="android:navigationBarColor">#FFE6EDEF</item>
+        <item name="android:windowBackground">#FFE6EDEF</item>
+    </style>
+</resources>
