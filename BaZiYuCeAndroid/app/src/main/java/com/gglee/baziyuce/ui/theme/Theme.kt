@@ -2,15 +2,9 @@ package com.gglee.baziyuce.ui.theme
 
 import android.app.Activity
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.lightColorScheme
@@ -25,8 +19,6 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 
@@ -88,13 +80,13 @@ val BaZiTypography = Typography(
     bodyLarge = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
+        fontSize = 17.sp,
         color = Ink,
     ),
     bodyMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
-        fontSize = 15.sp,
+        fontSize = 17.sp,
         color = Slate,
     ),
     bodySmall = TextStyle(
@@ -105,19 +97,12 @@ val BaZiTypography = Typography(
     ),
 )
 
-val PillarTextStyle = TextStyle(
-    fontFamily = FontFamily.Serif,
-    fontWeight = FontWeight.Medium,
-    fontSize = 28.sp,
-)
-
 @Suppress("UNUSED_PARAMETER")
 @Composable
 fun BaZiTheme(
     darkTheme: Boolean = false,
     content: @Composable () -> Unit,
 ) {
-    // Light mist/celadon only — matches iOS AppTheme (no dark mode in v1)
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
@@ -135,6 +120,7 @@ fun BaZiTheme(
     )
 }
 
+/** Exact structure of iOS `AppTheme.screenBackground`. */
 @Composable
 fun ScreenBackground(content: @Composable BoxScope.() -> Unit) {
     Box(
@@ -161,40 +147,4 @@ fun ScreenBackground(content: @Composable BoxScope.() -> Unit) {
             ),
         content = content,
     )
-}
-
-/** iOS-style section label + content (title not uppercased). */
-@Composable
-fun SectionLabeled(
-    title: String,
-    spacing: Dp = 10.dp,
-    content: @Composable () -> Unit,
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(spacing)) {
-        androidx.compose.material3.Text(
-            text = title,
-            style = MaterialTheme.typography.titleMedium,
-            color = CeladonSoft,
-        )
-        content()
-    }
-}
-
-@Composable
-fun FrostedCard(
-    modifier: Modifier = Modifier,
-    radius: Dp = 14.dp,
-    alpha: Float = 0.55f,
-    contentPadding: Dp = 16.dp,
-    content: @Composable () -> Unit,
-) {
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, Line, RoundedCornerShape(radius))
-            .background(Color.White.copy(alpha = alpha), RoundedCornerShape(radius))
-            .padding(contentPadding),
-    ) {
-        content()
-    }
 }

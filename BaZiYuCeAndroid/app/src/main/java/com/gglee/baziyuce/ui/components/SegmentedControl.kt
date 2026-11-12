@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,16 +15,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.gglee.baziyuce.ui.theme.Celadon
 import com.gglee.baziyuce.ui.theme.Ink
-import com.gglee.baziyuce.ui.theme.Line
-import com.gglee.baziyuce.ui.theme.MistDeep
 
-/** Approximate iOS segmented control. */
+/** Visual stand-in for iOS `.pickerStyle(.segmented)`. */
 @Composable
 fun <T> SegmentedControl(
     options: List<Pair<T, String>>,
@@ -31,13 +30,14 @@ fun <T> SegmentedControl(
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val track = Color(0xFFD8DEE0) // iOS segmented track-ish on mist
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(36.dp)
-            .clip(RoundedCornerShape(9.dp))
-            .background(MistDeep.copy(alpha = 0.55f))
-            .border(1.dp, Line, RoundedCornerShape(9.dp))
+            .height(32.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(track)
+            .border(0.5.dp, Color(0x33000000), RoundedCornerShape(8.dp))
             .padding(2.dp),
     ) {
         options.forEach { (value, label) ->
@@ -45,17 +45,24 @@ fun <T> SegmentedControl(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth()
-                    .height(32.dp)
-                    .clip(RoundedCornerShape(7.dp))
-                    .background(if (isSelected) Color.White.copy(alpha = 0.92f) else Color.Transparent)
+                    .fillMaxHeight()
+                    .then(
+                        if (isSelected) {
+                            Modifier
+                                .shadow(1.dp, RoundedCornerShape(6.dp))
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color.White)
+                        } else {
+                            Modifier.clip(RoundedCornerShape(6.dp))
+                        },
+                    )
                     .clickable { onSelect(value) },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     text = label,
-                    color = if (isSelected) Celadon else Ink.copy(alpha = 0.75f),
-                    fontSize = 14.sp,
+                    color = Ink,
+                    fontSize = 13.sp,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                 )
             }

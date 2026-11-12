@@ -30,7 +30,7 @@ import com.gglee.baziyuce.ui.theme.Celadon
 import com.gglee.baziyuce.ui.theme.Mist
 import com.gglee.baziyuce.ui.theme.Slate
 
-/** Mirrors iOS RootTabView: 起盘 / 八字 / 运势 / 关于. */
+/** Mirror of iOS `RootTabView`: 起盘 / 八字 / 运势 / 关于. */
 @Composable
 fun BaZiApp(session: BaZiSessionViewModel) {
     BaZiTheme {
@@ -40,7 +40,12 @@ fun BaZiApp(session: BaZiSessionViewModel) {
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
-                NavigationBar(containerColor = Mist.copy(alpha = 0.94f), tonalElevation = 0.dp) {
+                NavigationBar(
+                    containerColor = Mist.copy(alpha = 0.96f),
+                    tonalElevation = 0.dp,
+                    contentColor = Celadon,
+                ) {
+                    // Icons approximate SF Symbols: calendar.badge.clock / square.grid.2x2 / sparkles / info.circle
                     val items = listOf(
                         Triple("起盘", Icons.Outlined.CalendarMonth, true),
                         Triple("八字", Icons.Outlined.GridView, hasChart),
@@ -57,11 +62,12 @@ fun BaZiApp(session: BaZiSessionViewModel) {
                             colors = NavigationBarItemDefaults.colors(
                                 selectedIconColor = Celadon,
                                 selectedTextColor = Celadon,
-                                unselectedIconColor = Slate,
-                                unselectedTextColor = Slate,
-                                disabledIconColor = Slate.copy(alpha = 0.35f),
-                                disabledTextColor = Slate.copy(alpha = 0.35f),
-                                indicatorColor = Celadon.copy(alpha = 0.12f),
+                                unselectedIconColor = SoftTabGray,
+                                unselectedTextColor = SoftTabGray,
+                                disabledIconColor = SoftTabGray.copy(alpha = 0.35f),
+                                disabledTextColor = SoftTabGray.copy(alpha = 0.35f),
+                                // Kill Material pill indicator — iOS TabView has no selected pill
+                                indicatorColor = Color.Transparent,
                             ),
                         )
                     }
@@ -81,3 +87,5 @@ fun BaZiApp(session: BaZiSessionViewModel) {
         }
     }
 }
+
+private val SoftTabGray = Slate.copy(alpha = 0.55f)
