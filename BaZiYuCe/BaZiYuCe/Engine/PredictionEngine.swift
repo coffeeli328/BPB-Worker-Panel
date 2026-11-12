@@ -86,6 +86,61 @@ enum PredictionEngine {
         FortunePeriod.allCases.map { forecast(chart: chart, period: $0, at: date, timeZone: timeZone) }
     }
 
+    /// 指定公历月每日流日强弱指数（用于日历着色）。
+    static func monthDailyStrength(
+        chart: BaZiChart,
+        year: Int,
+        month: Int,
+        timeZone: TimeZone = .current
+    ) -> [DayStrength] {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = timeZone
+        guard let start = cal.date(from: DateComponents(year: year, month: month, day: 1)),
+              let range = cal.range(of: .day, in: .month, for: start)
+        else { return [] }
+
+        return range.compactMap { day -> DayStrength? in
+            guard let date = cal.date(from: DateComponents(year: year, month: month, day: day, hour: 12)) else {
+                return nil
+            }
+            let f = forecast(chart: chart, period: .day, at: date, timeZone: timeZone)
+            return DayStrength(date: date, score: f.score, flowingDay: f.flowingPillar, tone: f.tone)
+        }
+    }
+
+    /// 往昔 / 前瞻列表：按流日、流月或流年步进。
+    static func timeline(
+        chart: BaZiChart,
+        period: FortunePeriod,
+        direction: TimelineDirection,
+        count: Int = 12,
+        around date: Date = Date(),
+        timeZone: TimeZone = .current
+    ) -> [FortuneForecast] {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = timeZone
+
+        switch direction {
+        case .present:
+            return [forecast(chart: chart, period: period, at: date, timeZone: timeZone)]
+        case .past, .future:
+            let sign = direction == .past ? -1 : 1
+            let component: Calendar.Component
+            switch period {
+            case .day: component = .day
+            case .month: component = .month
+            case .year: component = .year
+            }
+            var items: [FortuneForecast] = []
+            for i in 1...max(1, count) {
+                guard let d = cal.date(byAdding: component, value: sign * i, to: date) else { continue }
+                items.append(forecast(chart: chart, period: period, at: d, timeZone: timeZone))
+            }
+            if direction == .past { items.reverse() }
+            return items
+        }
+    }
+
     // MARK: - Scoring & copy
 
     private static func baseScore(for god: TenGod) -> Int {

@@ -45,7 +45,7 @@ struct ChartResultView: View {
 
     private func header(_ chart: BaZiChart) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(chart.gender.displayName + "命")
+            Text((session.activeProfile?.name ?? session.profileName) + " · " + chart.gender.displayName + "命")
                 .font(AppTheme.sectionFont)
                 .foregroundStyle(AppTheme.celadon)
             Text(formatted(chart.birthDate))

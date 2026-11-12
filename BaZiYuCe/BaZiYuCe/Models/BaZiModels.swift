@@ -162,5 +162,7 @@ struct FortuneForecast: Hashable, Identifiable {
     let tips: [String]
     let ruleNotes: [String]
 
-    var id: String { period.rawValue }
+    var id: String {
+        "\(period.rawValue)-\(flowingPillar.name)-\(Int(targetDate.timeIntervalSince1970))"
+    }
 }

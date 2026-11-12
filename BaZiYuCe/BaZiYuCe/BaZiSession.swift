@@ -60,10 +60,14 @@ final class BaZiSession {
     static let minYear = 1900
     static let maxYear = 2100
 
+    var profiles: [PersonProfile] = []
+    var activeProfileId: UUID?
+
+    var profileName: String = "我"
     var birthYear: Int = 1990
     var birthMonth: Int = 5
     var birthDay: Int = 15
-    var birthShiChenIndex: Int = EarthlyBranch.si.rawValue // 巳时 9–11
+    var birthShiChenIndex: Int = EarthlyBranch.si.rawValue
     var gender: Gender = .male
 
     var birthDate: Date = Calendar.current.date(from: DateComponents(year: 1990, month: 5, day: 15, hour: 9, minute: 0)) ?? Date()
@@ -72,7 +76,17 @@ final class BaZiSession {
     var referenceDate: Date = Date()
     var inputError: String?
 
+    /// 日历当前展示的年月
+    var calendarYear: Int = Calendar.current.component(.year, from: Date())
+    var calendarMonth: Int = Calendar.current.component(.month, from: Date())
+    var monthStrength: [DayStrength] = []
+
     var timeZone: TimeZone { .current }
+
+    var activeProfile: PersonProfile? {
+        guard let activeProfileId else { return nil }
+        return profiles.first { $0.id == activeProfileId }
+    }
 
     var birthShiChen: ShiChen {
         ShiChen.all[max(0, min(11, birthShiChenIndex))]
@@ -82,6 +96,22 @@ final class BaZiSession {
         daysInMonth(year: birthYear, month: birthMonth)
     }
 
+    init() {
+        let payload = ProfileStore.load()
+        profiles = payload.profiles
+        activeProfileId = payload.activeProfileId
+        if let active = activeProfile {
+            applyProfileToDraft(active)
+            recalculateFromDraft(save: false)
+        } else if let first = profiles.first {
+            activeProfileId = first.id
+            applyProfileToDraft(first)
+            recalculateFromDraft(save: false)
+            persist()
+        }
+        syncCalendarCursorToReference()
+    }
+
     func clampBirthDay() {
         birthDay = min(max(1, birthDay), maxDayInMonth)
     }
@@ -89,6 +119,11 @@ final class BaZiSession {
     @discardableResult
     func validateAndComposeBirthDate() -> Bool {
         inputError = nil
+        let trimmed = profileName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            inputError = "请填写档案名称"
+            return false
+        }
         if birthYear < Self.minYear || birthYear > Self.maxYear {
             inputError = "年份请在 \(Self.minYear)–\(Self.maxYear) 之间"
             return false
@@ -121,23 +156,173 @@ final class BaZiSession {
             return false
         }
         birthDate = date
+        profileName = trimmed
         return true
     }
 
+    /// 排盘并写入（或更新）当前档案。
     func calculate() {
         guard validateAndComposeBirthDate() else { return }
-        let c = BaZiEngine.chart(birthDate: birthDate, gender: gender, timeZone: timeZone)
-        chart = c
-        forecasts = PredictionEngine.allForecasts(chart: c, at: referenceDate, timeZone: timeZone)
+        recalculateFromDraft(save: true)
     }
 
     func refreshForecasts() {
         guard let chart else { return }
         forecasts = PredictionEngine.allForecasts(chart: chart, at: referenceDate, timeZone: timeZone)
+        refreshMonthStrength()
     }
 
     func forecast(for period: FortunePeriod) -> FortuneForecast? {
         forecasts.first { $0.period == period }
+    }
+
+    func timeline(period: FortunePeriod, direction: TimelineDirection, count: Int = 12) -> [FortuneForecast] {
+        guard let chart else { return [] }
+        return PredictionEngine.timeline(
+            chart: chart,
+            period: period,
+            direction: direction,
+            count: count,
+            around: referenceDate,
+            timeZone: timeZone
+        )
+    }
+
+    func refreshMonthStrength() {
+        guard let chart else {
+            monthStrength = []
+            return
+        }
+        monthStrength = PredictionEngine.monthDailyStrength(
+            chart: chart,
+            year: calendarYear,
+            month: calendarMonth,
+            timeZone: timeZone
+        )
+    }
+
+    func shiftCalendarMonth(by delta: Int) {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = timeZone
+        guard let base = cal.date(from: DateComponents(year: calendarYear, month: calendarMonth, day: 1)),
+              let next = cal.date(byAdding: .month, value: delta, to: base)
+        else { return }
+        calendarYear = cal.component(.year, from: next)
+        calendarMonth = cal.component(.month, from: next)
+        refreshMonthStrength()
+    }
+
+    func selectCalendarDay(_ date: Date) {
+        referenceDate = date
+        refreshForecasts()
+    }
+
+    // MARK: - Profiles
+
+    func switchToProfile(_ id: UUID) {
+        guard let profile = profiles.first(where: { $0.id == id }) else { return }
+        activeProfileId = id
+        applyProfileToDraft(profile)
+        recalculateFromDraft(save: false)
+        persist()
+    }
+
+    func startNewProfileDraft() {
+        activeProfileId = nil
+        profileName = "新档案"
+        birthYear = 1990
+        birthMonth = 5
+        birthDay = 15
+        birthShiChenIndex = EarthlyBranch.si.rawValue
+        gender = .male
+        chart = nil
+        forecasts = []
+        monthStrength = []
+        inputError = nil
+    }
+
+    func deleteProfile(_ id: UUID) {
+        profiles.removeAll { $0.id == id }
+        if activeProfileId == id {
+            if let next = profiles.first {
+                switchToProfile(next.id)
+            } else {
+                activeProfileId = nil
+                chart = nil
+                forecasts = []
+                monthStrength = []
+                startNewProfileDraft()
+                persist()
+            }
+        } else {
+            persist()
+        }
+    }
+
+    func renameProfile(_ id: UUID, to name: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, let idx = profiles.firstIndex(where: { $0.id == id }) else { return }
+        profiles[idx].name = trimmed
+        profiles[idx].updatedAt = Date()
+        if activeProfileId == id { profileName = trimmed }
+        persist()
+    }
+
+    // MARK: - Private
+
+    private func applyProfileToDraft(_ profile: PersonProfile) {
+        profileName = profile.name
+        birthYear = profile.birthYear
+        birthMonth = profile.birthMonth
+        birthDay = profile.birthDay
+        birthShiChenIndex = profile.birthShiChenIndex
+        gender = profile.gender
+        inputError = nil
+    }
+
+    private func recalculateFromDraft(save: Bool) {
+        guard validateAndComposeBirthDate() else { return }
+        let c = BaZiEngine.chart(birthDate: birthDate, gender: gender, timeZone: timeZone)
+        chart = c
+        forecasts = PredictionEngine.allForecasts(chart: c, at: referenceDate, timeZone: timeZone)
+        refreshMonthStrength()
+
+        guard save else { return }
+        let now = Date()
+        if let id = activeProfileId, let idx = profiles.firstIndex(where: { $0.id == id }) {
+            profiles[idx].name = profileName
+            profiles[idx].birthYear = birthYear
+            profiles[idx].birthMonth = birthMonth
+            profiles[idx].birthDay = birthDay
+            profiles[idx].birthShiChenIndex = birthShiChenIndex
+            profiles[idx].gender = gender
+            profiles[idx].updatedAt = now
+        } else {
+            let profile = PersonProfile(
+                name: profileName,
+                birthYear: birthYear,
+                birthMonth: birthMonth,
+                birthDay: birthDay,
+                birthShiChenIndex: birthShiChenIndex,
+                gender: gender,
+                createdAt: now,
+                updatedAt: now
+            )
+            profiles.append(profile)
+            activeProfileId = profile.id
+        }
+        persist()
+    }
+
+    private func persist() {
+        ProfileStore.save(ProfileStorePayload(profiles: profiles, activeProfileId: activeProfileId))
+    }
+
+    private func syncCalendarCursorToReference() {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = timeZone
+        calendarYear = cal.component(.year, from: referenceDate)
+        calendarMonth = cal.component(.month, from: referenceDate)
     }
 
     private func daysInMonth(year: Int, month: Int) -> Int {

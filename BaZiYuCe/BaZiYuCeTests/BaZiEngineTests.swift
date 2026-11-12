@@ -71,6 +71,7 @@ final class BaZiEngineTests: XCTestCase {
 
     func testSeparateBirthFieldsComposeAndValidate() {
         let session = BaZiSession()
+        session.profileName = "测试"
         session.birthYear = 1990
         session.birthMonth = 5
         session.birthDay = 15
@@ -94,5 +95,59 @@ final class BaZiEngineTests: XCTestCase {
         session.birthYear = 1800
         XCTAssertFalse(session.validateAndComposeBirthDate())
         XCTAssertNotNil(session.inputError)
+    }
+
+    func testMonthStrengthAndTimeline() {
+        var cal = Calendar(identifier: .gregorian)
+        cal.timeZone = tz
+        let birth = cal.date(from: DateComponents(year: 1990, month: 5, day: 15, hour: 10, minute: 0))!
+        let chart = BaZiEngine.chart(birthDate: birth, gender: .female, timeZone: tz)
+
+        let days = PredictionEngine.monthDailyStrength(chart: chart, year: 2024, month: 6, timeZone: tz)
+        XCTAssertEqual(days.count, 30)
+        XCTAssertTrue(days.allSatisfy { (25...95).contains($0.score) })
+
+        let past = PredictionEngine.timeline(chart: chart, period: .day, direction: .past, count: 5, around: birth, timeZone: tz)
+        let future = PredictionEngine.timeline(chart: chart, period: .month, direction: .future, count: 3, around: birth, timeZone: tz)
+        XCTAssertEqual(past.count, 5)
+        XCTAssertEqual(future.count, 3)
+        XCTAssertTrue(past.first!.targetDate < birth)
+        XCTAssertTrue(future.first!.targetDate > birth)
+    }
+
+    func testProfilesPersistAndSwitch() {
+        let key = "BaZiYuCe.profiles.v1"
+        UserDefaults.standard.removeObject(forKey: key)
+
+        let session = BaZiSession()
+        session.profileName = "甲"
+        session.birthYear = 1990
+        session.birthMonth = 1
+        session.birthDay = 10
+        session.birthShiChenIndex = EarthlyBranch.zi.rawValue
+        session.gender = .male
+        session.calculate()
+        XCTAssertEqual(session.profiles.count, 1)
+        let firstId = session.activeProfileId
+
+        session.startNewProfileDraft()
+        session.profileName = "乙"
+        session.birthYear = 1995
+        session.birthMonth = 8
+        session.birthDay = 20
+        session.birthShiChenIndex = EarthlyBranch.wu.rawValue
+        session.gender = .female
+        session.calculate()
+        XCTAssertEqual(session.profiles.count, 2)
+        XCTAssertNotEqual(session.activeProfileId, firstId)
+
+        if let firstId {
+            session.switchToProfile(firstId)
+            XCTAssertEqual(session.profileName, "甲")
+            XCTAssertEqual(session.birthYear, 1990)
+            XCTAssertNotNil(session.chart)
+        }
+
+        UserDefaults.standard.removeObject(forKey: key)
     }
 }

@@ -27,6 +27,11 @@
 		04939262A7B5464198D4DE01 /* AboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06F2B19C923D449B9205AD0B /* AboutView.swift */; };
 		295700B1B70C47719BFA3BDA /* BaZiEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7AC37E3E37433C83382034 /* BaZiEngineTests.swift */; };
 		822222564FC14C98B25791E5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 5DDA167719264C4183029699 /* Assets.xcassets */; };
+		DBBDBD5C3F5E4116B7442710 /* PersonProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2320777C1A3B4F398616E62F /* PersonProfile.swift */; };
+		B475B880568D49FA99C0A798 /* ProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72118A774E4A42AC8A35B218 /* ProfileStore.swift */; };
+		6D6B69DDC2B8491AA60F6B06 /* ForecastCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E43C86672AA49C38A6E745C /* ForecastCardView.swift */; };
+		0614CCD451EA441693DE31A4 /* FortuneCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE338A7303F342E58A1C5E1D /* FortuneCalendarView.swift */; };
+		BAD2B07EC91D4297959B1D68 /* ProfilesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0B976C16E0749CABE35DDCC /* ProfilesView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +57,11 @@
 		5DDA167719264C4183029699 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0F766549A1254E0EA81B6326 /* BaZiYuCe.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BaZiYuCe.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		99058B6EDC3243FEA91DB878 /* BaZiYuCeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BaZiYuCeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2320777C1A3B4F398616E62F /* PersonProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonProfile.swift; sourceTree = "<group>"; };
+		72118A774E4A42AC8A35B218 /* ProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStore.swift; sourceTree = "<group>"; };
+		9E43C86672AA49C38A6E745C /* ForecastCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForecastCardView.swift; sourceTree = "<group>"; };
+		CE338A7303F342E58A1C5E1D /* FortuneCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FortuneCalendarView.swift; sourceTree = "<group>"; };
+		F0B976C16E0749CABE35DDCC /* ProfilesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilesView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +108,7 @@
 				E92E57B8ECE64A45AB883C97 /* Engine */,
 				8155634D035E411BB796791A /* Models */,
 				46567641986E40A3AB98D929 /* Theme */,
+				1F82B55DD1F34BCE9E83EB09 /* Services */,
 				CDC88656B46040B18F6E45F8 /* Views */,
 				5DDA167719264C4183029699 /* Assets.xcassets */,
 			);
@@ -124,6 +135,7 @@
 			children = (
 				504195A8CB2745A69AF6FE8C /* StemBranch.swift */,
 				C79DED418FEC41148CF6D4A8 /* BaZiModels.swift */,
+				2320777C1A3B4F398616E62F /* PersonProfile.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -144,6 +156,9 @@
 				CED93E22A46C431D85867BD1 /* ChartResultView.swift */,
 				182EDF03FB0C41049CF7FA0D /* PredictionHubView.swift */,
 				06F2B19C923D449B9205AD0B /* AboutView.swift */,
+				9E43C86672AA49C38A6E745C /* ForecastCardView.swift */,
+				CE338A7303F342E58A1C5E1D /* FortuneCalendarView.swift */,
+				F0B976C16E0749CABE35DDCC /* ProfilesView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -154,6 +169,14 @@
 				3F7AC37E3E37433C83382034 /* BaZiEngineTests.swift */,
 			);
 			path = BaZiYuCeTests;
+			sourceTree = "<group>";
+		};
+		1F82B55DD1F34BCE9E83EB09 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				72118A774E4A42AC8A35B218 /* ProfileStore.swift */,
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -265,6 +288,11 @@
 				AA0F46E152504CA7B6DE2F10 /* ChartResultView.swift in Sources */,
 				E9981C07356641368FC718F3 /* PredictionHubView.swift in Sources */,
 				04939262A7B5464198D4DE01 /* AboutView.swift in Sources */,
+				DBBDBD5C3F5E4116B7442710 /* PersonProfile.swift in Sources */,
+				B475B880568D49FA99C0A798 /* ProfileStore.swift in Sources */,
+				6D6B69DDC2B8491AA60F6B06 /* ForecastCardView.swift in Sources */,
+				0614CCD451EA441693DE31A4 /* FortuneCalendarView.swift in Sources */,
+				BAD2B07EC91D4297959B1D68 /* ProfilesView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

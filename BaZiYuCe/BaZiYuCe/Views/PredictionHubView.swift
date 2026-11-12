@@ -8,6 +8,8 @@ import SwiftUI
 struct PredictionHubView: View {
     @Environment(BaZiSession.self) private var session
     @State private var period: FortunePeriod = .year
+    @State private var direction: TimelineDirection = .present
+    @State private var selectedTimeline: FortuneForecast?
 
     var body: some View {
         NavigationStack {
@@ -16,6 +18,12 @@ struct PredictionHubView: View {
                 if session.chart != nil {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 20) {
+                            if let name = session.activeProfile?.name {
+                                Text("档案：\(name)")
+                                    .font(AppTheme.sectionFont)
+                                    .foregroundStyle(AppTheme.celadonSoft)
+                            }
+
                             Picker("时段", selection: $period) {
                                 ForEach(FortunePeriod.allCases) { p in
                                     Text(p.displayName).tag(p)
@@ -23,7 +31,16 @@ struct PredictionHubView: View {
                             }
                             .pickerStyle(.segmented)
 
-                            labeled("参考日期") {
+                            Picker("浏览", selection: $direction) {
+                                ForEach(TimelineDirection.allCases) { d in
+                                    Text(d.displayName).tag(d)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .onChange(of: direction) { _, _ in selectedTimeline = nil }
+                            .onChange(of: period) { _, _ in selectedTimeline = nil }
+
+                            labeled("参考锚点") {
                                 DatePicker(
                                     "参考日期",
                                     selection: Bindable(session).referenceDate,
@@ -32,18 +49,32 @@ struct PredictionHubView: View {
                                 .environment(\.locale, Locale(identifier: "zh_CN"))
                                 .onChange(of: session.referenceDate) { _, _ in
                                     session.refreshForecasts()
+                                    selectedTimeline = nil
                                 }
                             }
 
-                            if let f = session.forecast(for: period) {
-                                forecastCard(f)
-                                    .id(f.period.rawValue + f.flowingPillar.name)
-                                    .transition(.opacity.combined(with: .move(edge: .trailing)))
+                            Text(browseHint)
+                                .font(.footnote)
+                                .foregroundStyle(AppTheme.slate)
+
+                            if direction == .present {
+                                if let f = session.forecast(for: period) {
+                                    ForecastCardView(forecast: f, showDate: true)
+                                        .id(f.period.rawValue + f.flowingPillar.name + "\(f.score)")
+                                        .transition(.opacity.combined(with: .move(edge: .trailing)))
+                                }
+                            } else {
+                                timelineList
+                                if let selectedTimeline {
+                                    ForecastCardView(forecast: selectedTimeline, showDate: true)
+                                        .transition(.opacity)
+                                }
                             }
                         }
                         .padding(20)
                         .padding(.bottom, 36)
                         .animation(.easeInOut(duration: 0.28), value: period)
+                        .animation(.easeInOut(duration: 0.28), value: direction)
                     }
                 } else {
                     VStack(spacing: 12) {
@@ -60,90 +91,34 @@ struct PredictionHubView: View {
         }
     }
 
-    private func forecastCard(_ f: FortuneForecast) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(f.period.sectionTitle)
-                        .font(AppTheme.sectionFont)
-                        .foregroundStyle(AppTheme.celadonSoft)
-                    Text(f.flowingPillar.name)
-                        .font(AppTheme.titleFont)
-                        .foregroundStyle(AppTheme.ink)
-                    Text("\(f.stemGod.name) · \(f.tone)")
-                        .font(AppTheme.headlineFont)
-                        .foregroundStyle(AppTheme.celadon)
-                }
-                Spacer()
-                scoreRing(f.score)
-            }
-
-            Text(f.summary)
-                .font(AppTheme.bodyFont)
-                .foregroundStyle(AppTheme.ink)
-                .fixedSize(horizontal: false, vertical: true)
-
-            VStack(alignment: .leading, spacing: 10) {
-                Text("运势提示")
-                    .font(AppTheme.sectionFont)
-                    .foregroundStyle(AppTheme.celadonSoft)
-                ForEach(Array(f.tips.enumerated()), id: \.offset) { _, tip in
-                    HStack(alignment: .top, spacing: 8) {
-                        Circle()
-                            .fill(AppTheme.accent)
-                            .frame(width: 6, height: 6)
-                            .padding(.top, 7)
-                        Text(tip)
-                            .font(AppTheme.bodyFont)
-                            .foregroundStyle(AppTheme.ink)
-                    }
-                }
-            }
-
-            DisclosureGroup {
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(f.ruleNotes, id: \.self) { note in
-                        Text("· " + note)
-                            .font(.footnote)
-                            .foregroundStyle(AppTheme.slate)
-                    }
-                }
-                .padding(.top, 6)
-            } label: {
-                Text("规则说明（可扩展）")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(AppTheme.celadon)
-            }
+    private var browseHint: String {
+        switch direction {
+        case .present:
+            return "「当下」显示参考锚点对应的流\(period.displayName.suffix(1))详解。"
+        case .past:
+            return "「往昔」浏览参考锚点之前的流\(period.displayName.suffix(1))强弱列表，点选可看详情。"
+        case .future:
+            return "「前瞻」浏览参考锚点之后的流\(period.displayName.suffix(1))预测列表，点选可看详情。"
         }
-        .padding(18)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.white.opacity(0.55))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(AppTheme.line, lineWidth: 1)
-                )
-        )
     }
 
-    private func scoreRing(_ score: Int) -> some View {
-        ZStack {
-            Circle()
-                .stroke(AppTheme.mistDeep, lineWidth: 8)
-            Circle()
-                .trim(from: 0, to: CGFloat(score) / 100)
-                .stroke(AppTheme.celadon, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-            VStack(spacing: 0) {
-                Text("\(score)")
-                    .font(.title2.weight(.semibold).monospacedDigit())
-                    .foregroundStyle(AppTheme.ink)
-                Text("倾向")
-                    .font(.caption2)
-                    .foregroundStyle(AppTheme.slate)
+    private var timelineList: some View {
+        let items = session.timeline(period: period, direction: direction, count: period == .day ? 14 : 12)
+        return VStack(alignment: .leading, spacing: 10) {
+            Text(direction == .past ? "往昔列表" : "前瞻列表")
+                .font(AppTheme.sectionFont)
+                .foregroundStyle(AppTheme.celadonSoft)
+            ForEach(items) { item in
+                Button {
+                    selectedTimeline = item
+                    session.referenceDate = item.targetDate
+                    session.refreshForecasts()
+                } label: {
+                    TimelineRowView(forecast: item)
+                }
+                .buttonStyle(.plain)
             }
         }
-        .frame(width: 72, height: 72)
     }
 
     @ViewBuilder

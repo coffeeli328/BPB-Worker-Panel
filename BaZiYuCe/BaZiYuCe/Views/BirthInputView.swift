@@ -25,7 +25,7 @@ struct BirthInputView: View {
                                 .opacity(appeared ? 1 : 0)
                                 .offset(y: appeared ? 0 : 12)
 
-                            Text("分别填写出生年、月、日与时辰，排出四柱，并据流年、流月、流日给出规则化运势提示。")
+                            Text("分别填写档案名与出生年、月、日、时辰；可在「档案」切换多人，每人独立排盘。")
                                 .font(AppTheme.bodyFont)
                                 .foregroundStyle(AppTheme.slate)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -35,6 +35,57 @@ struct BirthInputView: View {
                         .padding(.top, 12)
 
                         VStack(alignment: .leading, spacing: 18) {
+                            if !session.profiles.isEmpty {
+                                labeled("当前档案") {
+                                    Menu {
+                                        ForEach(session.profiles) { p in
+                                            Button {
+                                                session.switchToProfile(p.id)
+                                                didCalculate = session.chart != nil
+                                            } label: {
+                                                if session.activeProfileId == p.id {
+                                                    Label(p.name, systemImage: "checkmark")
+                                                } else {
+                                                    Text(p.name)
+                                                }
+                                            }
+                                        }
+                                        Divider()
+                                        Button("新建档案") {
+                                            session.startNewProfileDraft()
+                                            didCalculate = false
+                                        }
+                                    } label: {
+                                        HStack {
+                                            Text(session.activeProfile?.name ?? session.profileName)
+                                                .foregroundStyle(AppTheme.ink)
+                                            Spacer()
+                                            Text("切换")
+                                                .font(.subheadline.weight(.medium))
+                                                .foregroundStyle(AppTheme.celadon)
+                                            Image(systemName: "chevron.up.chevron.down")
+                                                .font(.caption)
+                                                .foregroundStyle(AppTheme.slate)
+                                        }
+                                        .padding(12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                .fill(.white.opacity(0.5))
+                                                .overlay(
+                                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                                        .stroke(AppTheme.line, lineWidth: 1)
+                                                )
+                                        )
+                                    }
+                                }
+                            }
+
+                            labeled("档案名称") {
+                                TextField("例如：自己、父亲", text: $session.profileName)
+                                    .textFieldStyle(.roundedBorder)
+                                    .environment(\.locale, Locale(identifier: "zh_CN"))
+                            }
+
                             labeled("出生年月日") {
                                 HStack(spacing: 10) {
                                     fieldColumn(title: "年") {
