@@ -10,6 +10,21 @@ Kotlin + Jetpack Compose 本地起卦 / 解盘 App。
 - 历史：Room 本地存储
 - **无自建后端**；不请求定位权限
 
+## 直接下载 APK（侧载）
+
+GitHub Release（debug 签名，可安装）：
+
+- **Release 页**：https://github.com/coffeeli328/BPB-Worker-Panel/releases/tag/meihua-v1.0.0
+- **APK 直链**：https://github.com/coffeeli328/BPB-Worker-Panel/releases/download/meihua-v1.0.0/MeihuaYishu.apk
+
+### 安装步骤
+
+1. 手机浏览器打开上方直链下载，或把 APK 传到手机
+2. 系统设置 → 安全 → 允许「安装未知应用」
+3. 打开 APK → 安装 → 打开「梅花易数」
+
+不需要 Google Play。
+
 ## 自行构建
 
 要求：JDK 17+、Android SDK 34。
