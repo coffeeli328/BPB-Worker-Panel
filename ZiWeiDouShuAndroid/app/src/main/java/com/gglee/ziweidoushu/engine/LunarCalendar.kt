@@ -228,10 +228,13 @@ object LunarCalendar {
     }
 
     private fun dayStemBranch(year: Int, month: Int, day: Int): StemBranch {
+        // julianDay 返回该公历日 0h UT 的儒略日（xxx.5）。
+        // 锚定：1900-01-01 = 甲戌日（六十甲子序号 10），JD = 2415020.5。
+        // 旧实现误用 2415021.0，导致全日柱整体偏一天。
         val jd = julianDay(year, month, day)
-        val baseJD = 2415021.0
+        val baseJd = 2415020.5
         val baseIndex = 10
-        val delta = floor(jd - baseJD).toInt()
+        val delta = floor(jd - baseJd + 1e-9).toInt()
         val idx = ((baseIndex + delta) % 60 + 60) % 60
         return StemBranch.from(idx)
     }
