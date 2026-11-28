@@ -24,6 +24,8 @@ import com.gglee.ziweidoushu.engine.PlacedStar
 import com.gglee.ziweidoushu.engine.Star
 import com.gglee.ziweidoushu.engine.StemBranch
 import com.gglee.ziweidoushu.engine.DecadeLimit
+import com.gglee.ziweidoushu.engine.SiHua
+import com.gglee.ziweidoushu.engine.SiHuaEntry
 import com.gglee.ziweidoushu.engine.ZiWeiChart
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
@@ -87,6 +89,7 @@ data class ChartSnapshot(
     val ziweiBranch: Int,
     val cells: List<CellSnapshot>,
     val decades: List<DecadeSnapshot>,
+    val natalSiHua: List<SiHuaSnapshot> = emptyList(),
     val interpretations: List<InterpretationSnapshot>,
 )
 
@@ -103,7 +106,19 @@ data class CellSnapshot(
 )
 
 @Serializable
-data class StarSnapshot(val star: String, val brightness: String)
+data class StarSnapshot(
+    val star: String,
+    val brightness: String,
+    val natalSiHua: String? = null,
+)
+
+@Serializable
+data class SiHuaSnapshot(
+    val siHua: String,
+    val star: String,
+    val branch: Int,
+    val palaceType: String,
+)
 
 @Serializable
 data class DecadeSnapshot(
@@ -151,6 +166,9 @@ object ChartSnapshotCodec {
         decades = decades.map {
             DecadeSnapshot(it.palaceType.name, it.branch.rawValue, it.ageStart, it.ageEnd)
         },
+        natalSiHua = natalSiHua.map {
+            SiHuaSnapshot(it.siHua.name, it.star.name, it.branch.rawValue, it.palaceType.name)
+        },
         interpretations = interpretations.map {
             InterpretationSnapshot(it.id.toString(), it.title, it.detail, it.tone.name)
         },
@@ -162,35 +180,62 @@ object ChartSnapshotCodec {
         stem = stem.rawValue,
         isMing = isMing,
         isShen = isShen,
-        stars = stars.map { StarSnapshot(it.star.name, it.brightness.name) },
+        stars = stars.map {
+            StarSnapshot(it.star.name, it.brightness.name, it.natalSiHua?.name)
+        },
         decadeAgeStart = decadeAgeStart,
         decadeAgeEnd = decadeAgeEnd,
     )
 
-    private fun ChartSnapshot.toChart(): ZiWeiChart = ZiWeiChart(
-        id = UUID.fromString(id),
-        createdAt = Date(createdAt),
-        birthDate = Date(birthDate),
-        name = name,
-        gender = enumValueOf(gender),
-        calendarNote = calendarNote,
-        lunarLine = lunarLine,
-        yearSB = StemBranch.parse(yearSB) ?: StemBranch.from(0),
-        monthSB = StemBranch.parse(monthSB) ?: StemBranch.from(0),
-        daySB = StemBranch.parse(daySB) ?: StemBranch.from(0),
-        hourSB = StemBranch.parse(hourSB) ?: StemBranch.from(0),
-        fiveElementBureau = enumValueOf(bureau),
-        mingBranch = EarthlyBranch.from(mingBranch),
-        shenBranch = EarthlyBranch.from(shenBranch),
-        ziweiBranch = EarthlyBranch.from(ziweiBranch),
-        cells = cells.map { it.toCell() },
-        decades = decades.map {
-            DecadeLimit(enumValueOf(it.palaceType), EarthlyBranch.from(it.branch), it.ageStart, it.ageEnd)
-        },
-        interpretations = interpretations.map {
-            InterpretationItem(UUID.fromString(it.id), it.title, it.detail, enumValueOf(it.tone))
-        },
-    )
+    private fun ChartSnapshot.toChart(): ZiWeiChart {
+        val rawCells = cells.map { it.toCell() }
+        val year = StemBranch.parse(yearSB) ?: StemBranch.from(0)
+        val decodedSiHua = if (natalSiHua.isNotEmpty()) {
+            natalSiHua.map {
+                SiHuaEntry(
+                    enumValueOf(it.siHua),
+                    enumValueOf(it.star),
+                    EarthlyBranch.from(it.branch),
+                    enumValueOf(it.palaceType),
+                )
+            }
+        } else {
+            com.gglee.ziweidoushu.engine.SiHuaResolver.resolve(year.stem, rawCells)
+        }
+        val markByStar = decodedSiHua.associate { it.star to it.siHua }
+        val decodedCells = rawCells.map { cell ->
+            cell.copy(
+                stars = cell.stars.map { ps ->
+                    ps.copy(natalSiHua = ps.natalSiHua ?: markByStar[ps.star])
+                },
+            )
+        }
+        return ZiWeiChart(
+            id = UUID.fromString(id),
+            createdAt = Date(createdAt),
+            birthDate = Date(birthDate),
+            name = name,
+            gender = enumValueOf(gender),
+            calendarNote = calendarNote,
+            lunarLine = lunarLine,
+            yearSB = year,
+            monthSB = StemBranch.parse(monthSB) ?: StemBranch.from(0),
+            daySB = StemBranch.parse(daySB) ?: StemBranch.from(0),
+            hourSB = StemBranch.parse(hourSB) ?: StemBranch.from(0),
+            fiveElementBureau = enumValueOf(bureau),
+            mingBranch = EarthlyBranch.from(mingBranch),
+            shenBranch = EarthlyBranch.from(shenBranch),
+            ziweiBranch = EarthlyBranch.from(ziweiBranch),
+            cells = decodedCells,
+            decades = decades.map {
+                DecadeLimit(enumValueOf(it.palaceType), EarthlyBranch.from(it.branch), it.ageStart, it.ageEnd)
+            },
+            natalSiHua = decodedSiHua,
+            interpretations = interpretations.map {
+                InterpretationItem(UUID.fromString(it.id), it.title, it.detail, enumValueOf(it.tone))
+            },
+        )
+    }
 
     private fun CellSnapshot.toCell() = PalaceCell(
         type = enumValueOf(type),
@@ -199,7 +244,11 @@ object ChartSnapshotCodec {
         isMing = isMing,
         isShen = isShen,
         stars = stars.map {
-            PlacedStar(enumValueOf(it.star), enumValueOf(it.brightness))
+            PlacedStar(
+                star = enumValueOf(it.star),
+                brightness = enumValueOf(it.brightness),
+                natalSiHua = it.natalSiHua?.let { name -> enumValueOf<SiHua>(name) },
+            )
         },
         decadeAgeStart = decadeAgeStart,
         decadeAgeEnd = decadeAgeEnd,

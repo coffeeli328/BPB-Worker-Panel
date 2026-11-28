@@ -38,9 +38,20 @@ object AiPrompt {
         lines += "【四柱】${chart.ganzhiLine}"
         lines += "【农历】${chart.lunarLine}"
         lines += "【局】${chart.fiveElementBureau.displayName} 命宫${chart.mingBranch.hanzi} 身宫${chart.shenBranch.hanzi}"
+        if (chart.natalSiHuaLine.isNotEmpty()) {
+            lines += "【生年四化】${chart.natalSiHuaLine}"
+        }
         chart.cells.forEach { c ->
-            val majors = c.majorStars.joinToString(",") { "${it.star.hanzi}${it.brightness.hanzi}" }
-            val others = c.otherStars.joinToString(",") { it.star.hanzi }
+            val majors = c.majorStars.joinToString(",") {
+                buildString {
+                    append(it.star.hanzi)
+                    append(it.brightness.hanzi)
+                    it.natalSiHua?.let { sh -> append(sh.hanzi) }
+                }
+            }
+            val others = c.otherStars.joinToString(",") {
+                it.star.hanzi + (it.natalSiHua?.hanzi ?: "")
+            }
             lines += "${c.type.hanzi}(${c.stem.hanzi}${c.branch.hanzi}): 主[$majors] 辅[$others]"
         }
         return lines.joinToString("\n")

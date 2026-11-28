@@ -39,8 +39,16 @@ object ZiWeiEngine {
         val starMap = mutableMapOf<EarthlyBranch, MutableList<PlacedStar>>()
         EarthlyBranch.entries.forEach { starMap[it] = mutableListOf() }
 
+        val natalMarks = SiHuaResolver.natalMarkMap(pillars.year.stem)
+
         fun put(star: Star, branch: EarthlyBranch) {
-            starMap[branch]!!.add(PlacedStar(star, brightnessOf(star, branch)))
+            starMap[branch]!!.add(
+                PlacedStar(
+                    star = star,
+                    brightness = brightnessOf(star, branch),
+                    natalSiHua = natalMarks[star],
+                ),
+            )
         }
 
         // 紫微星系（逆）
@@ -127,6 +135,8 @@ object ZiWeiEngine {
             set(Calendar.MILLISECOND, 0)
         }
 
+        val natalSiHua = SiHuaResolver.resolve(pillars.year.stem, cells)
+
         val chart = ZiWeiChart(
             birthDate = birthCal.time,
             name = request.name.trim(),
@@ -143,9 +153,17 @@ object ZiWeiEngine {
             ziweiBranch = ziweiBranch,
             cells = cells,
             decades = decades,
+            natalSiHua = natalSiHua,
             interpretations = emptyList(),
         )
         return chart.copy(interpretations = InterpretationEngine.interpret(chart))
+    }
+
+    /** 立春换年后的流年干支（简化：公历年干支，2/4 前用上一年）。 */
+    fun annualStemBranch(solarYear: Int, month: Int = 6, day: Int = 15): StemBranch {
+        var y = solarYear
+        if (month < 2 || (month == 2 && day < 4)) y -= 1
+        return StemBranch.from(y - 1984)
     }
 
     /** 命宫：寅起正月，顺数至生月；再从该宫起子时，逆数至生时 */

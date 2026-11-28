@@ -163,6 +163,34 @@ enum class Brightness {
         }
 }
 
+/** 四化：禄权科忌 */
+enum class SiHua {
+    LU, QUAN, KE, JI;
+
+    val hanzi: String
+        get() = when (this) {
+            LU -> "禄"
+            QUAN -> "权"
+            KE -> "科"
+            JI -> "忌"
+        }
+
+    val shortMark: String get() = hanzi
+}
+
+enum class ChartScope {
+    NATAL,
+    DECADE,
+    ANNUAL;
+
+    val displayName: String
+        get() = when (this) {
+            NATAL -> "本命"
+            DECADE -> "大限"
+            ANNUAL -> "流年"
+        }
+}
+
 enum class Star(
     val hanzi: String,
     val category: StarCategory,
@@ -204,7 +232,14 @@ enum class Star(
 data class PlacedStar(
     val star: Star,
     val brightness: Brightness = Brightness.PING,
-)
+    /** 生年四化（本命） */
+    val natalSiHua: SiHua? = null,
+    /** 当前查看范围叠加的四化（大限/流年），本命盘为空 */
+    val scopeSiHua: SiHua? = null,
+) {
+    val siHuaMarks: List<SiHua>
+        get() = listOfNotNull(natalSiHua, scopeSiHua)
+}
 
 data class PalaceCell(
     val type: PalaceType,
@@ -215,6 +250,8 @@ data class PalaceCell(
     val stars: List<PlacedStar>,
     val decadeAgeStart: Int,
     val decadeAgeEnd: Int,
+    /** 当前 scope 下的宫名（本命/大限/流年） */
+    val scopeType: PalaceType = type,
 ) {
     val majorStars: List<PlacedStar> get() = stars.filter { it.star.isMajor }
     val otherStars: List<PlacedStar> get() = stars.filterNot { it.star.isMajor }
@@ -225,6 +262,21 @@ data class DecadeLimit(
     val branch: EarthlyBranch,
     val ageStart: Int,
     val ageEnd: Int,
+)
+
+data class SiHuaEntry(
+    val siHua: SiHua,
+    val star: Star,
+    val branch: EarthlyBranch,
+    val palaceType: PalaceType,
+)
+
+data class ScopeOverlay(
+    val scope: ChartScope,
+    val label: String,
+    val stem: HeavenlyStem?,
+    val siHua: List<SiHuaEntry>,
+    val focusBranch: EarthlyBranch?,
 )
 
 enum class InterpretationTone {
@@ -256,6 +308,7 @@ data class ZiWeiChart(
     val ziweiBranch: EarthlyBranch,
     val cells: List<PalaceCell>,
     val decades: List<DecadeLimit>,
+    val natalSiHua: List<SiHuaEntry> = emptyList(),
     val interpretations: List<InterpretationItem>,
 ) {
     val title: String
@@ -276,6 +329,10 @@ data class ZiWeiChart(
     fun cell(type: PalaceType): PalaceCell = cells.first { it.type == type }
 
     fun cellByBranch(branch: EarthlyBranch): PalaceCell = cells.first { it.branch == branch }
+
+    /** 生年四化一句话，如「廉贞禄、破军权…」 */
+    val natalSiHuaLine: String
+        get() = natalSiHua.joinToString("、") { "${it.star.hanzi}${it.siHua.hanzi}" }
 }
 
 data class CastRequest(

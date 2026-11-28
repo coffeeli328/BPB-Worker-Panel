@@ -98,7 +98,7 @@ fun SettingsScreen(aiSettings: AiSettings) {
         Spacer(Modifier.height(28.dp))
         Text("关于", fontWeight = FontWeight.SemiBold, color = Ink)
         Text(
-            "紫微斗数 Android · 三合派安星 MVP\n农历 1900–2100 · 十四主星 + 常用辅煞\n解读仅供学习参考",
+            "紫微斗数 Android · 三合派安星 v1.1\n农历 1900–2100 · 十四主星 + 辅煞 + 四化\n本命 / 大限 / 流年 · 解读仅供学习参考",
             color = Muted,
             fontSize = 13.sp,
             lineHeight = 20.sp,

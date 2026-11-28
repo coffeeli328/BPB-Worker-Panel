@@ -71,6 +71,44 @@ object InterpretationEngine {
             tone = InterpretationTone.NEUTRAL,
         )
 
+        if (chart.natalSiHua.isNotEmpty()) {
+            items += InterpretationItem(
+                title = "生年四化",
+                detail = buildString {
+                    append(chart.yearSB.stem.hanzi)
+                    append("年干四化：")
+                    append(chart.natalSiHuaLine)
+                    append("。")
+                    chart.natalSiHua.forEach { e ->
+                        append(e.star.hanzi)
+                        append(e.siHua.hanzi)
+                        append("在")
+                        append(e.palaceType.hanzi)
+                        append("（")
+                        append(e.branch.hanzi)
+                        append("）；")
+                    }
+                    append(siHuaHint())
+                },
+                tone = if (chart.natalSiHua.any { it.siHua == SiHua.JI && it.palaceType == PalaceType.MING }) {
+                    InterpretationTone.CAUTION
+                } else {
+                    InterpretationTone.NEUTRAL
+                },
+            )
+        }
+
+        val firstDecade = chart.decades.firstOrNull()
+        if (firstDecade != null) {
+            items += InterpretationItem(
+                title = "大限提纲",
+                detail = "起运约${firstDecade.ageStart}岁，首限在${firstDecade.palaceType.hanzi}" +
+                    "（${firstDecade.branch.hanzi}）。可在命盘页切换「大限」查看各限宫名与限干四化；" +
+                    "切换「流年」可看太岁所在与流年干四化。",
+                tone = InterpretationTone.NEUTRAL,
+            )
+        }
+
         majors.forEach { placed ->
             starHints[placed.star]?.let { hint ->
                 items += InterpretationItem(
@@ -121,11 +159,14 @@ object InterpretationEngine {
 
         items += InterpretationItem(
             title = "使用说明",
-            detail = "本解读为三合派安星规则下的学习参考摘要，不构成命运断言，亦不涉及医疗、法律或投资建议。完整论断需结合四化、大限流年与实际经历。",
+            detail = "本解读为三合派安星与生年四化口径下的学习参考摘要，不构成命运断言，亦不涉及医疗、法律或投资建议。",
             tone = InterpretationTone.NEUTRAL,
         )
         return items
     }
+
+    private fun siHuaHint(): String =
+        "化禄主顺遂收获，化权主权柄进取，化科主名声文书，化忌主牵绊关注点；需与落宫、对宫同参。"
 
     private fun toneFor(stars: List<PlacedStar>): InterpretationTone {
         if (stars.any { it.brightness == Brightness.MIAO || it.brightness == Brightness.WANG }) {

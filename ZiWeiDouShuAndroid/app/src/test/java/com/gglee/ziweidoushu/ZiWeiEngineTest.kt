@@ -6,6 +6,9 @@ import com.gglee.ziweidoushu.engine.Gender
 import com.gglee.ziweidoushu.engine.HeavenlyStem
 import com.gglee.ziweidoushu.engine.LunarCalendar
 import com.gglee.ziweidoushu.engine.PalaceType
+import com.gglee.ziweidoushu.engine.ScopeProjector
+import com.gglee.ziweidoushu.engine.SiHua
+import com.gglee.ziweidoushu.engine.SiHuaResolver
 import com.gglee.ziweidoushu.engine.Star
 import com.gglee.ziweidoushu.engine.StemBranch
 import com.gglee.ziweidoushu.engine.ZiWeiEngine
@@ -95,5 +98,50 @@ class ZiWeiEngineTest {
         assertEquals(2000, back.year)
         assertEquals(1, back.month)
         assertEquals(1, back.day)
+    }
+
+    @Test
+    fun siHua_jia_mapsClassicStars() {
+        val map = SiHuaResolver.starsFor(HeavenlyStem.JIA)
+        assertEquals(Star.LIAN_ZHEN, map[SiHua.LU])
+        assertEquals(Star.PO_JUN, map[SiHua.QUAN])
+        assertEquals(Star.WU_QU, map[SiHua.KE])
+        assertEquals(Star.TAI_YANG, map[SiHua.JI])
+    }
+
+    @Test
+    fun cast_includesNatalSiHuaOnStars() {
+        val chart = ZiWeiEngine.cast(
+            CastRequest(year = 1984, month = 6, day = 1, hour = 8, gender = Gender.MALE),
+        )
+        // 1984 甲子年
+        assertEquals(HeavenlyStem.JIA, chart.yearSB.stem)
+        assertEquals(4, chart.natalSiHua.size)
+        assertTrue(chart.cells.any { c -> c.stars.any { it.natalSiHua == SiHua.LU } })
+        assertTrue(chart.cells.any { c -> c.stars.any { it.natalSiHua == SiHua.JI } })
+    }
+
+    @Test
+    fun annualScope_renamesMingToYearBranch() {
+        val chart = ZiWeiEngine.cast(
+            CastRequest(year = 1990, month = 5, day = 15, hour = 10, gender = Gender.FEMALE),
+        )
+        val sb = ZiWeiEngine.annualStemBranch(2024)
+        val (cells, overlay) = ScopeProjector.annual(chart, sb, 2024)
+        val focus = cells.first { it.branch == sb.branch }
+        assertEquals(PalaceType.MING, focus.scopeType)
+        assertEquals(sb.branch, overlay.focusBranch)
+        assertEquals(4, overlay.siHua.size)
+    }
+
+    @Test
+    fun decadeScope_usesPalaceStemSiHua() {
+        val chart = ZiWeiEngine.cast(
+            CastRequest(year = 1990, month = 5, day = 15, hour = 10, gender = Gender.MALE),
+        )
+        val decade = chart.decades[2]
+        val (_, overlay) = ScopeProjector.decade(chart, decade)
+        assertEquals(chart.cellByBranch(decade.branch).stem, overlay.stem)
+        assertTrue(overlay.siHua.isNotEmpty())
     }
 }
