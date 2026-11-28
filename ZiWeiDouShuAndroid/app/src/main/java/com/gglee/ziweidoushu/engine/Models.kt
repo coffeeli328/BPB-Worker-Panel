@@ -181,13 +181,15 @@ enum class SiHua {
 enum class ChartScope {
     NATAL,
     DECADE,
-    ANNUAL;
+    ANNUAL,
+    MONTHLY;
 
     val displayName: String
         get() = when (this) {
             NATAL -> "本命"
             DECADE -> "大限"
             ANNUAL -> "流年"
+            MONTHLY -> "流月"
         }
 }
 
@@ -277,7 +279,37 @@ data class ScopeOverlay(
     val stem: HeavenlyStem?,
     val siHua: List<SiHuaEntry>,
     val focusBranch: EarthlyBranch?,
+    val flyingHints: List<FlyingHint> = emptyList(),
 )
+
+/**
+ * 飞星：某宫天干发出四化，落在目标星所在宫。
+ * 同源同宫为自化。
+ */
+data class FlyingHint(
+    val fromPalace: PalaceType,
+    val fromBranch: EarthlyBranch,
+    val fromStem: HeavenlyStem,
+    val siHua: SiHua,
+    val star: Star,
+    val toPalace: PalaceType,
+    val toBranch: EarthlyBranch,
+    val isSelf: Boolean,
+) {
+    val summary: String
+        get() = buildString {
+            append(fromPalace.hanzi)
+            append(fromStem.hanzi)
+            append("干飞")
+            append(star.hanzi)
+            append(siHua.hanzi)
+            append("→")
+            if (isSelf) append("自化") else append(toPalace.hanzi)
+            append("（")
+            append(toBranch.hanzi)
+            append("）")
+        }
+}
 
 enum class InterpretationTone {
     POSITIVE, NEUTRAL, CAUTION

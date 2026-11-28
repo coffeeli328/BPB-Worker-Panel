@@ -20,12 +20,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -63,7 +59,6 @@ import com.gglee.ziweidoushu.ui.theme.ShaStar
 import com.gglee.ziweidoushu.ui.theme.Teal
 import java.util.Calendar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChartScreen(
     chart: ZiWeiChart,
@@ -76,8 +71,9 @@ fun ChartScreen(
         Calendar.getInstance().apply { time = chart.birthDate }.get(Calendar.YEAR)
     }
     var annualYear by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.YEAR)) }
+    var lunarMonth by remember { mutableIntStateOf(Calendar.getInstance().get(Calendar.MONTH) + 1) }
 
-    val (viewCells, overlay) = remember(chart, scope, decadeIndex, annualYear) {
+    val (viewCells, overlay) = remember(chart, scope, decadeIndex, annualYear, lunarMonth) {
         when (scope) {
             ChartScope.NATAL -> ScopeProjector.natal(chart)
             ChartScope.DECADE -> {
@@ -87,6 +83,10 @@ fun ChartScreen(
             ChartScope.ANNUAL -> {
                 val sb = ZiWeiEngine.annualStemBranch(annualYear)
                 ScopeProjector.annual(chart, sb, annualYear)
+            }
+            ChartScope.MONTHLY -> {
+                val sb = ZiWeiEngine.annualStemBranch(annualYear)
+                ScopeProjector.monthly(chart, sb, annualYear, lunarMonth)
             }
         }
     }
@@ -134,6 +134,8 @@ fun ChartScreen(
             onDecade = { decadeIndex = it },
             annualYear = annualYear,
             onAnnualYear = { annualYear = it },
+            lunarMonth = lunarMonth,
+            onLunarMonth = { lunarMonth = it },
             minYear = birthYear,
         )
 
@@ -155,6 +157,11 @@ fun ChartScreen(
         Spacer(Modifier.height(14.dp))
         selected?.let { DetailPanel(it, overlay) }
 
+        if (overlay.flyingHints.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            FlyingPanel(overlay.flyingHints)
+        }
+
         Spacer(Modifier.height(18.dp))
         Button(
             onClick = onOpenInterpretation,
@@ -170,7 +177,6 @@ fun ChartScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ScopeControls(
     scope: ChartScope,
@@ -180,16 +186,30 @@ private fun ScopeControls(
     onDecade: (Int) -> Unit,
     annualYear: Int,
     onAnnualYear: (Int) -> Unit,
+    lunarMonth: Int,
+    onLunarMonth: (Int) -> Unit,
     minYear: Int,
 ) {
     val scopes = ChartScope.entries
-    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-        scopes.forEachIndexed { index, s ->
-            SegmentedButton(
+    // 两行避免四段按钮过挤
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        scopes.forEach { s ->
+            FilterChip(
                 selected = scope == s,
                 onClick = { onScope(s) },
-                shape = SegmentedButtonDefaults.itemShape(index, scopes.size),
-            ) { Text(s.displayName, fontSize = 13.sp) }
+                label = { Text(s.displayName, fontSize = 13.sp) },
+                colors = FilterChipDefaults.filterChipColors(
+                    containerColor = Mist,
+                    labelColor = Ink,
+                    selectedContainerColor = Teal.copy(alpha = 0.22f),
+                    selectedLabelColor = Teal,
+                ),
+            )
         }
     }
     when (scope) {
@@ -220,23 +240,79 @@ private fun ScopeControls(
         }
         ChartScope.ANNUAL -> {
             Spacer(Modifier.height(8.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { onAnnualYear(annualYear - 1) }) { Text("上一年") }
-                Text(
-                    "$annualYear",
-                    fontWeight = FontWeight.SemiBold,
-                    color = Ink,
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                )
-                TextButton(onClick = { onAnnualYear(annualYear + 1) }) { Text("下一年") }
-                Spacer(Modifier.width(8.dp))
-                TextButton(onClick = {
-                    onAnnualYear(Calendar.getInstance().get(Calendar.YEAR))
-                }) { Text("今年") }
-                TextButton(onClick = { onAnnualYear(minYear.coerceAtLeast(1900)) }) { Text("出生年") }
+            YearRow(annualYear, onAnnualYear, minYear)
+        }
+        ChartScope.MONTHLY -> {
+            Spacer(Modifier.height(8.dp))
+            YearRow(annualYear, onAnnualYear, minYear)
+            Spacer(Modifier.height(6.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                (1..12).forEach { m ->
+                    FilterChip(
+                        selected = lunarMonth == m,
+                        onClick = { onLunarMonth(m) },
+                        label = { Text("${m}月", fontSize = 12.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = Mist,
+                            labelColor = Ink,
+                            selectedContainerColor = GoldDeep.copy(alpha = 0.2f),
+                            selectedLabelColor = GoldDeep,
+                        ),
+                    )
+                }
             }
         }
         ChartScope.NATAL -> Unit
+    }
+}
+
+@Composable
+private fun YearRow(annualYear: Int, onAnnualYear: (Int) -> Unit, minYear: Int) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TextButton(onClick = { onAnnualYear(annualYear - 1) }) { Text("上一年") }
+        Text(
+            "$annualYear",
+            fontWeight = FontWeight.SemiBold,
+            color = Ink,
+            modifier = Modifier.padding(horizontal = 8.dp),
+        )
+        TextButton(onClick = { onAnnualYear(annualYear + 1) }) { Text("下一年") }
+        Spacer(Modifier.width(8.dp))
+        TextButton(onClick = {
+            onAnnualYear(Calendar.getInstance().get(Calendar.YEAR))
+        }) { Text("今年") }
+        TextButton(onClick = { onAnnualYear(minYear.coerceAtLeast(1900)) }) { Text("出生年") }
+    }
+}
+
+@Composable
+private fun FlyingPanel(hints: List<com.gglee.ziweidoushu.engine.FlyingHint>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Mist.copy(alpha = 0.45f))
+            .padding(12.dp),
+    ) {
+        Text("飞星 / 自化", fontWeight = FontWeight.SemiBold, color = GoldDeep, fontSize = 14.sp)
+        Text(
+            "宫干发出四化，落星所在宫；同宫为自化。",
+            fontSize = 11.sp,
+            color = Muted,
+            modifier = Modifier.padding(top = 2.dp, bottom = 8.dp),
+        )
+        hints.take(10).forEach { h ->
+            Text(
+                h.summary,
+                fontSize = 12.sp,
+                color = if (h.isSelf) ShaStar else Ink,
+                modifier = Modifier.padding(vertical = 2.dp),
+            )
+        }
     }
 }
 

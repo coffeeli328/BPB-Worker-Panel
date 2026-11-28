@@ -103,8 +103,33 @@ object InterpretationEngine {
             items += InterpretationItem(
                 title = "大限提纲",
                 detail = "起运约${firstDecade.ageStart}岁，首限在${firstDecade.palaceType.hanzi}" +
-                    "（${firstDecade.branch.hanzi}）。可在命盘页切换「大限」查看各限宫名与限干四化；" +
-                    "切换「流年」可看太岁所在与流年干四化。",
+                    "（${firstDecade.branch.hanzi}）。命盘页可切换本命 / 大限 / 流年 / 流月，" +
+                    "并查看对应干支四化与飞星自化。",
+                tone = InterpretationTone.NEUTRAL,
+            )
+        }
+
+        val flying = FlyingStarAnalyzer.analyzeNatal(chart)
+        val selfHua = FlyingStarAnalyzer.selfHuaOnly(flying)
+        if (selfHua.isNotEmpty()) {
+            items += InterpretationItem(
+                title = "本命自化",
+                detail = "自化指宫干所化之星仍落本宫，能量内敛或纠结。" +
+                    selfHua.take(6).joinToString("；") { it.summary } + "。",
+                tone = if (selfHua.any { it.siHua == SiHua.JI }) {
+                    InterpretationTone.CAUTION
+                } else {
+                    InterpretationTone.NEUTRAL
+                },
+            )
+        }
+        val mingFly = flying.filter {
+            !it.isSelf && (it.fromPalace == PalaceType.MING || it.toPalace == PalaceType.MING)
+        }.take(4)
+        if (mingFly.isNotEmpty()) {
+            items += InterpretationItem(
+                title = "命宫相关飞星",
+                detail = mingFly.joinToString("；") { it.summary } + "。飞入为外界牵引，飞出为向外作用。",
                 tone = InterpretationTone.NEUTRAL,
             )
         }

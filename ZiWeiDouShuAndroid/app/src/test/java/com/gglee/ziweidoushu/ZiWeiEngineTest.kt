@@ -6,6 +6,8 @@ import com.gglee.ziweidoushu.engine.Gender
 import com.gglee.ziweidoushu.engine.HeavenlyStem
 import com.gglee.ziweidoushu.engine.LunarCalendar
 import com.gglee.ziweidoushu.engine.PalaceType
+import com.gglee.ziweidoushu.engine.ChartScope
+import com.gglee.ziweidoushu.engine.FlyingStarAnalyzer
 import com.gglee.ziweidoushu.engine.ScopeProjector
 import com.gglee.ziweidoushu.engine.SiHua
 import com.gglee.ziweidoushu.engine.SiHuaResolver
@@ -143,5 +145,33 @@ class ZiWeiEngineTest {
         val (_, overlay) = ScopeProjector.decade(chart, decade)
         assertEquals(chart.cellByBranch(decade.branch).stem, overlay.stem)
         assertTrue(overlay.siHua.isNotEmpty())
+    }
+
+    @Test
+    fun monthlyScope_usesWuHuDunMonthStem() {
+        val chart = ZiWeiEngine.cast(
+            CastRequest(year = 1990, month = 5, day = 15, hour = 10, gender = Gender.MALE),
+        )
+        val yearSB = ZiWeiEngine.annualStemBranch(2024)
+        val (cells, overlay) = ScopeProjector.monthly(chart, yearSB, 2024, 3)
+        assertEquals(ChartScope.MONTHLY, overlay.scope)
+        assertEquals(ScopeProjector.monthStemFromYear(yearSB.stem, 3), overlay.stem)
+        val expectedFocus = EarthlyBranch.from(yearSB.branch.rawValue + 2)
+        assertEquals(expectedFocus, overlay.focusBranch)
+        assertEquals(PalaceType.MING, cells.first { it.branch == expectedFocus }.scopeType)
+        assertEquals(4, overlay.siHua.size)
+    }
+
+    @Test
+    fun flyingStar_detectsSelfHua() {
+        val chart = ZiWeiEngine.cast(
+            CastRequest(year = 1984, month = 6, day = 1, hour = 8, gender = Gender.MALE),
+        )
+        val all = FlyingStarAnalyzer.analyzeNatal(chart)
+        assertTrue(all.size >= 12)
+        // 每宫四化共 48 条
+        assertEquals(48, all.size)
+        val self = FlyingStarAnalyzer.selfHuaOnly(all)
+        assertTrue(self.all { it.isSelf })
     }
 }
