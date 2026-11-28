@@ -13,6 +13,23 @@ Kotlin + Jetpack Compose 本地排盘 App，三合派安星 MVP。
 - 历史：Room 本地存储
 - **无自建后端**；不请求定位权限
 
+## 下载安装（GitHub）
+
+预构建 debug APK（v1.2.0，可侧载）：
+
+- 文件：[`dist/ZiWeiDouShu.apk`](https://github.com/coffeeli328/BPB-Worker-Panel/blob/cursor/ziwei-doushu-android-7ccb/ZiWeiDouShuAndroid/dist/ZiWeiDouShu.apk)
+- 直链：https://github.com/coffeeli328/BPB-Worker-Panel/raw/cursor/ziwei-doushu-android-7ccb/ZiWeiDouShuAndroid/dist/ZiWeiDouShu.apk
+- 源码目录：https://github.com/coffeeli328/BPB-Worker-Panel/tree/cursor/ziwei-doushu-android-7ccb/ZiWeiDouShuAndroid
+- Pull Request：https://github.com/coffeeli328/BPB-Worker-Panel/pull/15
+
+### 安装步骤
+
+1. 用手机浏览器打开上方直链下载 APK
+2. 系统设置 → 允许「安装未知应用」
+3. 打开 APK → 安装 → 「紫微斗数」
+
+合并进 `main` 后，可将链接中的分支名换成 `main`。
+
 ## 自行构建
 
 要求：JDK 17+、Android SDK 34。
@@ -22,6 +39,7 @@ cd ZiWeiDouShuAndroid
 # local.properties 中 sdk.dir=你的 Android SDK 路径
 ./gradlew assembleDebug
 # 输出：app/build/outputs/apk/debug/app-debug.apk
+# 亦可复制为 dist/ZiWeiDouShu.apk
 ```
 
 单元测试：
@@ -29,12 +47,6 @@ cd ZiWeiDouShuAndroid
 ```bash
 ./gradlew :app:testDebugUnitTest
 ```
-
-### 安装步骤
-
-1. 把 APK 传到手机
-2. 允许「安装未知应用」
-3. 打开安装 → 「紫微斗数」
 
 ## 模块
 

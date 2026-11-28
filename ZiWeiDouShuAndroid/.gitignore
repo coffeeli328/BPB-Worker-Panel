@@ -5,7 +5,8 @@ local.properties
 .DS_Store
 build/
 app/build/
-dist/
+dist/*
+!dist/ZiWeiDouShu.apk
 captures/
 .externalNativeBuild/
 .cxx/
